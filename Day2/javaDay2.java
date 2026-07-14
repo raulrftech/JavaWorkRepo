@@ -50,9 +50,10 @@ public void setSeatsAvailable(int seatsAvailable) {
 // One fil, one public class holding main, as many package-private helper classes underneath it as you want
 public class javaDay2 {
     public static void main(String[] args) {
-        SensitiveData s1 = new SensitiveData("Raul Rodriguez");
-        s1.printDescription();
-        System.out.println(String.format("There are currently %d of sensitive data occurrences", SensitiveData.totalOccurrences));
+        Employee emp1 = new Employee("Raul Rodriguez", 118000, 12);
+        Manager man1 = new Manager("Alex", 118000, 12, 45);
+        SeniorManager SM1 = new SeniorManager("Daniel Hernandez", 118000, 22, 12, 18);
+        System.out.println(String.format("CONFIGURATED BONUSES:%n   %s: $%.2f%n   %s: $%.2f%n   %s: $%.2f", emp1.name, emp1.calculateBonus(), man1.name, man1.calculateBonus(), SM1.name, SM1.calculateBonus()));
     }
 }
 
@@ -187,5 +188,108 @@ class SensitiveData implements Describable {
 
     public String getDescription() {
         return String.format("%s's DOB is %s", this.name, this.dob);
+    }
+}
+
+interface Trackable {
+    default void logEvent() {
+        System.out.println("Event logged from Trackable interface");
+    }
+}
+interface Notifiable {
+    default void logEvent() {
+        System.out.println("Event logged from Notifiable interface");
+    }
+}
+class Event implements Trackable, Notifiable {
+    String name;
+    double duration;
+
+    public Event(String name, double duration) {
+        this.name = name;
+        this.duration = duration;
+    }
+
+    // Java requires you to explicitly resolve the ambiguity of which logEvent to use, even if you dont want to use either one
+    public void logEvent() {
+        Trackable.super.logEvent();
+    }
+    public void logEvent_Notifiable() {
+        Notifiable.super.logEvent();
+    }
+}
+
+// Inheritance - extends keyword
+// A class inherits every non-private field and method forma. parent class by declaring extends ParentClassName
+// The child class is called a subclass; the class it inherits from is the superclass.
+// Once a class extends another, every instance of the subclass automatically has acess to everything the superclass defined
+//      It doesnt need to redeclare those fields or mthods
+// Java only allows single inheritance - a class can extends exactly one other class, never more than one
+// If you need a class to gain capabilities from multiple unrelated sources, interfaces are the tool, extends is strictly one parent, one lineage
+// super(...) calss the parents constructor
+// When a subclass has its own constructor, Java needs to know how the inherited fields get initialized
+//      THe subclass's constructor doesnt automatically know how to set them up, super is how you explicitly call the superclass's constructor  from within the subclass's constructor
+// The struct rule; if you call super at all, it must be the very first line of the subclass's constructor - nothing can come before it. THis is because Java reqs the parents portion of the object to be fully constructed before the subclass starts builiding its own additional fields on top
+// What happens if you dont write super at all??
+//      Java will automatically inserts an invisible call to the superclass's no arg constructor as the first line silently but only if the superclass actually has a no arg constructor available
+//      If the superclass only has constructors that req params, and the subclass doesnt explicitly call super with those params, the code wont compule since Java jas no valid way to construct the parent portion of the object
+class Employee {
+    String name;
+    double baseSalary;
+    private int yearsEmployed; //  validate based on whether its negative, store 0 instead
+
+    public Employee(String name, double baseSalary, int yearsEmployed) {
+        this.name = name;
+        this.baseSalary = baseSalary;
+        if (yearsEmployed < 0) { this.yearsEmployed = 0; } else { this.yearsEmployed = yearsEmployed; }
+    }
+    public int getYearsEmployed() { return this.yearsEmployed; }
+    public double calculateBonus() { return this.baseSalary * 0.05; }
+}
+class Manager extends Employee {
+    int teamSize;
+
+    public Manager(String name, double baseSalary, int yearsEmployed, int teamSize) {
+        super(name, baseSalary, yearsEmployed);
+        this.teamSize = teamSize;
+    }
+}
+class Intern extends Employee {
+    public Intern(String name, double baseSalary, int yearsEmployed) {
+        super(name, baseSalary, yearsEmployed);
+    }
+}
+class Executive extends Employee {
+    double stockOptionsValue;
+
+    public Executive(String name, double baseSalary, int yearsEmployed, double stockOptionsValue) {
+        super(name, baseSalary, yearsEmployed); this.stockOptionsValue = stockOptionsValue;
+    }
+    @Override
+    public double calculateBonus() { return this.baseSalary * 0.20; }
+}
+class SeniorEmployee extends Employee {
+    int yearsOfLeadership;
+
+    public SeniorEmployee(String name, double baseSalary, int yearsEmployed, int yearsOfLeadership) {
+        super(name, baseSalary, yearsEmployed); this.yearsOfLeadership = yearsOfLeadership;
+    }
+
+    @Override
+    public double calculateBonus() {
+        double baseBonus = super.calculateBonus(); return baseBonus + (yearsOfLeadership * 500);
+    }
+}
+class SeniorManager extends Manager {
+    int regionsManaged;
+
+    public SeniorManager(String name, double baseSalary, int yearsEmployed, int teamSize, int regionsManaged) {
+        super(name, baseSalary, yearsEmployed, teamSize); this.regionsManaged = regionsManaged;
+    }
+
+    @Override
+    public double calculateBonus() {
+        double baseBonus = super.calculateBonus();
+        return baseBonus + (regionsManaged * 1000);
     }
 }
