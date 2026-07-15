@@ -50,10 +50,7 @@ public void setSeatsAvailable(int seatsAvailable) {
 // One fil, one public class holding main, as many package-private helper classes underneath it as you want
 public class javaDay2 {
     public static void main(String[] args) {
-        Employee emp1 = new Employee("Raul Rodriguez", 118000, 12);
-        Manager man1 = new Manager("Alex", 118000, 12, 45);
-        SeniorManager SM1 = new SeniorManager("Daniel Hernandez", 118000, 22, 12, 18);
-        System.out.println(String.format("CONFIGURATED BONUSES:%n   %s: $%.2f%n   %s: $%.2f%n   %s: $%.2f", emp1.name, emp1.calculateBonus(), man1.name, man1.calculateBonus(), SM1.name, SM1.calculateBonus()));
+        
     }
 }
 
@@ -291,5 +288,75 @@ class SeniorManager extends Manager {
     public double calculateBonus() {
         double baseBonus = super.calculateBonus();
         return baseBonus + (regionsManaged * 1000);
+    }
+}
+
+
+
+// What @Override actually checks precisely
+//   For a subclass method to genuinely override a parent method, three things must match exactly
+//      Method name, parameter list (types and order) and the return type must be the same 
+//          or valid subtype (called covariant return types)
+//          a more specific type than the parent's is allowed but not a completely unrelated one)
+//      If any of these differ even slightly, a typo in the name, an extra param or different return type, 
+//          Java doesnt override anything. It just created a brand new unrelated method
+// Why @Override matters so much given that
+//      Without it, a mistake like this compiles successfully and gives no warning - 
+//          youd just have a subclass with what you think is a working override but its actually
+//          a dead never called method sitting alongside the parents original unmodified version 
+//              still being used
+//      @Override forces the compiler to check your intent against reality - if you write @Override on something
+//           that doesnt actually match a parents methods signature, compilation fails immediately with a clear error
+
+// Access level rule for overrides
+//   An override cannot reduce the visibility of the method its overriding
+//   If a parent method is public, the override must also be public
+//      It cannot become private or package private in the subclass
+//      You can widen it (protected -> public) but never narrow it
+class Shape {
+    public Shape() {}
+    public double calculateArea() {
+        return 0.0;
+    }
+}
+class Square extends Shape {
+    double sideLength;
+    public Square(double sideLength) { this.sideLength = sideLength; }
+
+    @Override
+    public double calculateArea() { return 0; }
+}
+// Small vehicle rental pricing system
+class Vehicle {
+    String type;
+    double baseDailyRate;
+    public Vehicle(String type, double baseDailyRate) {
+        this.type = type; this.baseDailyRate = baseDailyRate;
+    }
+    public double calculateDailyCost() {
+        return baseDailyRate;
+    }
+}
+class Sedan extends Vehicle {
+    public Sedan(String type, double baseDailyRate) {
+        super(type, baseDailyRate);
+    }
+}
+class SUV extends Vehicle {
+    public SUV(String type, double baseDailyRate) {
+        super(type, baseDailyRate);
+    }
+    @Override
+    public double calculateDailyCost() {
+        return super.calculateDailyCost() + 25.0;
+    }
+}
+class LuxuryVehicle extends Vehicle {
+    public LuxuryVehicle(String type, double baseDailyRate) {
+        super(type, baseDailyRate);
+    }
+    @Override
+    public double calculateDailyCost() {
+        return baseDailyRate * 1.75;
     }
 }
