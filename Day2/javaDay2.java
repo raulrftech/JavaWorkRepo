@@ -50,7 +50,9 @@ public void setSeatsAvailable(int seatsAvailable) {
 // One fil, one public class holding main, as many package-private helper classes underneath it as you want
 public class javaDay2 {
     public static void main(String[] args) {
-        
+        PickupTruck pTruck1 = new PickupTruck("Ford", 2020, 2400, 96);
+        PickupTruck pTruck2 = new PickupTruck("Jeep", 2019, 2500, 40);
+        System.out.println(String.format("Truck 1:%n%s%nTruck 2:%n%s", pTruck1.getSpecs(), pTruck2.getSpecs()));
     }
 }
 
@@ -358,5 +360,170 @@ class LuxuryVehicle extends Vehicle {
     @Override
     public double calculateDailyCost() {
         return baseDailyRate * 1.75;
+    }
+}
+
+// Overriding equals(), Overriding a method that you did not write
+//      Every Java class you create automatically inherits from a hidden root class called Object, whether you write extends or not
+//      Object provides a handful of default methods every single object gets for free, including equals(Object other)
+//          which by defualt just checks if two references point to the exact same object in memory - not whether their data looks the same
+
+class Coordinate {
+    double x; double y;
+    public Coordinate(double x, double y) { this.x = x; this.y = y; }
+
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof Coordinate)) {
+            // instance of checks if other is acutally a Coordinate before treating it as one
+            //  since the parameter type is the general Object, not Coordinate specifically
+            //      this is a strict req- overriding equals() must keep the exact Object param type, or it doesnt count as a real override
+            return false;
+        }
+        Coordinate otherCoord = (Coordinate) other;
+        // (Coordinate) other - a cast, converting the general Object reference into a specific Coordinate ref so you can access .x and .y on it
+        // declare var that holds val and type (Coordinate otherCoord) which is casting the type of Coordinate to other
+        return this.x == otherCoord.x && this.y == otherCoord.y;
+    }
+}
+class Contact {
+    String firstName; String lastName; String phoneNumber;
+    public Contact(String firstName, String lastName, String phoneNumber) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.phoneNumber = phoneNumber;
+    }
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof Contact)) {
+            return false;
+        }
+        Contact otherContact = (Contact) other;
+        return this.phoneNumber == otherContact.phoneNumber;
+    }
+}
+class ContactBook {
+    Contact contact1;
+    Contact contact2;
+    Contact contact3;
+    public ContactBook(Contact contact1, Contact contact2, Contact contact3) {
+        this.contact1 = contact1; this.contact2 = contact2; this.contact3 = contact3;
+    }
+    public String findDuplicates() {
+        boolean oneAndTwo = contact1.equals(contact2);
+        boolean oneAndThree = contact1.equals(contact3);
+        boolean twoAndThree = contact2.equals(contact3);
+        return oneAndTwo ? "One and Two match" : oneAndThree ? "One and Three match" : twoAndThree ? "Two and Three match" : (oneAndTwo && oneAndThree && twoAndThree) ? "All numbers match" : "No contacts have the same number";
+    }
+}
+// Overriding toString()
+//   Another method every class inherits from Object - toString() - controls what gets shown whenever you print an object directly (System.out.println(someObj))
+//      instead of printing one of its fields manually
+//   The default version prints something unreadable like Contact@4517d9a3 - the calss name + a memory address.
+//   Overriding it properly is standard practice for almost every real class youll write
+/* 
+    @Override
+    public String toString() { return firstName + " " + lastName + " (" + phoneNumber + ")";}
+ */
+class Book {
+    String title; String author; int publicationYear;
+    public Book(String title, String author, int publicationYear) {
+        this.title = title; this.author = author;
+        this.publicationYear = publicationYear;
+    }
+    @Override
+    public String toString() { return String.format("%s by %s was published in %d", this.title, this.author, this.publicationYear);}
+}
+class Library {
+    Book book1; Book book2; Book book3;
+    public Library(Book book1, Book book2, Book book3) {
+        this.book1 = book1; this.book2 = book2; this.book3 = book3;
+    }
+    public Book findOldest(Book book1, Book book2, Book book3) {
+        if (book1.publicationYear > book2.publicationYear ) {
+            if (book1.publicationYear > book3.publicationYear) { 
+                return book1;
+            } else {
+                return book3;
+            }
+        } else { return book2.publicationYear > book3.publicationYear ? book2 : book3; }
+    }
+    public String getOldestBook() {
+        return findOldest(book1, book2, book3).toString();
+    }
+}
+class BankAccount {
+    String ownerName; private double accountBalance;
+    static int instanceCreated;
+    public BankAccount(String ownerName, double accountBalance) {
+        this.ownerName = ownerName;
+        if (accountBalance > 0) {
+            this.accountBalance = accountBalance;
+        } else { this.accountBalance = 0.0; }
+        instanceCreated++;
+    }
+    @Override
+    public String toString() {
+        return String.format("Customer %s(%d) currently has $%.2f in their account.", this.ownerName, this.instanceCreated, this.accountBalance);
+    }
+
+    // Getter due to subclass restricted access level for accBalance
+    public double getBalanace() { return this.accountBalance; }
+}
+class SavingsAccount extends BankAccount {
+    double InterestRate;
+    public SavingsAccount(String ownerName, double accountBalance, double InterestRate) {
+        super(ownerName, accountBalance); 
+        if (InterestRate > 0.99) { this.InterestRate = 0.50; } else { this.InterestRate = InterestRate; }
+    }
+    @Override
+    public String toString() {
+        return String.format("%s%s", super.toString(), String.format(" Their interest rate is %.2f", this.InterestRate * 100));
+        //return "super.toString() + String.format(" Their interest rate is %.2f%", (this.InterestRate * 1000))";
+    }
+    public double applyInterest() {
+        return super.getBalanace() * (1 + this.InterestRate);
+    }
+}
+// Build Vehicle -> Truck -> Pickup Truck
+// Every single level overrides the same method String getSpecs()
+// Every override must call super.getSpecs() and build on it
+class VehicleExc {
+    String make; int year;
+    public VehicleExc(String make, int year) { this.make = make; this.year = year; }
+
+    public String getSpecs() {
+        return String.format("VEHICLE SPECS; %d %s", this.year, this.make);
+    }
+}
+class Truck extends VehicleExc {
+    double towingCapacity;
+    public Truck(String make, int year, double towingCapacity) {
+        super(make, year);
+        this.towingCapacity = towingCapacity;
+    }
+
+    @Override
+    public String getSpecs() {
+        if (this.towingCapacity <= 0) {
+            return super.getSpecs();
+        } else {
+            return String.format("%s%nTOWING CAPACITY: %.2f", super.getSpecs(), this.towingCapacity);
+        }
+    }
+}
+class PickupTruck extends Truck {
+    int bedLengthInches;
+    public PickupTruck(String make, int year, double towingCapacity, int bedLengthInches) {
+        super(make, year, towingCapacity); this.bedLengthInches = bedLengthInches;
+    }
+
+    @Override
+    public String getSpecs() {
+        if (this.bedLengthInches >= 60) {
+            return String.format("%s%nBED LENGTH(inches): %d", super.getSpecs(), this.bedLengthInches);
+        } else {
+            return super.getSpecs();
+        }
     }
 }
