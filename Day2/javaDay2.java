@@ -50,9 +50,9 @@ public void setSeatsAvailable(int seatsAvailable) {
 // One fil, one public class holding main, as many package-private helper classes underneath it as you want
 public class javaDay2 {
     public static void main(String[] args) {
-        PickupTruck pTruck1 = new PickupTruck("Ford", 2020, 2400, 96);
-        PickupTruck pTruck2 = new PickupTruck("Jeep", 2019, 2500, 40);
-        System.out.println(String.format("Truck 1:%n%s%nTruck 2:%n%s", pTruck1.getSpecs(), pTruck2.getSpecs()));
+        TeamLead manager1 = new TeamLead("RaulR", 75, 3, 27.50);
+        Director director1 = new Director("RaulE", 120, 4, 25);
+        System.out.println(manager1.getManagementSummary());System.out.println(director1.getManagementSummary());
     }
 }
 
@@ -525,5 +525,174 @@ class PickupTruck extends Truck {
         } else {
             return super.getSpecs();
         }
+    }
+}
+// Small Media Library System
+class MediaItem {
+    String title; int durationInMinutes;
+    public MediaItem(String title, int durationInMinutes) {
+        this.title = title; this.durationInMinutes = durationInMinutes;
+    }
+    public String getPlaybackInfo() { return String.format("%s is %d minutes long.", this.title, this.durationInMinutes);}
+}
+class Movie extends MediaItem {
+    String rating;
+    public Movie(String title, int durationInMinutes, String rating) {
+        super(title, durationInMinutes); this.rating = rating;
+    }
+    @Override
+    public String getPlaybackInfo() { return String.format("%s%nRATING: %s", super.getPlaybackInfo(), this.rating);}
+}
+class Podcast extends MediaItem {
+    int episodeNumber;
+    public Podcast(String title, int durationInMinutes, int episodeNumber) {
+        super(title, durationInMinutes); this.episodeNumber = episodeNumber;
+    }
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof Podcast)) { return false;}
+        Podcast otherPodcast = (Podcast) other;
+        return this.episodeNumber == otherPodcast.episodeNumber;
+    }
+    @Override
+    public String toString() {
+        return String.format("This podcast is currently on episode %d", this.episodeNumber);
+    }
+}
+
+
+// Abstract Classes and Abstract Methods
+//  An abstract class is one that can never be instantiated directly - new Shape() would be illegal
+//      if Shape were abstract - it exists purely to be extended.
+//  An abstract method is a method with no body at all, declared only as a signature, forcing
+//      every concrete (non-abstract) subclass to provide its own implementation or the subclass itself
+//      must also be marked abstract and pass the obligation further down
+//  The real distinction from an interface, concretely:
+//      Example; Shape holds actual state (color, a real field with real data) and a mix
+//      of finished (describe()) and unfinished (calculateArea()) methods
+//      - something an interface traditionally couldnt do at all, since interfaces only declare method signatures
+//      plus optional defaults with no persistent state of their own
+//      A class can only extends one abstract class but can implements many interfaces - same single vs mutltiple inhertiances rules as before
+// Payroll Calculation System - abs class name, hoursWorked, constructor, abs method calculatePay and full-imp String getPaySummary
+abstract class PayableWorker {
+    String name; private double hoursWorked;
+
+    public PayableWorker(String name, double hoursWorked) {
+        this.name = name;
+        if (hoursWorked <= 0) { this.hoursWorked = 20; } else { this.hoursWorked = hoursWorked;}
+    }
+    abstract double calculatePay();
+    double getHoursWorked() { return this.hoursWorked; }
+    String getPaySummary() {
+        double totalPay = calculatePay();
+        return String.format("%s made a total of $%.2f this pay period.", this.name, totalPay);
+    }
+}
+class HourlyWorker extends PayableWorker {
+    double hourlyRate;
+    public HourlyWorker(String name, double hoursWorked, double hourlyRate) {
+        super(name, hoursWorked);
+        this.hourlyRate = hourlyRate;
+    }
+
+    @Override
+    double calculatePay() {
+        return this.hourlyRate * this.getHoursWorked();
+    }
+}
+class SalariedWorker extends PayableWorker {
+    double fixedWeeklyPay;
+    public SalariedWorker(String name, double hoursWorked, double fixedWeeklyPay) {
+        super(name, hoursWorked); this.fixedWeeklyPay = fixedWeeklyPay;
+    }
+    @Override
+    double calculatePay() {
+        return this.fixedWeeklyPay;
+    }
+}
+abstract class Publication {
+    String title;
+    public Publication(String title) { this.title = title;}
+    abstract double calculateShippingCost();
+    abstract String getFormatDescription();
+    String getOrderSummary() {
+        return String.format("Confirmed Order! %s", getFormatDescription());
+    }
+}
+class PhysicalBook extends Publication {
+    double weight_Pounds;
+    public PhysicalBook(String title, double weight_Pounds) {
+        super(title); this.weight_Pounds = weight_Pounds;
+    }
+    @Override
+    double calculateShippingCost() {
+        return this.weight_Pounds * 2.50;
+    }
+    @Override
+    String getFormatDescription() {
+        return String.format("%s is a Physical Hardcover%nShipping Cost: $%.2f", this.title, this.calculateShippingCost());
+    }
+}
+class EBook extends Publication {
+    double fileSize_MB;
+    public EBook(String title, double fileSize_MB) {
+        super(title); this.fileSize_MB = fileSize_MB;
+    }
+    @Override
+    double calculateShippingCost() { return 0.0; }
+    @Override
+    String getFormatDescription() {
+        return String.format("%s is %.2f MB in size. Shpping cost is %.2f", this.title, this.fileSize_MB, this.calculateShippingCost());
+    }
+}
+class Employee_AbsExc {
+    String name; private double hoursWorked;
+    public Employee_AbsExc(String name, double hoursWorked) {
+        this.name = name;
+        if (hoursWorked < 0) {
+            this.hoursWorked = 2;
+        } else { this.hoursWorked = hoursWorked; }
+    }
+}
+abstract class ManagementRole extends Employee_AbsExc {
+    int jobTier;
+    public ManagementRole(String name, double hoursWorked, int jobTier) {
+        super(name, hoursWorked);
+        if (jobTier < 0) { this.jobTier = 1;} else {
+            if (jobTier > 4) { this.jobTier = 4; }
+            this.jobTier = jobTier;
+        }
+    }
+    abstract double calculateLeadershipBonus();
+    String getManagementSummary() {
+        double bonus = this.calculateLeadershipBonus();
+        return String.format("%s is a %d Manager who is going to get a $%.2f bonus.", this.name, this.jobTier, bonus);
+    }
+}
+class TeamLead extends ManagementRole {
+    double hourlyRate;
+    public TeamLead(String name, double hoursWorked, int jobTier, double hourlyRate) {
+        super(name, hoursWorked, jobTier);
+        if (hourlyRate <= 0.00) { this.hourlyRate = 7.50;}else{this.hourlyRate = hourlyRate;}
+    }
+    @Override
+    double calculateLeadershipBonus() {
+        double regBonus = jobTier * 450;
+        return regBonus - 300;
+    }
+}
+class Director extends ManagementRole {
+    double yearsWorked;
+    public Director(String name, double hoursWorked, int jobTier, double yearsWorked) {
+        super(name, hoursWorked, jobTier);
+        if (yearsWorked <= 0.00) {
+            this.yearsWorked = 1.0;
+        } else { this.yearsWorked = yearsWorked;}
+    }
+    @Override
+    double calculateLeadershipBonus() {
+        double regBonus = jobTier * 2000;
+        double yearsWorkedBonus = yearsWorked * 500;
+        return yearsWorkedBonus + regBonus;
     }
 }
