@@ -50,9 +50,7 @@ public void setSeatsAvailable(int seatsAvailable) {
 // One fil, one public class holding main, as many package-private helper classes underneath it as you want
 public class javaDay2 {
     public static void main(String[] args) {
-        TeamLead manager1 = new TeamLead("RaulR", 75, 3, 27.50);
-        Director director1 = new Director("RaulE", 120, 4, 25);
-        System.out.println(manager1.getManagementSummary());System.out.println(director1.getManagementSummary());
+        
     }
 }
 
@@ -696,3 +694,80 @@ class Director extends ManagementRole {
         return yearsWorkedBonus + regBonus;
     }
 }
+// Abstract Class Implementing an Interface
+interface Discountable {
+    double applyDiscount(double originalPrice);
+}
+abstract class Product implements Discountable {
+    String name; double basePrice;
+    public Product(String name, double basePrice) {
+        this.name = name; this.basePrice = basePrice;
+    }
+    String getPriceSummary() {
+        return String.format("Original Price: $%.2f, With Discount: $%.2f", basePrice, applyDiscount(basePrice));
+    }
+}
+class ClearanceItem extends Product {
+    public ClearanceItem(String name, double basePrice) {
+        super(name, basePrice);
+    }
+    @Override
+    public double applyDiscount(double originalPrice) {
+        return originalPrice * 0.50;
+    }
+}
+class MemberOnlyItem extends Product {
+    public MemberOnlyItem(String name, double basePrice) {
+        super(name, basePrice);
+    }
+    @Override
+    public double applyDiscount(double originalPrice) {
+        return originalPrice * 0.85;
+    }
+}
+// Abstract class with an Abstract Method and a Regular Method both calling each other
+abstract class GradedAssignment {
+    String studentName; double pointsEarned; double pointsPossible;
+    public GradedAssignment(String studentName, double pointsEarned, double pointsPossible) {
+        this.studentName = studentName;
+        this.pointsEarned = pointsEarned;
+        this.pointsPossible = pointsPossible;
+    }
+    abstract String getLetterGrade();
+    String getFullReport() {
+        double trueGrade = pointsEarned / pointsPossible;
+        String gradeNote = "";
+        if ((trueGrade * 100) <= 70) { gradeNote = "; Needs Improvement"; }
+        return String.format("Grade: %.2f(%S)%s", (trueGrade * 100), getLetterGrade(), gradeNote);
+    }
+}
+class StandardAssignment extends GradedAssignment {
+    public StandardAssignment(String studentName, double pointsEarned, double pointsPossible) {
+        super(studentName, pointsEarned, pointsPossible);
+    }
+    @Override
+    public String getLetterGrade() {
+        double respectiveGrade = (this.pointsEarned / this.pointsPossible) * 100;
+        if (respectiveGrade < 70.0) { return "F"; } else if (respectiveGrade >= 70.0 && respectiveGrade < 80.0) { return "C"; } else if (respectiveGrade >= 80.0 && respectiveGrade < 90.0) {
+            return "B";
+        } else { return "A";}
+    }
+}
+class PassFailAssignment extends GradedAssignment {
+    public PassFailAssignment(String studentName, double pointsEarned, double pointsPossible) {
+        super(studentName, pointsEarned, pointsPossible);
+    }
+    @Override
+    public String getLetterGrade() {
+        double respectiveGrade = this.pointsEarned / this.pointsPossible;
+        if ((respectiveGrade * 100) < 70.0) { return "Fail";} else { return "Pass";}
+    }
+}
+// Abstract Classes vs Interfaces, Used Together Deliberately
+// Real skill here isnt new syntax but the architectural judement of when to reach for which tool and building someting that genuinely needs both at once rather than either one alone
+// Concrete Decision Rule, stated plainly;
+//      Use an abstract class when subclasses share actual state (fields with real data) and a tight,
+//          natural "is-a" relationship where only one parent makes sense
+//      Use an interface when unrelated classes across different hierarchies just need to promise the same capability, 
+//          with no shared state required and where a single class might need multiple such promises at once
+// Exc1; One Class, One Abstract Parent, Multiple Interfaces
