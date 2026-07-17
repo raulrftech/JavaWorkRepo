@@ -50,7 +50,18 @@ public void setSeatsAvailable(int seatsAvailable) {
 // One fil, one public class holding main, as many package-private helper classes underneath it as you want
 public class javaDay2 {
     public static void main(String[] args) {
-        
+        Transaction regTransaction = new Transaction("A140D3", 40, 5, 0.1);
+        Transaction profTransaction = new Transaction("BZ49mD2I", 320, 87.50, 0.05);
+
+        System.out.println(regTransaction.getBaseSummary());
+        System.out.println(regTransaction.getRecordType());
+        System.out.println(regTransaction.getAuditLog());
+        System.out.println(regTransaction.exportData());
+
+        System.out.println(profTransaction.getBaseSummary());
+        System.out.println(profTransaction.getRecordType());
+        System.out.println(profTransaction.getAuditLog());
+        System.out.println(profTransaction.exportData());
     }
 }
 
@@ -771,3 +782,39 @@ class PassFailAssignment extends GradedAssignment {
 //      Use an interface when unrelated classes across different hierarchies just need to promise the same capability, 
 //          with no shared state required and where a single class might need multiple such promises at once
 // Exc1; One Class, One Abstract Parent, Multiple Interfaces
+interface Auditable { String getAuditLog(); }
+interface Exportable { String exportData(); }
+abstract class FinancialRecord {
+    String recordID;
+    double amount;
+    public FinancialRecord(String recordID, double amount) {
+        this.recordID = recordID;
+        if (amount < 0) { this.amount = 1;} else { this.amount = amount;}
+    }
+    abstract String getRecordType();
+    String getBaseSummary() { return String.format("Record %s%nAmounnt: %f", this.recordID, this.amount);}
+}
+class Transaction extends FinancialRecord implements Auditable, Exportable {
+    double priceOf; double taxRate;
+    public Transaction(String recordID, double amount, double priceOf, double taxRate) {
+        super(recordID, amount);
+        if (priceOf < 0.00) { this.priceOf = 1.00; } else { this.priceOf = priceOf; }
+        if (taxRate < 0.00 || taxRate > 1) { this.taxRate = 0.0825; } else { this.taxRate = taxRate; }
+    }
+    // Usable data manips for @Override funcs (subtotal, taxes)
+    private double getSubtotal() { return this.amount * this.priceOf; }
+    private double getTotal() { return getSubtotal() * (1 + taxRate); }
+
+    @Override
+    public String getAuditLog() {
+        return String.format("Record %s", this.recordID);
+    }
+    @Override
+    public String exportData() {
+        return String.format("TRANSACTION%nRECORD: %s%nUNIT PRICE: %.2f%nAMOUNT: %.2fTAX RATE: %f percent%nTOTAL: $%.2f", this.recordID, this.priceOf, this.amount, (this.taxRate * 100), getTotal());
+    }
+    @Override
+    public String getRecordType() {
+        if (getTotal() > 1000.00) { return String.format("Business Transaction of $%.2f", getTotal());} else { return "Regular Transaction";}
+    }
+}
