@@ -50,18 +50,8 @@ public void setSeatsAvailable(int seatsAvailable) {
 // One fil, one public class holding main, as many package-private helper classes underneath it as you want
 public class javaDay2 {
     public static void main(String[] args) {
-        Transaction regTransaction = new Transaction("A140D3", 40, 5, 0.1);
-        Transaction profTransaction = new Transaction("BZ49mD2I", 320, 87.50, 0.05);
-
-        System.out.println(regTransaction.getBaseSummary());
-        System.out.println(regTransaction.getRecordType());
-        System.out.println(regTransaction.getAuditLog());
-        System.out.println(regTransaction.exportData());
-
-        System.out.println(profTransaction.getBaseSummary());
-        System.out.println(profTransaction.getRecordType());
-        System.out.println(profTransaction.getAuditLog());
-        System.out.println(profTransaction.exportData());
+        System.out.println(new ArchiveManager().processArchive( new Laptop("45SF1", 12)));
+        System.out.println(new ArchiveManager().processArchive( new Report("Test Title", 24)));
     }
 }
 
@@ -816,5 +806,46 @@ class Transaction extends FinancialRecord implements Auditable, Exportable {
     @Override
     public String getRecordType() {
         if (getTotal() > 1000.00) { return String.format("Business Transaction of $%.2f", getTotal());} else { return "Regular Transaction";}
+    }
+}
+interface Archivable { String archive(); }
+abstract class Document {
+    String title; 
+    public Document(String title) { this.title = title; }
+    abstract String getContentSummary();
+}
+class Report extends Document implements Archivable {
+    int pageCount;
+    public Report(String title, int pageCount) { super(title); this.pageCount = pageCount; }
+    @Override
+    public String getContentSummary() {
+        return String.format("%s is currently on page %d", this.title, this.pageCount);
+    }
+    @Override
+    public String archive() {
+        return String.format("Submitting %s to archive, on page %d", this.title, this.pageCount);
+    }
+}
+abstract class Equipment {
+    String assetTag;
+    public Equipment(String assetTag) { this.assetTag = assetTag; }
+    abstract String getConditionStatus();
+}
+class Laptop extends Equipment implements Archivable {
+    int ageInMonths;
+    public Laptop(String assetTag, int ageInMonths) { super(assetTag); this.ageInMonths = ageInMonths;}
+    public String getConditionStatus() {
+        return String.format("Laptop %s is currently %d months old.", this.assetTag, this.ageInMonths);
+    }
+    @Override
+    public String archive() {
+        return String.format("Storing laptop %s to section %d AgeInMonths in archive", this.assetTag, this.ageInMonths);
+    }
+}
+// Interfaces as a Method Parameter Type
+class ArchiveManager {
+    public ArchiveManager() {}
+    public String processArchive(Archivable item) {
+        return String.format("PROCESSED: %s", item.archive());
     }
 }
