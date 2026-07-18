@@ -50,8 +50,14 @@ public void setSeatsAvailable(int seatsAvailable) {
 // One fil, one public class holding main, as many package-private helper classes underneath it as you want
 public class javaDay2 {
     public static void main(String[] args) {
-        System.out.println(new ArchiveManager().processArchive( new Laptop("45SF1", 12)));
-        System.out.println(new ArchiveManager().processArchive( new Report("Test Title", 24)));
+        LastBookExc book1 = new LastBookExc("James Patterson", "4000578102", 21);
+        Magazine mag1 = new Magazine("Harley Davidson Bikes", "3215877770", 21);
+        DVD wwe = new DVD("WWE", "3000124780", 21);
+
+        LibraryLoans ll = new LibraryLoans();
+        System.out.println(ll.getLoanedDurations(book1, mag1, wwe));
+        System.out.println(ll.getLoanSummaries(book1, mag1, wwe));
+        ll.extendLoanDurations(book1, mag1, 44);
     }
 }
 
@@ -847,5 +853,102 @@ class ArchiveManager {
     public ArchiveManager() {}
     public String processArchive(Archivable item) {
         return String.format("PROCESSED: %s", item.archive());
+    }
+}
+// Interface parameters
+interface Playable { String play(); }
+class BoardGame implements Playable {
+    String name; int playerCount;
+    public BoardGame(String name, int playerCount) {
+        this.name = name;
+        if (playerCount < 0 ) { this.playerCount = (playerCount * -1);}
+    }
+    @Override
+    public String play() {
+        return String.format("Starting game %s with %d players", this.name, this.playerCount);
+    }
+}
+class VideoGame implements Playable {
+    String title; String platform;
+    public VideoGame(String title, String platform) {
+        this.title = title; this.platform = platform;
+    }
+    @Override
+    public String play() {
+        return String.format("Now playing %s on %S", this.title, this.platform);
+    }
+}
+class CardGame implements Playable {
+    String name; int deckSize;
+    public CardGame(String name, int deckSize) {
+        this.name = name;
+        if (deckSize < 0) { this.deckSize = (deckSize * -1);}
+    }
+    @Override
+    public String play() {
+        return String.format("Playing a game of %s with a deck of %d cards.", this.name, deckSize);
+    }
+}
+class GameNight {
+    public GameNight() {}
+    public String hostGameNight(Playable first, Playable second, Playable third) {
+        return String.format("Game Night Results%nFIRST: %s%nSECOND: %s%nTHIRD%n%s", first.play(), second.play(), third.play());
+    }
+}
+// Choosing Between Abstract Class and Interface
+// Smalll library with 3 kinds of items, Book, Magazine and DVD
+//      All share real data, String title, String barcodeID abd int getLoanPeriodDays() returning possible loan duration
+//      Only Book and Magazing need the ability to be renewed (extending a checkout without returning it first)
+interface Extendable {
+    void extendLoanDuration(int original, int extendBy);
+}
+abstract class Loanable {
+    String title; String barcodeID; int loanDuration;
+    public Loanable(String title, String barcodeID, int loanDuration) {
+        this.title = title; this.barcodeID = barcodeID; this.loanDuration = loanDuration;
+    }
+    int getLoanDuration() { return this.loanDuration; }
+    String getSummary() {
+        return String.format("TITLE: %s%nBARCODE: %s%nLoan Duration: %d", this.title, this.barcodeID, this.getLoanDuration());
+    }
+}
+class LastBookExc extends Loanable implements Extendable {
+    public LastBookExc(String title, String barcodeID, int loanDuration) {
+        super(title, barcodeID, loanDuration);
+    }
+    @Override
+    public void extendLoanDuration(int original, int extendBy) {
+        this.loanDuration += extendBy;
+    }
+}
+class Magazine extends Loanable implements Extendable {
+    public Magazine(String title, String barcodeID, int loanDuration) {
+        super(title, barcodeID, loanDuration);
+    }
+    @Override
+    public void extendLoanDuration(int original, int extendBy) {
+        this.loanDuration += (extendBy - 1);
+    }
+}
+class DVD extends Loanable {
+    public DVD(String title, String barcodeID, int loanDuration) {
+        super(title, barcodeID, loanDuration);
+    }
+}
+class LibraryLoans {
+    public LibraryLoans() {}
+    public String getLoanedDurations(Loanable first, Loanable second, Loanable third) {
+        return String.format("Loan Durations%nFIRST:%n   %s for %d days%nSECOND:   %s for %d days%nTHIRD:   %s for %d days", first.title, first.getLoanDuration(), second.title, second.getLoanDuration(), third.title, third.getLoanDuration());
+    }
+    public String getLoanSummaries(Loanable first, Loanable second, Loanable third) {
+        return String.format("SUMMARIES%n%s%n%s%n%s", first.getSummary(), second.getSummary(), third.getSummary());
+    }
+    public void extendLoanDurations(LastBookExc first, Magazine second, int by) {
+        System.out.println(String.format("Extending %s loan of %d days by %d more days", first.title, first.getLoanDuration(), by));
+        first.extendLoanDuration(first.getLoanDuration(), by);
+        System.out.println(String.format("New loan duration of %s is %d days", first.title, first.getLoanDuration()));
+        System.out.println(String.format("Extending %s loan of %d days by %d more days", second.title, second.getLoanDuration(), by));
+        second.extendLoanDuration(second.getLoanDuration(), by);
+        System.out.println(String.format("New loan duration of %s is %d days", second.title, second.getLoanDuration()));
     }
 }
