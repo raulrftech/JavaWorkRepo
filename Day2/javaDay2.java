@@ -50,14 +50,14 @@ public void setSeatsAvailable(int seatsAvailable) {
 // One fil, one public class holding main, as many package-private helper classes underneath it as you want
 public class javaDay2 {
     public static void main(String[] args) {
-        LastBookExc book1 = new LastBookExc("James Patterson", "4000578102", 21);
-        Magazine mag1 = new Magazine("Harley Davidson Bikes", "3215877770", 21);
-        DVD wwe = new DVD("WWE", "3000124780", 21);
+        RoutineCase rtC = new RoutineCase("Raul E R");
+        TraumaCase tC = new TraumaCase("Emmanuel R", 8, 2500);
+        ChronicCase cC = new ChronicCase("Raul R");
 
-        LibraryLoans ll = new LibraryLoans();
-        System.out.println(ll.getLoanedDurations(book1, mag1, wwe));
-        System.out.println(ll.getLoanSummaries(book1, mag1, wwe));
-        ll.extendLoanDurations(book1, mag1, 44);
+        TriageDesk mainTriage = new TriageDesk("All Cases Help", 18, rtC, tC, cC);
+        System.out.println(mainTriage.processTransfers(tC, cC));
+        System.out.println(mainTriage.getFullTriageReport(9995));
+
     }
 }
 
@@ -950,5 +950,105 @@ class LibraryLoans {
         System.out.println(String.format("Extending %s loan of %d days by %d more days", second.title, second.getLoanDuration(), by));
         second.extendLoanDuration(second.getLoanDuration(), by);
         System.out.println(String.format("New loan duration of %s is %d days", second.title, second.getLoanDuration()));
+    }
+}
+// MP - Emergency Department Triage System
+abstract class MedicalCase {
+    String patientName; int severityLevel;
+    private double treatmentCostEstimate;
+    public MedicalCase(String patientName, int severityLevel) {
+        this.patientName = patientName;
+        if (severityLevel < 0 || severityLevel > 10) {
+            this.severityLevel = 3;
+        } else { this.severityLevel = severityLevel;}
+    }
+    public MedicalCase(String patientName) {
+        this.patientName = patientName;
+        this.severityLevel = 3;
+    }
+    void addFee(double of) {
+        this.treatmentCostEstimate += of;
+    }
+    void setCostEstimate(double to) {
+        if (to < 0) { this.treatmentCostEstimate = (to * -1);} else {
+            this.treatmentCostEstimate = to;
+        }
+    }
+    double getCostEstimate() { return this.treatmentCostEstimate; }
+    abstract int getEstimatedWait_Minutes();
+    String getCaseSummary(double costEstimate) {
+        setCostEstimate(costEstimate);
+        return String.format("PATIENT SUMMARY%nNAME: %S%nSEVERITY: %d%nCOST: $%.2f%nWAIT TIME: %d",this.patientName, this.severityLevel, getCostEstimate(), getEstimatedWait_Minutes());
+    }
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof MedicalCase)) { return false; }
+        MedicalCase otherCase = (MedicalCase) other;
+        return this.patientName == otherCase.patientName;
+    }
+    @Override
+    public String toString() {
+        return String.format("Patient %s has a severity level of %d", this.patientName, this.severityLevel);
+    }
+}
+interface Transferable { String transferToFacility(String facilityName); }
+class RoutineCase extends MedicalCase {
+    public RoutineCase(String patientName) {
+        super(patientName);
+    }
+    @Override
+    public int getEstimatedWait_Minutes() {
+        int costToInt = (int) this.getCostEstimate(); return costToInt / 6;
+    }
+}
+class TraumaCase extends MedicalCase implements Transferable {
+    double fee;
+    public TraumaCase(String patientName, int severityLevel, double fee) {
+        super(patientName, severityLevel);
+        this.fee = fee;
+    }
+    String traumaDescription = "";
+    @Override
+    public String getCaseSummary(double costEstimate) {
+        setCostEstimate(costEstimate);
+        super.addFee(fee);
+        if (costEstimate > 5000) { traumaDescription = "This is a very important case";} else { traumaDescription = "This case is going to be taken care of quite easily.";}
+        return String.format("PATIENT SUMMARY%nNAME: %S%nSEVERITY: %d%nCOST: $%.2f%nWAIT TIME: %d%n%s",this.patientName, this.severityLevel, getCostEstimate(), getEstimatedWait_Minutes(), traumaDescription);
+    }
+    @Override
+    public int getEstimatedWait_Minutes() {
+        int feeToInt = (int) fee; return feeToInt / 2;
+    }
+    @Override
+    public String transferToFacility(String facilityName) {
+        traumaDescription += String.format(" Transferring %s to %s", this.patientName, facilityName);
+        return String.format("Submitted transfer to %s for %s", facilityName, this.patientName);
+    }
+}
+class ChronicCase extends MedicalCase implements Transferable {
+    public ChronicCase(String patientName) { super(patientName);}
+    @Override
+    public int getEstimatedWait_Minutes() { return 120; }
+    @Override
+    public String transferToFacility(String facilityName) {
+        return String.format("Submitted transfer to %s for %s", facilityName, this.patientName);
+    }
+}
+class TriageDesk {
+    String name; int StationNumber; 
+    MedicalCase routineCase;
+    MedicalCase traumaCase;
+    MedicalCase chronicCase;
+    public TriageDesk(String name, int StationNumber, MedicalCase routineCase, MedicalCase traumaCase, MedicalCase chronicCase) {
+        this.name = name; this.StationNumber = StationNumber;
+        this.routineCase = routineCase; this.traumaCase = traumaCase; this.chronicCase = chronicCase;
+    }
+    public String getFullTriageReport(double CostEstimate) {
+        String areEqual = "";
+        if (routineCase.equals(traumaCase) && routineCase.equals(chronicCase)) { areEqual = String.format("Found that all three cases are for %s", routineCase.patientName);}
+        return String.format("----%s Triage Desk %d Report----%n%s%n%s%n%s%n%s%n", this.name, this.StationNumber, routineCase.getCaseSummary(CostEstimate), traumaCase.getCaseSummary(CostEstimate), chronicCase.getCaseSummary(CostEstimate), areEqual);
+    }
+    public String processTransfers(Transferable first, Transferable second) {
+        return String.format("%s%n%s", first.transferToFacility("UMC"), second.transferToFacility("VDS"));
     }
 }
