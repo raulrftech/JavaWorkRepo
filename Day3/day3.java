@@ -1,11 +1,11 @@
 package Day3;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.ArrayList; import java.util.Collections;
+import java.util.Arrays; import java.util.List;
 
 public class day3 {
     public static void main(String[] args) {
-        ArrayList<String> useCase = new ArrayList<>();
-        System.out.println(fillStringArray(useCase, "Index 2", "heyThere", "BOOM"));
+        ArrayList<Integer> useCase = new ArrayList<>(Arrays.asList(1,4,5,6,7,8,8,3,1,1));
+        convertable(useCase);
     }
 
     // Loops - Full Concept
@@ -281,5 +281,45 @@ public class day3 {
         fillable.set(fillable.indexOf("Index 4"), replaceWith);
         System.out.println(fillable);
         return String.format("Existential Findings%n%s%n%s", shouldExist, shouldntExist);
+    }
+
+    // Exercise 4 -- ArrayList.addAll, .subList, .clear
+    // Create two separate ArrayList<Integer> with different starting vals
+    // Use .addAll() to merge the second lists contents into the first, confirming the first lists size and contents reflect both lists combined
+    // On the merged list, use .subList(from, to) to grab a portion of it
+    //      Instead of just printing sublist, mutate the sublist directly (using .set()) then print original list afterwards
+    // Confirm what actually happens
+    // use .clear() on either list and confirm size of each, especially which list correctly reports size of 0
+    public static String subListTest(ArrayList<Integer> arr1, ArrayList<Integer> arr2) {
+        arr1.addAll(arr2); System.out.println(arr1);
+        List<Integer> subList = arr1.subList(arr1.size() - (arr1.size() - 1), arr1.size());
+        System.out.println("Current Sublist, " + subList);
+        subList.set(1, 1001);
+        System.out.println(arr1);
+
+        arr1.clear(); arr2.clear();
+        return String.format("%s", (arr1.isEmpty() && arr2.isEmpty() ? "Both Lists are empty" : "At least one didnt clear"));
+    }
+
+    // Exercise 5 -- .toArray(), Collections.sort(), Arrays.asList()
+    // use Collections.sort() to sort in place, print before and after
+    // use .toArray() to convert now sorted into plain array
+    //      toArray() with no args returns Object[], not Integer[], which wont let you treat the results as numbers directly without a cast
+    // Find and use the correct overload approach to get back a proper Integer[] you can actually work with
+    // Use Arrays.asList() on a plain array to convert it back into a List view
+    //      test whether that resulting list supports .add() 
+    public static void convertable(ArrayList<Integer> arr1) {
+        System.out.println("Before " + arr1); Collections.sort(arr1); System.out.println("After " + arr1);
+
+        Object[] arr1AsObjects = arr1.toArray();
+        int[] primitiveArray = new int[arr1AsObjects.length];
+        for (int i = 0; i < arr1AsObjects.length; i++) {
+            primitiveArray[i] = (int) arr1AsObjects[i]; // casts each element at index i to int and sets the primitiveArray index of i to that value
+        }
+        List<Object> properlist = Arrays.asList(arr1AsObjects); // this is a list of individual elements not one array wrapped as a single object
+        List<int[]> nowIs = Arrays.asList(primitiveArray);
+        System.out.println(properlist);
+        // sets this array as an object within the List<int[]> since Arrays.asList() takes parameters to put into a list and not separated each value within this obj as its own int[]
+        // nowIs can only contain int[] objs not separate integers
     }
 }
