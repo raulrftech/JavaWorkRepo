@@ -1,14 +1,14 @@
 package Day3;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class day3 {
     public static void main(String[] args) {
-        System.out.println(summation(0, 10));
-        System.out.println(surpass(3));
-        System.out.println(checkBeforeCont(4));
-        System.out.println(continuingExample(new int[] {1,2,3,4,5,6,7,8,9,10,11,12,13,14}));
-        System.out.println(breakingExample(new int[] {120, 240, 300, 100, 800, 40, 50}));
-
+        int[] useCase = new int[] {1, 2, 3, 4, 5, 7, 9, 10, 11, 12, 23, 56};
+        ArrayList<int[]> returnVal = twoPointers(useCase, 34);
+        for (int[] group: returnVal) { 
+            for (int i = 0; i < group.length; i++) { System.out.println(group[i]);}
+        }
     }
 
     // Loops - Full Concept
@@ -108,5 +108,65 @@ public class day3 {
             if (numberIn + ((int) (Math.round(numberIn * -1.3))) + ((int) (Math.round(numberIn * 0.5))) < 0) { break; } else { returningArray.add(numberIn); }
         }
         return returningArray;
+    }
+
+    // Exercise 2.1 -- Nested Loops
+    // takes an int[] and finds every pair of numbers in that array that sum to a specific target value
+    // using a classic nested for loop (outer picks lhs number) (inner picks rhs)
+    public static ArrayList<int[]> findTargetSufficient(int[] numbers, int target) {
+        ArrayList<int[]> returningArray = new ArrayList<>();
+        for (int i = 0; i < numbers.length; i++) {
+            for (int j = i + 1; j < numbers.length; j++) {
+                if (numbers[i] + numbers[j] == target) { returningArray.add(new int[] {i, j}); }
+            }
+        }
+        return returningArray;
+    }
+    // Exercise 2.2
+    // do while loop as outer loop and while loop as inner
+    // find the largest single val in array by comparing element agaisnt a running max
+    public static int findLargest(int[] numbers) {
+        int largest = 0;
+        int currentIndex = 0;
+        do {
+            while (largest < numbers[currentIndex]) { largest = numbers[currentIndex];}
+            currentIndex++;
+        } while (currentIndex < numbers.length);
+        return largest;
+    }
+
+    // Exercise 3 - A Problem That Actually Requires Nesting, Not Just Permits It
+    // method with 2D int[][] array and find the sum of every row
+    // return results as int[], where each positon holds that rows total
+    public static int[] heavyReduce(int[][] numberInNumbers) {
+        ArrayList<Integer> reducedOutcomes = new ArrayList<>();
+
+        for (int i = 0; i < numberInNumbers.length; i++) {
+            int currentArrayCounter = 0;
+            for (int j = 0; j < numberInNumbers[i].length; j++) {
+                currentArrayCounter += numberInNumbers[i][j];
+            }
+            reducedOutcomes.add(currentArrayCounter);
+        }
+
+        int[] finalArray = new int[reducedOutcomes.size()];
+        for (int i = 0; i < reducedOutcomes.size(); i++) { finalArray[i] = reducedOutcomes.get(i);}
+        return finalArray;
+    }
+
+    // Exercise 4 -- Two Pointers
+    public static ArrayList<int[]> twoPointers(int[] numbers, int target) {
+        ArrayList<int[]> targetsFound = new ArrayList<>();
+
+        int left = 0; int right = numbers.length - 1;
+
+        while (left < right) {
+            int sum = numbers[left] + numbers[right];
+            if (sum == target) {
+                targetsFound.add(new int[] { numbers[left], numbers[right]}); left++; right--;
+            } else if (sum < target) { left++;} else { right--;}
+        }
+        
+        return targetsFound;
     }
 }
