@@ -4,11 +4,8 @@ import java.util.Arrays;
 
 public class day3 {
     public static void main(String[] args) {
-        int[] useCase = new int[] {1, 2, 3, 4, 5, 7, 9, 10, 11, 12, 23, 56};
-        ArrayList<int[]> returnVal = twoPointers(useCase, 34);
-        for (int[] group: returnVal) { 
-            for (int i = 0; i < group.length; i++) { System.out.println(group[i]);}
-        }
+        ArrayList<String> useCase = new ArrayList<>();
+        System.out.println(fillStringArray(useCase, "Index 2", "heyThere", "BOOM"));
     }
 
     // Loops - Full Concept
@@ -168,5 +165,121 @@ public class day3 {
         }
         
         return targetsFound;
+    }
+
+    // Arrays - the primitive, fixed-size versions
+    // int[] scores = new int[5]
+    //   Creates an array of exactly 5 ints, every slot defaulting to 0,
+    //   Size is fixed at creation and can never change - no append, no resize, ever
+    //   Is closer to a fixed block of memory than a dynamic cretion
+    // Literal Syntax
+    //      int[] scores = { 2, 4, 5, 6, 7 };
+    //      Size is inferred from how many values provided, still fixed once created
+    //      scores[0] reads and scores[0] = 100 writes
+    //      .length gives size - length is a property not a method
+    //      Arrays.sort(arrayName) -- sorts in place, ascending
+    //      Arrays.toString(arrayName) - usable readable format
+    //      Arrays.equals(array1, array2) - compares two arrays contents, not references
+    //      Arrays.fill(arrayName, 0) - sets every element to the same value
+    //      Arrays.copyOf(arrayName, newLength) - this is how to get a bigger array; creates new array of specified length, copying over what fits, defaults rest if theres more
+    //      Arrays.binarySearch(arrayName, target) - reqs a sorted array, returns index if found ( directly relevant to two pointers and sliding window)
+    // ArrayList<T> - the dynamic, resizable alternative, lives in java.util
+    //   ArrayList<Integer> scores = new ArrayList<>();
+    //   Grows and shrrinks freely via .add(), .remove(), .get(index) instead of subscript syntax
+    //   .size() instead of .count
+    //   The <> after new ArrayList<>() is called the diamond operator
+    //      Java can infer the generic type from the left sife so no need to repeat it on the right
+    //   ArrayList can only hold objects never primitives
+    //      ArrayList<int> doesnt compule, must use capital Integer
+    //      Autoboxing handles the conversion silently when you .add(85) - Java converts primitive int to an Integer obj behind the scenes
+    //   Literal Syntax
+    //      .contains(element) - checks for an exact equals() match directly, no closure needed for simple value checks
+    //      .indexOf(element) - returns the index of the first match, -1 if not found
+    //      .set(index, newValue) - replaces value at the specific index
+    //      .isEmpty() - cleaner than checking .size() == 0
+    //      .clear() - removes everything, results in size 0
+    //      .addAll(otherList) - appends every element from another ArrayList at once
+    //      .subList(from, to) - returns a view into a portion of the list
+    //          this is a live view, not a copy. Changes to this affect the original list too
+    //      .sort(null) or Collections.sort(list) - sorting an ArrayList (two different valid syntaxes, Collections is another util class similar to Arrays)
+    //      .toArray() - converts back to a plain array, the reverse of the arrayList from array pattern
+    // When to Reach for Which
+    //      fixed-size array when you know exact count in advance and it will never change ( fixed-grid, small lookup table )
+    //      ArrayList for anything else which describes the majority of real DSA problems
+
+    // Exercise 1 - Arrays.sort, Arrays.toString, Arrays.binarySearch
+    // takes an unsorted int[], sorts it. print with toString
+    // use binSearch twice against sorted array - once for value that exists and one that doesnt
+    public static String sortList(int[] numbers, int target1, int target2) {
+        if (numbers.length == 0 ) { return "List passed in is empty"; } else {
+            Arrays.sort(numbers);
+            int bsRes1 = Arrays.binarySearch(numbers, target1);
+            int bsRes2 = Arrays.binarySearch(numbers, target2);
+            if (bsRes1 >= 0 && bsRes2 >= 0) {
+                return String.format("Sorted Array:%n   %s%nFound Both Targets!%n   First found at index %d, Second found at index %d", Arrays.toString(numbers), bsRes1, bsRes2);
+            } else {
+                String whichOneWasntAsString = "";
+                Boolean whichOneWasnt = false;
+                Boolean noneWereFound = false;
+                // since this else block only runs if one of the res were not greater than 0, first check if both were less than 0, if not, then only one of them is less than 0
+                if (bsRes1 < 0 && bsRes2 < 0) {
+                    whichOneWasntAsString = "No results were found"; noneWereFound = true;
+                } else {
+                    if (bsRes1 < 0 ) { whichOneWasnt = true; whichOneWasntAsString = String.format("Target %d was not found but Target %d was", target1, target2); } else {
+                        whichOneWasntAsString = String.format("Target %d was not found but Target %d was", target2, target1);
+                    }
+                }
+                return String.format("Sorted Array:%n   %s%n%S", Arrays.toString(numbers), whichOneWasntAsString);
+            }
+        }
+    }
+
+    // Exercise 2 - Arrays.copyOf, Arrays.copyOfRange, Arrays.equals
+    // takes a fixed int[] and uses copyOf to create a version thats larger than the orginal
+    //      Confirm what value(s) are new
+    // Use copyOfRange to extract a sub-section from somewhere in the middle of the original array
+    // Use equals to compare two separate arrays that have the same values in the same order and two arrays that have same values but in different order
+    public static String expandList(int[] numbers, int by) {
+        int[] copyOf = Arrays.copyOf(numbers, numbers.length + by);
+        int[] newValues = Arrays.copyOfRange(copyOf, numbers.length, copyOf.length);
+        return Arrays.toString(newValues);
+    }
+    public static String extractMidsection(int[] of, int by) {
+        if (by > of.length) { return "By parameter is out of bounds";}
+        if (by % 2 != 0) { by -= 1; }
+        int subSectionLength = by / 2;
+        return Arrays.toString(Arrays.copyOfRange(of, subSectionLength, of.length - subSectionLength));
+    }
+
+    // Exercise 3 -- ArrayList.contains, .indexOf, .set, .isEmpty
+    // Build an ArrayList<String> representing something of my choosing
+    // Use .isEmpty() before adding anything then add elements and check again
+    // Use .contains() to check for an element that exists and one that does not, print both results
+    // Use .indexOf() to find position of a specific element, then use .set() to replace that value with something new
+    //      print array of before and after
+    public static String fillStringArray(ArrayList<String> fillable, String findable, String nonFindable, String replaceWith) {
+        // existing string placeholder
+        String shouldExist = "";
+        String shouldntExist = "";
+        if (!fillable.isEmpty()) { return "Please use an empty array for this func call"; }
+        // fill the array
+        for (int i = 0; i <= 6; i++) {
+            fillable.add(String.format("Index %d", i));
+        }
+
+        // check for an existing element
+        if (fillable.contains(findable)) {
+            shouldExist = String.format("The argument '%S' was found", findable);
+        } else { shouldExist = String.format("The argument '%S' was not found", findable);}
+        // check for a non-existing element
+        if (fillable.contains(nonFindable)) { shouldntExist = String.format("The argument '%S' was found but should not have been found", nonFindable);} else {
+            shouldntExist = String.format("The argument '%S' was not found as expected.", nonFindable);
+        }
+
+        // Replacement
+        System.out.println(fillable);
+        fillable.set(fillable.indexOf("Index 4"), replaceWith);
+        System.out.println(fillable);
+        return String.format("Existential Findings%n%s%n%s", shouldExist, shouldntExist);
     }
 }
