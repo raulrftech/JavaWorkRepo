@@ -4,7 +4,13 @@ import java.util.Arrays; import java.util.List;
 
 public class day3 {
     public static void main(String[] args) {
-        
+        ArrayList<Integer> arr1 = new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
+        Integer[] arr2 = { 4, 5, 6, 7, 8, 9, 10 }; List<Integer> arr2AsList = Arrays.asList(arr2);
+        List<Integer> arr3 = List.of(arr2); // since arr2 is an array, it is able to be passed in although the List type will be the component type of arr2 which is Integer but is unmodifiable
+        System.out.println(String.format("Array 1: %d%n", reduceConformingList(arr1)));
+        System.out.println(String.format("Array 2: %d%n", reduceConformingList(arr2AsList))); // since arr2 is an array, it is not a list so that is why arr2AsList is able to conform to the reqs of this method
+        System.out.println(String.format("Array 3: %d%n", reduceConformingList(arr3)));
+
     }
 
     // Loops - Full Concept
@@ -59,7 +65,6 @@ public class day3 {
     //          for (int i = 0; i < 5; i++) { boolean check; continue; }
     //   Both work identically to swift
 
-    
 
     // Exercise 1
     // classic for loop computing a running sum 1 to some number
@@ -367,5 +372,37 @@ public class day3 {
         System.out.println("Confirming theres no change done to original: " + Arrays.toString(arr1));
     }
 
-    
+
+    // List<T> - the interface, not a class
+    // Every ArrayList<T> is technically a List<T> too
+    //      ArrayList is one specific class that implements the List interface
+    //          Is one concrete implementation that holds full contract
+    // asList()'s return value is a different implementation, honoring the contract only partially as just proven above
+    // The practical, real world reason this matters - declaring vars and params as List<T> instead of ArrayList<T>
+    //      List<Integer> numbers = new ArrayList<>()
+    //          This compiles and owrks identically to deccing it as ArrayList<Integer> on left side 
+    //          but its considered the better Java practice and reasoning is worth understanding
+    //              If you write a method that takes ArrayList<Integer> as a parameter, that method can only ever accept genuine ArrayList instances not Arrays.asList result, not any other List implementation that might exist
+    //              If you write that same method taking List<Integer> instead, it can accept any class that implements List, ArrayList, asList() result, LinkedList, anything
+    // Where this genuinely matters in DSA specifically
+    //      many classic algorithm sigs are written accepting List<Integer> rather than ArrayList<Integer>,
+    //          precisely so the same method works regardless of which concrete List implementation the calller happens to be using
+
+    // Exercise 1 - List<T> as a Parameter Type, Accepting Multiple Implementations
+    // Build a method whose param is List<Integer>, does real work like summing every element or finding the maximum
+    // Use a loop of your choice
+    // Call same method 3 times passing in three different things each time
+    //      ArrayList<Integer> you build and populate normally
+    //      Result of asList() on an Integer[]
+    //      List<Integer> built via List.of()
+    public static int reduceConformingList(List<Integer> list) {
+        int counter = 0;
+        for (int i = 0; i < list.size(); i++) {
+            if (list.get(i) == null) { continue;}
+            counter += list.get(i);
+            // since List can hold null vals, I obv cant add a null value to counter
+            // I can either add 0 or skip; skipping that index is the better choice
+        }
+        return counter;
+    }
 }
