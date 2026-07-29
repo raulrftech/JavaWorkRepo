@@ -1,16 +1,11 @@
 package Day3;
 import java.util.ArrayList; import java.util.Collections;
 import java.util.Arrays; import java.util.List;
+import java.util.HashMap; import java.util.Map;
 
 public class day3 {
     public static void main(String[] args) {
-        ArrayList<Integer> arr1 = new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
-        Integer[] arr2 = { 4, 5, 6, 7, 8, 9, 10 }; List<Integer> arr2AsList = Arrays.asList(arr2);
-        List<Integer> arr3 = List.of(arr2); // since arr2 is an array, it is able to be passed in although the List type will be the component type of arr2 which is Integer but is unmodifiable
-        System.out.println(String.format("Array 1: %d%n", reduceConformingList(arr1)));
-        System.out.println(String.format("Array 2: %d%n", reduceConformingList(arr2AsList))); // since arr2 is an array, it is not a list so that is why arr2AsList is able to conform to the reqs of this method
-        System.out.println(String.format("Array 3: %d%n", reduceConformingList(arr3)));
-
+        
     }
 
     // Loops - Full Concept
@@ -372,7 +367,6 @@ public class day3 {
         System.out.println("Confirming theres no change done to original: " + Arrays.toString(arr1));
     }
 
-
     // List<T> - the interface, not a class
     // Every ArrayList<T> is technically a List<T> too
     //      ArrayList is one specific class that implements the List interface
@@ -387,7 +381,6 @@ public class day3 {
     // Where this genuinely matters in DSA specifically
     //      many classic algorithm sigs are written accepting List<Integer> rather than ArrayList<Integer>,
     //          precisely so the same method works regardless of which concrete List implementation the calller happens to be using
-
     // Exercise 1 - List<T> as a Parameter Type, Accepting Multiple Implementations
     // Build a method whose param is List<Integer>, does real work like summing every element or finding the maximum
     // Use a loop of your choice
@@ -404,5 +397,47 @@ public class day3 {
             // I can either add 0 or skip; skipping that index is the better choice
         }
         return counter;
+    }
+
+    // HashMap<K, V> - Java's Dictionary Type, the direct equivalent of Swift's [key: value]
+    /*
+        HashMap<String, Integer> ages = new HashMap<>();
+        ages.put("Raul", 24); ages.put("Alex", 30);
+        int RaulAge = ages.get("Raul");
+    */
+    // .put(key, value) - adds or updates, .get(key) retireves, returns null if the kye doesnt exist
+    //      .get() on a missing key doesnt throow, it silently hands back null, which will cause a NullPointerException later if you try to use it as a primtive without checking first
+    //          This is exactly why .get(key) into an int var dirrectly is dangerous, since unboxing a null Integer crashes
+    // .containsKey(key) or .containsValue(value) - existences checks, map equivalent of ArrayList.contains()
+    // .remove(key) - deletes an entry
+    // .getOrDefault(key, defaultValue) - the safe alternative to raw .get(), returning a fallback instead of null when the key is missing
+    //      Worth reaching for this over .get() whenever a missing key shouldnt crash the program
+    // .keySet() - returns a Set of every key, iterable
+    // .values() - returns a Collection of every value
+    // .entrySet() - returns every key-value pair together, typically iterated like for (Map.Entry<String, Integer> entry : ages.entrySet()), giving you entry.getKey and entry.getValue() in one pass
+    //      the most common way to loop through a whole map when you need both pieces at once
+    // HashSet<T> - Java's set, direct equivalent of Swift's Set<T>
+    //      No dupes allowed, no guaranteed order
+    //      .add, .remove, .contains, same names as ArrayList, but .add on an already present value silently does nothing rather than throwing or duping - worht confirming that behavior directly rather assuming
+
+    // Exercise 1 - HashMap. Full Method Set
+    //      Build a HashMap<String, Integer> representing something of your choosing
+    //      Populate it with .put
+    //      Use .containsKey() to check for a key that exists and one that doesnt
+    //      Deliberately call .get() on a key you know doesnt exist and print result directly - see the raw null
+    //      Then use .getOrDefault() on that same missing key with a real fallback value, proving the safer alternative actually avoids the null
+    //      Use .remove() on an existing key and confirm via .containsKey() after that its genuinely gone
+    //      Finally iterate the whole map using .entrySet(), printing every key-value pair
+    public static void checkAndIterate(HashMap<String, Integer> iteratingHM, String checkForKey) {
+        System.out.println(String.format("Key Check Results:%n%s", (iteratingHM.containsKey(checkForKey)) ? String.format("iteratingHM does contain %s", checkForKey) : String.format("iteratingHM does not contain %s", checkForKey)));
+        System.out.println(String.format("Deliberately checked for key that does not exist %s", iteratingHM.get("heyyyyy")));
+        System.out.println(String.format("Deliberately checked for key that does not exist but safely %s", iteratingHM.getOrDefault("heyyy", 69)));
+        iteratingHM.put("Will Remove", 88);
+        iteratingHM.remove("Will Remove");
+        System.out.println(String.format("Added k,v of ('Will Remove', 88) and then removed. Result: %b", iteratingHM.containsKey("Will Remove")));
+
+        for (Map.Entry<String, Integer> entry: iteratingHM.entrySet()) {
+            System.out.println(String.format("KEY: %S, VAL: %d", entry.getKey(), entry.getValue()));
+        }
     }
 }
