@@ -4,8 +4,7 @@ import java.util.Arrays; import java.util.List;
 
 public class day3 {
     public static void main(String[] args) {
-        ArrayList<Integer> useCase = new ArrayList<>(Arrays.asList(1,4,5,6,7,8,8,3,1,1));
-        convertable(useCase);
+        
     }
 
     // Loops - Full Concept
@@ -322,4 +321,51 @@ public class day3 {
         // sets this array as an object within the List<int[]> since Arrays.asList() takes parameters to put into a list and not separated each value within this obj as its own int[]
         // nowIs can only contain int[] objs not separate integers
     }
+
+    // Exercise 6 -- Arrays.asList(), Forcing the Fixed Size Boundary Multiple Ways
+    // Construct three separate attempts to break Arrays.asList()'s fixed-size restriction using 3 opps - .add, .remove and .clear
+    //      Each on its own separate Arrays.asList() backed list
+    // For each of the three
+    //      wrap the call in a try catch block try {} catch (Exception e) { Sysoutprntln stringVal + e }
+    //          This lets program continue running past a thrown exception instead of crashing entirely
+    // Then prove the other side of Arrays.asList()'s behavior - that .set() genuinely does work on it
+    //      since only size changing operations are restricted, not all mutation
+    // Use .set to successfully change a value and print the underlying orginal array afterward to confirm the change reflects there too
+    //      this is the same live view proof as subList but now on Arrays.asList() specifically
+    // Build all four pieces - three caught exceptions, one successful .set() with the underlying array proof
+    public static void alterArrays(Integer[] arr1, Integer[] arr2, Integer[] arr3) {
+        List<Integer> returnedArr1 = Arrays.asList(arr1); // calling asList returns type List<T> or in this case List<ArrayList<Integer>>
+                             // per documentation, changes made to orig will be visible to this and vice versa
+                             // however; this new List implements optional Collection methods except those that would change the size
+        List<Integer> returnedArr2 = Arrays.asList(arr2);
+        List<Integer> returnedArr3 = Arrays.asList(arr3);
+
+        try { returnedArr1.add(2);} catch (Exception e) { System.out.println("Appending Error: " + e); }
+        try { returnedArr2.remove(0);} catch (Exception e) { System.out.println("Appending Error: " + e); }
+        try { returnedArr3.clear();;} catch (Exception e) { System.out.println("Appending Error: " + e); }
+
+        System.out.println("%nNow attempting .set. Here is the original array first " + Arrays.toString(arr1));
+        returnedArr1.set(0, 444); System.out.println("%nModified the asList version here: " + returnedArr1);
+        System.out.println("%nConfirm original shows change too: " + Arrays.toString(arr1));
+    }
+
+    // Exercise 7 -- asList() Interacting with a Genuine ArrayList and Where the Restriction Actually Ends
+    // take an Integer[], wrap it with asList() then construct a genuine brand new ArrayList<Integer> by passing that same fixed size list into ArrayLists constructor
+    // prove that this new list is fully resizable
+    // Prove the two lists are now genuinely independent--mutate new ArrayList further then print the original asList and confirm there was no change
+    //      confirming that wrapping it in new ArrayList<>(listName) created a real, separate copy, breaking the live view relationship that subList and direct .set calls preserved
+    public static void confirmRelationship(Integer[] arr1) {
+        List<Integer> arr1AsList = Arrays.asList(arr1); // still fixed size, .get .set will still make changes to original
+        ArrayList<Integer> newArr1 = new ArrayList<>(arr1AsList); // this is now a new obj; made from the List thus transforming from Integer[] to ArrayList<Integer>
+        try { arr1AsList.add(2);} catch (Exception e) {
+            System.out.println(e); // confirming that the List of arr1 is not alterable
+        }
+        try {
+            newArr1.add(2); System.out.println(newArr1); // confirming this change occurrs
+            newArr1.remove(2); System.out.println(newArr1);
+        } catch (Exception e) { System.out.println(e); }
+        System.out.println("Confirming theres no change done to original: " + Arrays.toString(arr1));
+    }
+
+    
 }
