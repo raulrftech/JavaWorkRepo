@@ -6,14 +6,8 @@ import java.util.Objects;
 
 public class day3 {
     public static void main(String[] args) {
-        ArrayList<Integer> al1 = new ArrayList<>(Arrays.asList(1,2,3,4, 5, 6, 7));
-        ArrayList<Integer> al2 = new ArrayList<>(Arrays.asList(1,2,3,4, 5, 6, 7));
-        HashMap<String, ArrayList<Integer>> hm = new HashMap<>();
-        alterCreatedHM(hm, "Strign1", 28);
-        alterCreatedHM(hm, "String1-2", 29);
-        alterCreatedHM(hm, "String1-2", 30);
-
-
+        String[] strings = {"hello", "bye", "hey", "whatsUp", "hello", "bye"}; ArrayList<String> stringsOf = new ArrayList<>(Arrays.asList(strings));
+        OrganizeNames(stringsOf);
     }
 
     // Loops - Full Concept
@@ -472,6 +466,47 @@ public class day3 {
 
         // iteration below
         for (Map.Entry<String, ArrayList<Integer>> entry: HM.entrySet()) {
+            System.out.println(String.format("KEY: %S, VAL: %s", entry.getKey(), entry.getValue()));
+        }
+    }
+
+    // Exercise 3 - HashMap<String, Integer> as a Frequency Counter
+    // Directly foreshadows DSA problems that are hit constantly (counting character frequencies, counting occurrences in an array, etc)
+    // Build a method that takes a String[] of words (some that are repeated)
+    //      returns a HashMap<String, Integer> counting how many times each word appears
+    // For each word, if its already a key, increment its count; if not, add it with a starting count of 1
+    // Same checl then branch logic as previous exercises but
+    //      Since Integer is immutable think through it
+    public static void frequencyDeterminator(String[] strArr) {
+        HashMap<String, Integer> frequencies = new HashMap<>();
+        for (int stringIndex = 0; stringIndex < strArr.length; stringIndex++) {
+            String currentString = strArr[stringIndex];
+            if (frequencies.containsKey(currentString)) {
+                // since put updates or adds I can do this
+                frequencies.put(currentString, frequencies.get(currentString) + 1);
+            } else {
+                frequencies.put(currentString, 1);
+            }
+        }
+        for (Map.Entry<String, Integer> entry: frequencies.entrySet()) {
+            System.out.println(String.format("KEY: %S, VAL: %s", entry.getKey(), entry.getValue()));
+        }
+    }
+
+    // Exercise 4 -- HashMap<Integer, ArrayList<String>>, Reversed Key/Value Roles
+    // Build a method that takes an ALString of names and groups them by length, producing the HM
+    //      where each key is a name length and each value is the list of every name with that exact length
+    public static void OrganizeNames(ArrayList<String> strings) {
+        HashMap<Integer, ArrayList<String>> organizedHM = new HashMap<>();
+
+        // so iterate through the array, check length, if it matches a key then add it to its AL
+        // otherwise create the pair, add the string to the new AL
+        for (String string: strings) {
+            Integer currentLength = string.length();
+            organizedHM.computeIfAbsent(currentLength, k -> new ArrayList<>()).add(string);
+        }
+
+        for (Map.Entry<Integer, ArrayList<String>> entry: organizedHM.entrySet()) {
             System.out.println(String.format("KEY: %S, VAL: %s", entry.getKey(), entry.getValue()));
         }
     }
