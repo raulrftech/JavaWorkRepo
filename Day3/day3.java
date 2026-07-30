@@ -2,10 +2,18 @@ package Day3;
 import java.util.ArrayList; import java.util.Collections;
 import java.util.Arrays; import java.util.List;
 import java.util.HashMap; import java.util.Map;
+import java.util.Objects;
 
 public class day3 {
     public static void main(String[] args) {
-        
+        ArrayList<Integer> al1 = new ArrayList<>(Arrays.asList(1,2,3,4, 5, 6, 7));
+        ArrayList<Integer> al2 = new ArrayList<>(Arrays.asList(1,2,3,4, 5, 6, 7));
+        HashMap<String, ArrayList<Integer>> hm = new HashMap<>();
+        alterCreatedHM(hm, "Strign1", 28);
+        alterCreatedHM(hm, "String1-2", 29);
+        alterCreatedHM(hm, "String1-2", 30);
+
+
     }
 
     // Loops - Full Concept
@@ -438,6 +446,33 @@ public class day3 {
 
         for (Map.Entry<String, Integer> entry: iteratingHM.entrySet()) {
             System.out.println(String.format("KEY: %S, VAL: %d", entry.getKey(), entry.getValue()));
+        }
+    }
+
+    // Exercise 2 - HashMap Values That Are Collections Themselves
+    // Build a HashMap<String, ArrayList<Integer>> - each key maps not to a single value but to an entire list of vals
+    // Build a method that takes a key and a value to add and correctly handles both cases
+    //      If the key already exists, append the new value to its existing list
+    //      If the key doesnt exist, create a brand new ArrayList, add the value to it and put it to the HM
+    // Think carefully about the check then create or append logic here - theres a real risk of a NullPointerException if you try to call .add on a list that doesnt exist yet
+    // Populate the map by calling this method several times with a mix of new and existing keys, then iterate the whole strcuture using .entrySet()
+    public static void alterCreatedHM(HashMap<String, ArrayList<Integer>> HM, String k, Integer valueForV) {
+        // 2nd approach to this, if a val isnt present in HM add it; accordingly
+        // base case would be if not anything is present in the list
+        if ((HM.containsKey(k) == false && HM.get(k) == null) || (HM.containsKey(k) && HM.get(k) == null)) {
+            // add these two statements above since the solution below applies
+            ArrayList<Integer> newVAL = new ArrayList<>(); newVAL.add(valueForV);
+            HM.put(k, newVAL);
+            // next case would be if the k alrleady exists
+            // this is starting out as an else if branch below but lets make sure thats justified and correct
+            // above two cases cover if theres no k nor v, or if v doesnt so other case left guarantees that k exists so else is needed not else if
+        } else  {
+            HM.get(k).add(valueForV);
+        }
+
+        // iteration below
+        for (Map.Entry<String, ArrayList<Integer>> entry: HM.entrySet()) {
+            System.out.println(String.format("KEY: %S, VAL: %s", entry.getKey(), entry.getValue()));
         }
     }
 }
