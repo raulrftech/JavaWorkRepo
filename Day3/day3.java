@@ -6,8 +6,8 @@ import java.util.Objects;
 
 public class day3 {
     public static void main(String[] args) {
-        String[] strings = {"hello", "bye", "hey", "whatsUp", "hello", "bye"}; ArrayList<String> stringsOf = new ArrayList<>(Arrays.asList(strings));
-        OrganizeNames(stringsOf);
+        int[] nums = {1, 2, 3, 4, 5, 6, 7, 10, 22, 11, 14};
+        twoSumHM(nums, 25);
     }
 
     // Loops - Full Concept
@@ -508,6 +508,106 @@ public class day3 {
 
         for (Map.Entry<Integer, ArrayList<String>> entry: organizedHM.entrySet()) {
             System.out.println(String.format("KEY: %S, VAL: %s", entry.getKey(), entry.getValue()));
+        }
+    }
+
+    // Exercise 5 -- Nested HashMap, Two Levels of Keys
+    // Build a HMstring, HMstring, Integer where each val is itself another map
+    // Model something like a small gradebook, outer key is a students name, inner maps keys are subject names, inner maps values are scores
+    // Build a method that takes a student name, subject, and a score and handles four real cases using only manual logic
+    // If student doesnt exist, create both outer entry and a fresh inner map
+    // Not going to keep going with reqs because they should be obvious
+    // HashMap Structure -- HashMap<String, HashMap<String, Integer>>
+    public static void recordStudentGrade(HashMap<String, HashMap<String, Integer>> HM, String studentName, String subject, Integer score) {
+        if (HM.containsKey(studentName) == false) {
+            HashMap<String, Integer> studentCourses = new HashMap<>();
+            studentCourses.put(subject, score);
+            HM.put(studentName, studentCourses);
+        } else {
+            HashMap<String, Integer> studentCourseHM = HM.get(studentName);
+            if (studentCourseHM.containsKey(subject)) {
+                Integer courseScore = studentCourseHM.get(subject);
+                if (courseScore < score) { studentCourseHM.put(subject, score);}
+            } else {
+                studentCourseHM.put(subject, score);
+            }
+        }
+        for (Map.Entry<String, HashMap<String, Integer>> entry: HM.entrySet()) {
+            System.out.println(String.format("KEY: %S, VAL: %s", entry.getKey(), entry.getValue()));
+        }
+    }
+
+    // Exercise 6 -- HashMap with ArrayList Keys...Sort Of - THe actual Trap of Mutable Keys
+    // Attempt to build a HashMap<ArrayList<Intger>, String> using an ArrayList as the key instead of a String or Integer
+    // Put a few entries in, using different small ArrayLists as keys
+    // Then, after inserting, take one of the original ArrayList objects you used as a key and mutate it - call .add directly
+    // Afterwards, try to .get() that same key again, using the same reference you just mutated
+    // Predict in writing prior running whether that .get call will still successfully find the entry or whether it will fail
+    //      reasoning from what you now know about how HashMap uses hash codes to locate entries in buckets then run and confirm whether the prediction was right
+    public static void validEditableKeys(HashMap<ArrayList<Integer>, String> usingHM, ArrayList<Integer> k1, ArrayList<Integer> k2, ArrayList<Integer> k3) {
+        usingHM.put(k1, "Pair 1"); usingHM.put(k2, "Pair 2"); usingHM.put(k3, "Pair3");
+        k1.add(5); System.out.println(usingHM.get(k1));
+        // since each arrayList is its own object, I dont believe that it would cause any runtime errors but considering how HashMap uses hashcodes to locate entries in buckets
+        // if I do edit an ArrayList as a key then that bucket would be different than before since a new value was added so I do think itll cause an error well not an error but print out null
+        // after running, it did infact print null
+    }
+
+    // Exercise 7 -- HashMap Driving Real Decision Logic
+    // Build an inventory system
+    // HashMap<String, Integer> tracks item names to stock counts
+    // Build a method that takes the HM, itemName, and quantityRequested
+    //      if the item doesnt exist in the map at all, reject the order with a clear message
+    //      If it exists but current stock is less than the req quant, reject with a different message including the current stock
+    //      If stock is sufficient, subtract the requested quantity from the map using .put to update and confirm the order succeeded by printing new remanining stock
+    // Populate an inventory with several items and varying stock levels. Test all three outcomes explicitly and print inventorys full state before and after all 3 attempts
+    public static void processOrder(HashMap<String, Integer> inventory, String itemName, int quantityRequested) {
+        for (Map.Entry<String, Integer> entry: inventory.entrySet()) {
+            System.out.println(String.format("Item: %s, Stock: %d", entry.getKey(), entry.getValue()));
+        }
+
+        if (!inventory.containsKey(itemName)) {
+            System.out.println(String.format("%S is not an item that is currently being sold. The list above is our current items and their respective stock.", itemName));
+
+            for (Map.Entry<String, Integer> entry: inventory.entrySet()) {
+            System.out.println(String.format("Item Name: %s, Item Quantity: %d", entry.getKey(), entry.getValue()));
+        }
+        } else if (inventory.containsKey(itemName) && quantityRequested > inventory.get(itemName)) {
+            Integer currentStock = inventory.get(itemName);
+            System.out.println(String.format("There is only %d available of %s. Lower your requested amount.", currentStock, itemName));
+
+            for (Map.Entry<String, Integer> entry: inventory.entrySet()) {
+            System.out.println(String.format("Item Name: %s, Item Quantity: %d", entry.getKey(), entry.getValue()));
+        }
+        } else {
+            inventory.put(itemName, inventory.get(itemName) - quantityRequested);
+            // no other logic needed for updated the item such as doing the .get on its own line. that would work fine but code would be redundant
+            System.out.println(String.format("You successfully bought %d of %s. Come again.", quantityRequested, itemName));
+            System.out.println(String.format("New stock of %s: %d", itemName, inventory.get(itemName)));
+
+            for (Map.Entry<String, Integer> entry: inventory.entrySet()) {
+            System.out.println(String.format("Item Name: %s, Item Quantity: %d", entry.getKey(), entry.getValue()));
+        }
+        }        
+    }
+
+    // Exercise 8 -- HashMap Combined with Two Pointers
+    // Solve the classic two sum problem but using a HashMap based single pass approach not the sorted two pointers approach form exc 4
+    // Given an unsorted int[] and a target sum, walk through the array once using HM<Int, Int> to track values yovue already seen mapped to their index
+    // For each number calculate what its complement would need to be (target - currentNumber) and check if that complement is already a key in the map
+    //      if it is, youve found your pair immediately, using the current index and the stored index of the complement
+    //      if it isnt, add the current number and its index to the map and continue
+    public static void twoSumHM(int[] numbers, int target) {
+        HashMap<Integer, Integer> occurences = new HashMap<>();
+        // each number is stored as the key and its own index as the value
+        // Before adding the current number to the map, check whether the complement is already sitting in the map as a key
+        // 
+
+        for (int i = 0; i < numbers.length; i++) {
+            int currentNumber = numbers[i];
+            int complement = target - currentNumber;
+            if (occurences.containsKey(complement)) {
+                System.out.println(String.format("Found Pair: (%d, %d)", complement, currentNumber));
+            } else { occurences.put(currentNumber, i);}
         }
     }
 }
