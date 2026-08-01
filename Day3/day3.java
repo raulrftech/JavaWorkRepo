@@ -1,13 +1,14 @@
 package Day3;
 import java.util.ArrayList; import java.util.Collections;
 import java.util.Arrays; import java.util.List;
-import java.util.HashMap; import java.util.Map;
-import java.util.Objects;
+import java.util.HashMap; import java.util.HashSet;
+import java.util.Map; import java.util.Set;
 
 public class day3 {
     public static void main(String[] args) {
-        int[] nums = {1, 2, 3, 4, 5, 6, 7, 10, 22, 11, 14};
-        twoSumHM(nums, 25);
+        int[] nums = {1, 1, 3, 4, 5, 6, 7, 10, 22, 11, 14};
+        int[] nums2 = {100, 200, 333, 14, 12, 11, 9, 6, 10, 21, 45, 14};
+        findIntersection(nums, nums2);
     }
 
     // Loops - Full Concept
@@ -598,10 +599,11 @@ public class day3 {
     //      if it isnt, add the current number and its index to the map and continue
     public static void twoSumHM(int[] numbers, int target) {
         HashMap<Integer, Integer> occurences = new HashMap<>();
-        // each number is stored as the key and its own index as the value
-        // Before adding the current number to the map, check whether the complement is already sitting in the map as a key
-        // 
-
+        // what i got from the clarification that lead to this simple if else statement
+        // if the complement was already account for, example target= 11, currentNumber = 2, complement is therefore 9
+        // so if 9 is there it prints out that complement and the current number which wouldve been 2. Valid pair
+        // I have sysoutprntln to print out pairs as they come, theyre not stored dynamically then formatted for sysoutprntln
+        // the else block adds the current number and its index
         for (int i = 0; i < numbers.length; i++) {
             int currentNumber = numbers[i];
             int complement = target - currentNumber;
@@ -609,5 +611,80 @@ public class day3 {
                 System.out.println(String.format("Found Pair: (%d, %d)", complement, currentNumber));
             } else { occurences.put(currentNumber, i);}
         }
+    }
+
+
+    // Set<T> - the interface and where it actually matters beyond no duplicates
+    // Interface itself declared .add, .remove, .contains, .size, .isEmpty - same shape as List minus anything index-based
+    //      Since a Set has no positions, only memeber ship
+    // The real distinguishing behavior: .add on a vlaue already present returns false and does nothing, rather than throwing or duplicating
+    //      worth resting that return value directly rather than assuming
+
+    // Exercise 1 - St<T> as a Parameter Type, .add()'s Return Value Actually Used
+    // Build a method typed to accept Set<Integer>(inferface)
+    // Inside of it, attmept to .add a series of values, some of which are genuine dupes
+    // Insted of ignoring the boolean .add() returns, capture and use it
+    //      print whether each individual add attempt actually succeeeded or was silently rejected as a duplicate
+    // Call this method passing in a genuine HashSet<Integer>
+    // Prove the actual no dupes guarantee at the data level, not just the return value, after all additions print sets final size and confirm it accurately reflects only unique vals
+    public static void addToSet(Set<Integer> setOf, int[] intsOf) {
+        int counter = 0;
+        for (int number: intsOf) {
+            // since there is no return or throwing done with an .add on a Set, Ill use if else statement and a counter to confirm that it has added all of the elements
+            if (setOf.add(number)) {
+                System.out.println(String.format("Added %d to the set", number));
+                counter += 1;
+            }
+        }
+        if ( counter == intsOf.length) {
+            System.out.println("All the elements were added to the array");
+        } else {
+            double percentage = ((double) counter / (double) intsOf.length) * 100;
+            System.out.println(String.format("Only %f percent (%d/%d) were added to the set", percentage, counter, intsOf.length));
+        }
+    }
+
+    // Exercise 2 - Set for Genuine Deduplication Across Tow Sources, Then Intersection
+    // Build a mthod that takes two separate int[], each of which may contain internal duplicates of its own
+    // Using two separate Set<Integer> ( one for each array ), deduplicate each array independently first
+    // Then without using any built in intersection method, manually, using a loop and .contains() - find every value that exists in both deduplicated sets
+    //      building a third Set<Integer> containing only the genuine overlap
+    // Print all three sets clearly labeled, first arrays unique vals, same for 2nd, and the intersection Set
+    // Test with two arrays specifically designed so some vals are unique to each array, some overlap and at least one array has inteneral duplicate that need deduplicating
+    public static void findIntersection(int[] arr1, int[] arr2) {
+        // init holder sets
+        Set<Integer> set1 = new HashSet<>(); Set<Integer> set2 = new HashSet<>(); Set<Integer> intersectionValues = new HashSet<>();
+
+        // deduplication to both arrs
+        for (int number: arr1) {
+            // no need for an if else statement
+            set1.add(number);
+        }
+        for (int number: arr2) {
+            set2.add(number);
+        }
+
+        // find intersections
+        //for (int firstNumber: set1) {
+          //  for (int secondNumber: set2) {
+              //  if (secondNumber == firstNumber) { intersectionValues.add(secondNumber); } else {
+                //    System.out.println(String.format("%d is unique to set2", secondNumber));
+            //    }
+          //  }
+
+            // this for loop compares each currentNumber to each currentNumber of first set
+            // this may not be opportune since its n^2 time and will run a total of set1.size() * set2.size() times
+            // below will be using contains
+        //}
+
+        // find intersections - improved with .contains()
+        // ill compare set1 v set2
+        for (int number: set1) {
+            if (set2.contains(number)) { intersectionValues.add(number); } else {
+                System.out.println(String.format("%d is unique to set 1", number));
+            }
+        }
+        System.out.println(set1); System.out.println(set2.toString()); System.out.println(intersectionValues.toString());
+        // the reason why I did toString on only one is to see the what differs in the string format it returns
     }
 }
