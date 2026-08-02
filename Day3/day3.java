@@ -6,9 +6,10 @@ import java.util.Map; import java.util.Set;
 
 public class day3 {
     public static void main(String[] args) {
-        int[] nums = {1, 1, 3, 4, 5, 6, 7, 10, 22, 11, 14};
-        int[] nums2 = {100, 200, 333, 14, 12, 11, 9, 6, 10, 21, 45, 14};
-        findIntersection(nums, nums2);
+        Map<String, Integer> map = new HashMap<>();
+        map.put("K1", 1); map.put("K2", 2); map.put("K3", 3); map.put("K4", 4); map.put("K5", 5);
+        map.put("K6", 6); map.put("K7", 7); map.put("K8", 8); map.put("K9", 9); map.put("K10", 10);
+        reduceMap(map);
     }
 
     // Loops - Full Concept
@@ -686,5 +687,63 @@ public class day3 {
         }
         System.out.println(set1); System.out.println(set2.toString()); System.out.println(intersectionValues.toString());
         // the reason why I did toString on only one is to see the what differs in the string format it returns
+    }
+
+    // Exercise 3 - Set for Detecting Duplicates Without Removing Them
+    // This exercise uses Set purely as a detection tool, while the orginal data ( with dupes intact) stays untouched
+    // Build a method that takes an int[] which may contains dupes and returns two things:
+    //      whether the array contains any duplicate at all ( a boolean ) and specifically which values are duped (not just yes or no)
+    //          the actual repeated vals themselves, each listed only once even if a value contains three or more times in the input
+    // Do this using two separate Set<Integer> working together in single pass through the array
+    //      think through what role each one needs to play, since one Set alone can only tell you "have I seen this before"
+    // Need to accumulate a separate answer (which specific answer are dupes) without contaminating the "have I seen it" tracking
+    // Test with an array where one value appears exactly twicee, another appears three times, and several vals appear only once
+    //      confirming the dupe value output correctly lists each repeated value exactly once, regardless of how many times it actually repeated
+    public static void searchDupes(int[] numbers) {
+        // this is rather simple, we iterate the array passed in as the param and add each val to a set since its .add method adds whether it is unique to the set and not a dupe
+        // so one set contains the unique vals (no dupes), the other contains the vals which were duped
+        Set<Integer> uniqueSet = new HashSet<>(); Set<Integer> dupeContainer = new HashSet<>();
+        //for (int val: numbers) {
+          //  if (uniqueSet.contains(val)) {
+                // this is already a duplicate so we append it to the dupeContainer
+                // but since sets dont accept duplicates such as in the arr { 1, 2, 2, 3}
+                // trying to add index 2 to dupeContainer will fail so we check like aboce
+            //    if (!dupeContainer.contains(val)) { dupeContainer.add(val); }
+           // } else { uniqueSet.add(val); } // im going to reformat this so i dont need a branched if else
+      //  }
+
+        for (int val: numbers) {
+            if (!uniqueSet.add(val)) { dupeContainer.add(val); // adds to dupeContainer to see if its not been accounted for 
+            }
+        }
+        System.out.println(String.format("Original: %s%nUnique: %s%nDuplicates: %s", Arrays.toString(numbers), uniqueSet, dupeContainer));
+    }
+
+    // Moving onto Map with .forEach() introduced
+    // .forEach() - a method based alternative to the enhanced for loop, taking a lambda
+    // numbers.forEach(n -> Sysoutprntln(n))
+    // Functionally similar to for (int n: numbers) but expressed as a method call on the collection itself, passing a lamda describing what too do with each ele
+    // Works on any Collection and notably Map has its own two arg version
+    //      someMap.forEach((key, value) Sysoutprntln(key + "" + v))
+    //      This is genuinely useful for Map specifically, since it gives you both the key and value directly as two separate lambda params, without needing Map.Entry or .getKey()
+    //          a more concise alternative to the entrySet() loop
+
+    // Exercise 1 -- Map<K, V> Interface, .forEach() as the Primary Iteration Method
+    // Rebuild something conceptually similar to the first HashMap exc ( populate a map, check keys, iterate)
+    // But this time, the methods parameter must be typed Map<String, Integer> and all iteration must use .forEach(), not entrySet() not any manual for loop at all
+    // Populate a map representing something of your choosing then use .forEach() with a two parameter lambda to print every entry
+    //      and separately use .forEach() again to compute something real across all entries - like a running total
+    //          proving you can accumulate state acorss a .forEach call, not just print inside of it
+    public static void reduceMap(Map<String, Integer> map) {
+        // output map with .forEach()
+        map.forEach((key, value) -> System.out.println(String.format("(KEY: %s, VAL: %d", key, value)));
+
+        // since a val used in a .forEach has to be final, well use a single digit array
+        int[] totalSum = {0};
+        // reduce map
+        map.forEach((string, integer) -> {
+            totalSum[0] += integer;
+        });
+        System.out.println(String.format("Map values summed: %d", totalSum[0]));
     }
 }
