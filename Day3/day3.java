@@ -2,14 +2,13 @@ package Day3;
 import java.util.ArrayList; import java.util.Collections;
 import java.util.Arrays; import java.util.List;
 import java.util.HashMap; import java.util.HashSet;
-import java.util.Map; import java.util.Set;
+import java.util.Map; import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        Map<String, Integer> map = new HashMap<>();
-        map.put("K1", 1); map.put("K2", 2); map.put("K3", 3); map.put("K4", 4); map.put("K5", 5);
-        map.put("K6", 6); map.put("K7", 7); map.put("K8", 8); map.put("K9", 9); map.put("K10", 10);
-        reduceMap(map);
+        Map<String, Integer> players = new HashMap<>();
+        players.put("Raul", 0); players.put("Emmanuel", 2); players.put("Alex", 1);
+        strikeRecord("Raul", players); strikeRecord("Emmanuel", players); strikeRecord("Alex", players);
     }
 
     // Loops - Full Concept
@@ -719,6 +718,7 @@ public class day3 {
         System.out.println(String.format("Original: %s%nUnique: %s%nDuplicates: %s", Arrays.toString(numbers), uniqueSet, dupeContainer));
     }
 
+    
     // Moving onto Map with .forEach() introduced
     // .forEach() - a method based alternative to the enhanced for loop, taking a lambda
     // numbers.forEach(n -> Sysoutprntln(n))
@@ -745,5 +745,71 @@ public class day3 {
             totalSum[0] += integer;
         });
         System.out.println(String.format("Map values summed: %d", totalSum[0]));
+    }
+
+    // TreeMap<K,V> - A Map implementation backed by a red-black tree, not a hash table
+    // HashMap stores entries by computing each key's hash code and placing it into a bucket - fast (O(1)) average fro get/put but with no ordering guarantee
+    // TreeMap instead stores entries in a self-balancing binary search tree structure internally
+    //      Organized entirely by key comparison (using iether the key's natural ordering - like alphabetical for String, numeric for Integer - or a custom comparator you can supply)
+    //      Every time you insert, the tree reorganizes itself to stay balanced, keeping every operation efficient even as it grows
+    // What this means for performance, concretely
+    //      get/put remove on a TreeMap run in O(log(n)) time - slower tahn HashMaps O(1) avg case because
+    //          navigating a tree requires comparing against multiple nodes rather than jumping straight to a hash bucket
+    //      Youre paying a performance cost specifically to gain guaranteed sorted iteration order, soemthing HashMap cannot offer at any cost since it doesnt track order at all
+    // Memory-Wise
+    //      TreeMap requires more overhed per entry than Hashmap, since each internal tree node needs to store references to its parent and child nodes to maintain the tree strcucture
+    // What it holds and how its accessed
+    //      identical external API to HashMap
+    //          .put, .get, .containsKey, .forEach, .entrySet
+    //      Only observable difference from the outside is iteration order, which is always sorted by key, every single time
+    // Additional methods TreeMap offers that HashMap doesnt, since sorted order enables them
+    //      .firstKey, .lastKey, .lowerKey(k) (next key strictly greater/less than a given one), .headMap(k), .tailMap(k) (sub maps of everything before/after a given key)
+
+
+    // Exercise 2 -- Map<K, V> Interface, Two Implementations Compared via .forEach
+    // Build a method typed to accept Map<String, Integer>
+    // Using .forEach for all iteration as established in the exercise above
+    // Call it twixe with S, I and TreeMap S I
+    //      TreeMap automatically sorts entries by key during iteration unlike HMs unpredictable bucket order
+    // Populate both with the same five k-v pairs in the same insertion order
+    // Print both .forEach outputs cleary labeled and compare directly
+    //      confirm TreeMaps iteration comes back in sorted key order regardless of insertion order, while Hms stays in its usual hash-bucket order
+    public static void compareMaps(Map<String, Integer> map) {
+        map.forEach((string, integer) -> System.out.println(String.format("KEY: %s, VAL: %d", string, integer)));
+    }
+
+    // Exercise 3 - Map Method Chaining with .merge()
+    // .merge(k, v, remappingFunction) - a single method that replaces the manual check if key exists the either combine with existing value or insert fresh
+    // It takes a key, value, lambda describing how to combine the new value with an existing one, if there is one
+    // counts.merge("apple", 1, (oldValue, newValue) -> oldValue + newValue)
+    //      If apple isnt in the map yet, this simply inserts 1 under that key, the lambda isnt called
+    //      If apple is present, the lambda runs, receiving the existing value and the new value you passed in, and whatever the lambda returns becomes the new stored value
+    // Storage/performance
+    //      .merge() doesnt change anything about how the map itself stores data internally - purely a convenience method wrapping the same underlying get/put ops
+    //          meaning theres no performance cost or benefit versus doing it yourself with an if/else, only a difference in code length and readability
+    // Build a wor-frequency counter, implemented using only .merge, no manual if/else/containsKey()
+    // Test against an array with genuine repeats and confirm the output matches what the original manual version would have produces
+    public static void mergeFrequency(String[] strings) {
+        TreeMap<String, Integer> sortedOccurences = new TreeMap<>();
+        for (String string: strings) {
+            sortedOccurences.merge(string, 1, (currentCount, updatedCount) -> currentCount + updatedCount);
+        }
+        System.out.println(sortedOccurences);
+    }
+
+    // Exercise 4 - .merge with a Remapping Function That Can Remove Entries
+    // Something worth knowing - if the lambda you provide returns null, .merge doesnt just store null as the value - it removes the key entirely from the map
+    // Build a method modeling a small "strikes" system 
+    // Map<String, Integer> tracking how many strikes each person has
+    // Each time a person gets a new strike call .merge to increment their count, same as the freq counter
+    // But this time the remapping lambda needs real condition logic inside it
+    //      if incrementing would push someones count to 3 or more, the lambda should return null instead of the incremented number
+    // Test with several people, some accumulating enough strikes to hit the removal threshold, some staying under it
+    // Print the map after every single strike is recorded so you can see specific people disappear from the map exactly when they cross the threshold
+    public static void strikeRecord(String name,Map<String, Integer> players) {
+        players.merge(name, 1, (oldValue, newValue) -> {
+                if (oldValue + newValue <=2) { return oldValue + newValue;} else { return null;}
+        });
+        System.out.println(players);
     }
 }
