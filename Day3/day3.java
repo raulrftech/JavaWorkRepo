@@ -7,10 +7,7 @@ import java.util.Map; import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        LinkedHashMap<String, Integer> lhm1 = new LinkedHashMap<>();
-        lhm1.put("Firstly", 0); lhm1.put("Secondly", 1); lhm1.put("Thirdly", 2); lhm1.put("Fourthly", 3); lhm1.put("Fifthly", 4);
-        recentlyViewed(lhm1, "Secondly", 3); recentlyViewed(lhm1, "Fourthly", 3); recentlyViewed(lhm1, "JustAdded", 3);
-        recentlyViewed(lhm1, "Fifthly", 4);
+        
     }
 
     // Loops - Full Concept
@@ -930,5 +927,110 @@ public class day3 {
         //  Logic updated above
     }
 
+    // Exercise 2 - Access-Order Mode, Built and Proven Directly
+    // This exercise requires actually constructing a LinkedHashMap in access-order mode and proving that reading an existing entry moves it to the end of iteration order
+    // LinkedHashMap<String, Integer> lhm = new LinkedHashMap(16, 0.75f, true);
+    // The three constructor arguments:
+    //      16(reasonable default): initial capacity
+    //      0.75f: load factor, .75 f is standard default - the threshold at which the internal structure resizes
+    //          This ogverns when a hash-based strcuture resizes itself internally
+    //          Every HashMap/LHM starts with some number of internal "buckets" (the initial capacity - 16 by default)
+    //          As you .put more entries in, the map fills up those buckets.
+    //          Load factor is the threshold, expressed as a fraction, at which the map decides its getting too full and needs to grow
+    //          0.75f means once the map is 75% full relative to its current capacity, it automatically resizes -
+    //              doubling its internal bucket count and rehashes every existing entry into the new larger strcutor
+    //          Why 0.75 specifically and why its a tradeoff and not an arbitrary default
+    //              a lower load factor (resizing sooner, when less full) means more wasted empty bucket space at any given time, but fewer hash collisions (two different keys landing in the same bucket)
+    //                  keeping lookups closer to true O(1)
+    //              A higher load factor (waiting until nearly full before resizing) means better memroy efficiency, less wasted space but more collisions
+    //              Since buckets get crowded before the resize kicks in, which can degrade get/put performance closer to O(n) in the worst case if many keys collide into the same bucket
+    //          Resizing itself has a real, if usually invisible, cost:
+    //              Every time a resize happens, every single existing entry has to be rehashed and redistributed into the new bucket layout -
+    //                  an O(n) operation that happens automatically and infrequently but is worth knowing about since its part of why HM/LHM are described as O(1) avg case
+    //              An insertion that triggers a resize is momentarily more expensive than a typical one
+    // Build a small program: populate this access-order map with 5 entries. Print full iteration order. Then call .get on one of the middle entries
+    // Print iteration order again and confirm directly that the entry you just read has moved to the very end while everything else's relative order stayed the same
+    // This exercise was done in the main func
 
+    // Exercise 3 - LRU Cache, Built for Real
+    // Build a class (not just a static method this time - a real, small class) implementing a basic LRU cache: a fixed maximum size, using an access-order LHM internally as its storage
+    // When a new item is added and the cache is already at capacity, the least recently used entry - determine by access-order mode, meaning whichever entry hasnt been read or written in the longest time should be evicted
+    // using the if vs while lesson from Exc 1 correctly applied (should only ever need to evict one entry per insertion, if capacity is enforced correctly on every single add - reason thoruh why thats true here, unlike Exercise 1 where the map started over limit)
+    // Give the class two public methods: one to record a "get" (which should count as a use, moving that entry to the end via access order mode automatically) and one to record a "put"
+    // Test it with a small capacity (like 3), inserting more items than the capacity allows, interspersing some .get() calls on existing entries between insertions to prove that reading an item protects it from eviction just as much as writing one
+    // then insert enough new items to force eviction and confirm specifically that the item you deliberately kept fresh via .get survives while an item you never touched again gets evicted first, exactly as true LRU behavior demands
+    public static class LRUExample {
+        String name; LinkedHashMap<String, Integer> lhm; int maxSize;
+        public LRUExample(String name, LinkedHashMap<String, Integer> lhm, int maxSize) {
+            this.name = name; this.lhm = lhm; this.maxSize = maxSize;
+        }
+        public final Integer getVal(String keyName) {
+            return lhm.get(keyName);
+        }
+        public final void putPair(String keyName, Integer value) {
+            lhm.put(keyName, value);
+            if (lhm.size() > maxSize) { lhm.remove(lhm.entrySet().iterator().next().getKey());}
+        }
+        public final void returnLHM() { 
+            lhm.forEach((keyName, integerValue) -> {
+                System.out.println(String.format("Key: %s, Value: %d", keyName, integerValue));
+                // again eviction happens whenever a pair is read or written to so the "return value" after 5 insertions should be 3-5
+            });
+        }
+    }
+
+    // Exercise 4 -- Two LRU Caches, One Feeding Evictions Into the Other
+    // This forces the cache to interact with something outside itself as a side effect of eviction, rather than evicted entries simply disappearing - a real patter (write behind / overflow caching) worth building correctly
+    // Build a new version of the LRU Cache above so that whenever an entry is evicted, instead of just being removed and discarded, it gets recorded into a second, separate strcuture,
+    //      a plain HM<String, Integer> acting as cold storage for everything thats ever fallen out of the hot cache
+    //      This seocnd map should never evict anything itself - just accumulates every evicted key-value pair permanently
+    // Build a method, String checkAnywhere(String key) that searches both structures - checks hot LRU cache first and if found, this counts as a genuine use menaing it should trigger the same access order protections as a normal read
+    //      if not found there, checks cold storage map
+    // Return astring indicating exactly where the key was found hot cache vs cold storage or that it doesnt exist in either
+    // Test with enough insertions to force several evictions into cold storage then call checkAnywhere on a key you know has been evicted (confirming its found in cold storage, not hot cache)
+    //      and on a key you know is still in the hot cach (confirming its found there instead and that checking it via checkAnywhere actually protects it from future eviction same as a direct get would)
+    public static class LRUExample2 {
+        String name; LinkedHashMap<String, Integer> lhm; int maxSize; TreeMap<String, Integer> evictionContainer;
+
+        public LRUExample2(String name, LinkedHashMap<String, Integer> lhm, int maxSize, TreeMap<String, Integer> evictionContainer) {
+            this.name = name; this.lhm = lhm; this.maxSize = maxSize; this.evictionContainer = evictionContainer;
+        }
+
+        public final void putPair(String keyName, Integer value) {
+            lhm.put(keyName, value);
+            if (lhm.size() > maxSize) {
+                Map.Entry<String, Integer> evictingPair = lhm.entrySet().iterator().next();
+                evictionContainer.put(evictingPair.getKey(), evictingPair.getValue());
+                lhm.remove(evictingPair.getKey());
+            }
+        }
+
+        public String checkAnywhere(String keyName) {
+            Boolean hot = false; Boolean notAnywhere = false;
+            if (lhm.get(keyName) != null ) { hot = true; } else if (evictionContainer.get(keyName) != null ) {} else { notAnywhere = true; }
+            String returnValue = notAnywhere ? String.format("%s was not found anywhere", keyName) : hot ? String.format("%s was found in the LRU", keyName) : String.format("%s was found in the eviction container", keyName);
+            return returnValue;
+        }
+
+        public final void returnLHM() { 
+            lhm.forEach((keyName, integerValue) -> {
+                System.out.println(String.format("Key: %s, Value: %d", keyName, integerValue));
+                // again eviction happens whenever a pair is read or written to so the "return value" after 5 insertions should be 3-5
+            });
+        }
+    }
+
+    // Exercise 5 -- Two Independent LRU Caches, Cross-Cache Promotion
+    // Might be the hardest one in this stretch since it forces reasoning about two separate access-order structures interacting with each other, not just one cache plus a passive cold storage sink
+    // Build a two tier cache system: a small hot LRU cache (maxSize 2) and large warm lru cache (maxsize 4) both using access-order LHMs internally
+    //      both genuinely LRU (evicting their own oldest-unused entry when they exceed their own limit)
+    // When something is evicted from the hot cache, instead of being discarded or dumped into a passive map, it should be inserted into the warm cache
+    //      meaning the warm cahce's own LRU eviction logic might itself trigger as a consequence, potentially evicting somethign from the warm cache too (which, for this exc, can simply be discarded - no third tier needed)
+    // Build one method, access(String key, Integer value) that always writes to the hot cache first.
+    // Build a second method, promote(String key) that specifically searches the warm cache for a key and if found mvoes it back into the hot cache, removing it from war, inserting it into hot (which may itself trigger a hot cache eviction, cascading back into warm again)
+    // Test a sequenece where an item gets written to hot, evicted into warm (by writing enough new items to hot)
+    // Then explicitly promoted back into hot via promote and confirm its genuinely back in the hot cache afterward while also confirming that whatever the promotion evicted from hot correclty lands in warm as a result
+    public static class LRUExample3 {
+        
+    } 
 }
