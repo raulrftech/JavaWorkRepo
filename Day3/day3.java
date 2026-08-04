@@ -7,7 +7,13 @@ import java.util.Map; import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        
+        LinkedHashMap<String, Integer> hotLRU = new LinkedHashMap<>(16, 0.75f, true);
+        LinkedHashMap<String, Integer> warmLRU = new LinkedHashMap<>(16, 0.75f, true);
+        LRUExample3 lruClass = new LRUExample3(hotLRU, 2, warmLRU, 4);
+        lruClass.accessHOT("Entry 1", 1); lruClass.accessHOT("Entry 2", 2);
+        lruClass.accessHOT("Entry 3", 3); System.out.println(lruClass.promote("Entry 1")); lruClass.accessHOT("Entry 4", 4);
+        lruClass.returnLHM();
+        // 1 gets add reg at first then 2 same then 3 causes 1 to go to warm then promote 1 back to hot then 2 goes to warm due to LRU then adding 4 to hot doesnt cause eviction
     }
 
     // Loops - Full Concept
@@ -1031,6 +1037,45 @@ public class day3 {
     // Test a sequenece where an item gets written to hot, evicted into warm (by writing enough new items to hot)
     // Then explicitly promoted back into hot via promote and confirm its genuinely back in the hot cache afterward while also confirming that whatever the promotion evicted from hot correclty lands in warm as a result
     public static class LRUExample3 {
-        
+        LinkedHashMap<String, Integer> hotLRU; int hotLRU_MAXSIZE; LinkedHashMap<String, Integer> warmLRU; int warmLRU_MAXSIZE;
+
+        public LRUExample3(LinkedHashMap<String, Integer> hotLRU, int hotLRU_MAXSIZE, LinkedHashMap<String, Integer> warmLRU, int warmLRU_MAXSIZE) {
+            this.hotLRU = hotLRU; this.hotLRU_MAXSIZE = hotLRU_MAXSIZE; this.warmLRU = warmLRU; this.warmLRU_MAXSIZE = warmLRU_MAXSIZE;
+        }
+
+        public final void accessHOT(String keyName, Integer value) {
+            hotLRU.put(keyName, value); System.out.println(String.format("New Size of Hot LRU is %d", hotLRU.size()));
+            if (hotLRU.size() > hotLRU_MAXSIZE) {
+                Map.Entry<String, Integer> removingPair = hotLRU.entrySet().iterator().next();
+                accessWARM(removingPair.getKey(), removingPair.getValue());
+                hotLRU.remove(removingPair.getKey());
+                System.out.println("new size of hot lru is " + hotLRU.size() + " removed " + removingPair.getKey());
+            }
+        }
+        public final void accessWARM(String keyName, Integer value) {
+            warmLRU.put(keyName, value); System.out.println("A pair was added to the warm lru: " + keyName);
+            if (warmLRU.size() > warmLRU_MAXSIZE) {
+                warmLRU.remove(warmLRU.entrySet().iterator().next().getKey());
+                System.out.println(String.format("%s was removed completely", keyName));
+            }
+        }
+        public final Boolean promote(String keyName) {
+            if (warmLRU.get(keyName) != null) {
+                accessHOT(keyName, warmLRU.get(keyName));
+                warmLRU.remove(keyName); return true;
+            } else { System.out.println(hotLRU.size()); return false; }
+        }
+
+        public final void returnLHM() { 
+            hotLRU.forEach((keyName, integerValue) -> {
+                System.out.println(String.format("Key: %s, Value: %d", keyName, integerValue));
+                // again eviction happens whenever a pair is read or written to so the "return value" after 5 insertions should be 3-5
+            });
+            System.out.println("-------");
+            warmLRU.forEach((keyName, integerValue) -> {
+                System.out.println(String.format("Key: %s, Value: %d", keyName, integerValue));
+                // again eviction happens whenever a pair is read or written to so the "return value" after 5 insertions should be 3-5
+            });
+        }
     } 
 }
