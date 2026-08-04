@@ -2,13 +2,15 @@ package Day3;
 import java.util.ArrayList; import java.util.Collections;
 import java.util.Arrays; import java.util.List;
 import java.util.HashMap; import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map; import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        Map<String, Integer> players = new HashMap<>();
-        players.put("Raul", 0); players.put("Emmanuel", 2); players.put("Alex", 1);
-        strikeRecord("Raul", players); strikeRecord("Emmanuel", players); strikeRecord("Alex", players);
+        LinkedHashMap<String, Integer> lhm1 = new LinkedHashMap<>();
+        lhm1.put("Firstly", 0); lhm1.put("Secondly", 1); lhm1.put("Thirdly", 2); lhm1.put("Fourthly", 3); lhm1.put("Fifthly", 4);
+        recentlyViewed(lhm1, "Secondly", 3); recentlyViewed(lhm1, "Fourthly", 3); recentlyViewed(lhm1, "JustAdded", 3);
+        recentlyViewed(lhm1, "Fifthly", 4);
     }
 
     // Loops - Full Concept
@@ -765,7 +767,6 @@ public class day3 {
     // Additional methods TreeMap offers that HashMap doesnt, since sorted order enables them
     //      .firstKey, .lastKey, .lowerKey(k) (next key strictly greater/less than a given one), .headMap(k), .tailMap(k) (sub maps of everything before/after a given key)
 
-
     // Exercise 2 -- Map<K, V> Interface, Two Implementations Compared via .forEach
     // Build a method typed to accept Map<String, Integer>
     // Using .forEach for all iteration as established in the exercise above
@@ -812,4 +813,122 @@ public class day3 {
         });
         System.out.println(players);
     }
+
+    // Exercise 5 - .compute(), the More General Sibling of .merge()
+    // .comput(key, remappingFunction) - similar spirit to .merge but more general and worth understanding how it differs
+    // .merge's lambda receives two vals (old value and new value thats passed in) and only runs if the key already exists (otherwise it just inserts your new value directly, lambda skipped)
+    // .compute's lambda instead receives the key itself and the current value (which will be bull if the key doesnt exist yet) 
+    //      meaning .compute's lambda always runs, every time, whether the key existed before or not
+    //          and its the lambda's own job to handle the "value might be null" case internally, rather than .merge handling that automatically
+    // map.compute(key, (k, currentValue)) -> { if (currentValue == null) { return 1;} else { return currentValue + 1;} }
+    // This produces the same result as .merge(key, 1, (old, new)) for a simple increment case
+    //      but .compute gives you access to the key inside the lambda too (useful if the logic needs to reference the keys value, not just the count)
+    //          and forces you to explicitly handle the null case
+    // Rebuild the strikes system from Exc 4 using .compute
+    // Explicitly handle the player being null inside the lambda
+    // Test with at least one player who isnt already in the map when their first strike is recorded
+    public static void strikeRecord_Compute(String keyPlayerName, Map<String, Integer> players) {
+        // logic to retain -- if key doesnt exist then that pair doesnt exist
+
+                // since compute supplies the key itself and the current value keeping mind the "logic to retain" above
+                // we guarantee its existence since were using a forEach, so were iterating over what currently exists
+                // given the key and current value we can do the logic for removal or adding to strike score
+                // add to score
+                
+                // I honestly have to think about these lambdas as a closure in Swift, Ive confusen myself in this compute body several times so far
+                // what Ive began to understand that its a function thats being ran and returns the new value associated with the current key being k
+                // justified by the documentation given by hovering over the compute keyword
+                // now im doing something right because Ive ran into the ConcurrentModificationException error again meaning that we cannot use a for each
+                // therefore we can use a name as a key as a param being passed in and just use compute, no forEach or get needed
+        players.compute(keyPlayerName, (k, v) -> {
+            if (v == null) { return 1;} // this adds this pair (keyPlayerName, 1)
+            Integer newScore = v + 1;
+            if (newScore == 3) { return null;} else { return newScore; }
+        });
+        // now this version works just like using the merge did but not to the extent we need it too, since we pass in a keyPlayerName to look up the key need to make sure its not null
+        // updated version is above 
+        System.out.println(players);
+    }
+
+
+    // LinkedHashMap<K, V> -- Full Explanation Before Any Exercises
+    // HashMap stores by hash bucket, no order guarantee
+    // TreeMap stores in a tree, guaranteeing sorted-by-key order.
+    // LinkedHashmap takes a third approach
+    //      internally, it still uses the same hash-bucket mechanism as HashMap for fast O(1) lookups
+    //      but, it additionally maintains a doubly-linked list threading thorugh every entry in the order they were inserted, purely for iteration purps
+    // When you iterate a LinkedHashMap, it walks that separate linked list, not the hash buckets directly, which is why iteration order matches insertion order exactly, every time, guaranteed
+    // Performance Wise - 
+    //      get/put remain O(1) avg case, identical to HashMap since underlying hash mechanism is unchanged
+    //      The cost is purely in memory overhead - every single entry now needs two extra pointer refs (previous/next in the linked list)
+    //          beyond what a plain HashMap entry needs
+    //      And theres a small constant-time cost to maintaining that linked list on every insertion/removal
+    //          TreeMap, by comparison, traded get/put speed itself (O(log n)) for its ordering guarantee; LHM trades only memory and a small constant overhead, keeping get/put just as fast as HM
+    // One additional capability worth knowing exists:
+    //      LHM has a special constructor mode that can maintain access order instead of insertion order
+    //          meaning the most recently read or written entry moves to the end of the iteration order every time you touch it, rather than styaing fixed at its orig pos
+    //      This specific mode is the actual mechanism real LRU (Least Recently Used) caches are built on - directly relevant to DSA since "implement an LRU cache" is one of the most commonly asked interview problems
+    //          LHMs access order mode does most of the heavy lifting for you
+    // Every method, What It Does and Whats Happening Underneath
+    //      Since LHM extends HashMap ( a real class inheritance relationship, not just a similar looking sibling) it inherits every single method HM has
+    //          .put, .get, .remove, .containsKey, .containsValue, .getOrDefault, .merge, .compute, .forEach, .entrySet, .keySet, .values, .size, .isEmpty, .clear
+    //              The only difference is how iteration-related ones (.entrySet, .keySetm .values, .forEach) walk through the data, using the internal linked list instead of raw bucket order
+    // Whats Genuinely New or Different, not just inherited
+    //      There is no .firstKey or .lastKey - unlike TreeMap, LHM doesnt expose direct "give me the first or last entry" methods
+    //      Since it maintains insertion order via the internal linked list but doesnt expose that list directly, the standard way to get the first entry is calling .entrySet().iterator().next()
+    //          grabbing an iterator over the entry set (which will always start from the first inserted entry, guaranteed) and taking just the first element it produces without looping through the rest
+    // The access-order constructor
+    //      new LinkedHashMap<>(initialCapacity, loadFactor, true) - the boolean arg switches the map from insertion order mode (the default) to access-order mode
+    //      In this mode, every .get or .put on an existing key moves that entry to the end of the iteration order, as if it were just re-inserted
+    //      This is what makes LHM the standard building block for LRU caches - combined with overriding a protected method called removeEldestEntry() (which youd override in a subclass to automatically evict the oldest entry once the map exceeds some size)
+    //          it gives you a working "least recently used" eviction policy, almost for free
+
+    // Intro Exercise - LHM Proving Insertion Order Directly, Against a Non-Trivial Key Set
+    // Build a HashMap<String, Integer>  and a LHM same type
+    // Insert the same five keys in the same deliberately non alpha order into both and print both using .forEach
+    // Confirm directly; does LHMs output match your exact insertion order every single time while HMs output is unpredictable
+    public static void compareOrder(Map<String, Integer> map) { map.forEach((k, v) -> System.out.println(String.format("KEY: %s, Val: %d", k, v))); }
+
+    // Exercise 1 - LHM Driving Real Logic
+    // Build a recently viewed items tracker - LHM<String, Integer> where key is an itemName and value is a view count
+    // Build a method that records a view; if the item hasnt been seen before, add it with a count of 1; if it has, increment its count
+    // Heres the actual req forcing real logic -
+    //      after every single view is recorded, print the first key in the map (the oldest item still tracked, by insertion order) using an actual method call, not just eyeballing printed output
+    // LHM doesnt have .firstKey the way TreeMap does so figure out how to correctly retrieve the first entry
+    public static void recentlyViewed(LinkedHashMap<String, Integer> lhm, String key_ItemName, int maxSize) {
+        // since were working with insertion order, the LHM will remain with its default constructor
+        // so were basically adding to the value of the pair given by the key_ItemName
+        // simple way to do this would be getOrDefault since it appends to the map if it doesnt exist
+        // tried with gOD but it doesnt return an Integer value, sicne it doenst exist we can just append with .put
+        //      now this makes me run into ConcurrentModificationException whenever adding the pair that hasnt been added
+
+        // "Modifying a map" during iteration specifically means structural changes
+        //      adding a new key, removing a key - anything that changes the maps size or entry set membership
+        // Simply updating an existing keys value like .merge incrementing a count for a key thats already present does not count as structural modification since the entry itself still exists, only its value changed
+        // The compute didnt work since .put does exactly that, it modifies structure
+        // .merge doesnt have this problem because its self contained - you never call .put yorself inside .merge's lambda
+        //      .merge handles the actual insert or update internally based on what your lambda returns, not based on you separately calling another mutating method
+        //      Real Distinction: .merge's lambda only computes a value and returns it
+        // The fix for compute: never call .put from inside a compute/merge lambda - just return the value you want stored, and let the method itself handle the actual insertion
+        lhm.merge(key_ItemName, 1, (oldValue, newValue) -> { return oldValue + newValue; });
+        // lhm.compute(key_ItemName, (k, currentValue) -> {
+        //     if (currentValue == null) { lhm.put(key_ItemName, 1); return 1;} else {
+        //         return currentValue + 1;
+        //     }
+        // });
+        if (lhm.size() > maxSize) { 
+            lhm.remove(lhm.entrySet().iterator().next().getKey());
+            // with a maxSize of 3, once a fourth distinct item gets added, the maps size becomes 4, exceeding the limit so the oldest entry (the first inserted) gets remove
+            //  Whenever the sysoutprntln is called below, it will be the next oldest item which would be index 1
+        }
+        System.out.println(lhm.entrySet().iterator().next());
+        // Eviction Logic - The Core Idea
+        //      you need a max size limit
+        //      Everytime a view is recorded, if the maps size exceeds that limit after the insert remove the oldest entry - and since LHM maintains insertion order, the oldest entry is always
+        //          whatever .entryset.iterator.next give you
+        //      The only new piece is: get that first entry's key specifically (not just print it) and call .remove on that key
+        //  Logic updated above
+    }
+
+
 }
