@@ -7,12 +7,12 @@ import java.util.Map; import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        LinkedHashMap<String, Integer> hotLRU = new LinkedHashMap<>(16, 0.75f, true);
-        LinkedHashMap<String, Integer> warmLRU = new LinkedHashMap<>(16, 0.75f, true);
-        TreeMap<String, Integer> coldTM = new TreeMap<>();
-        LRUExample4 ex4 = new LRUExample4(hotLRU, 1, warmLRU, 2, coldTM);
-        ex4.insert("Entry 1", 1); ex4.insert("Entry 2", 2); ex4.insert("Entry 3", 3); ex4.insert("Entry 4", 4); ex4.insert("Entry 5", 5);
-        ex4.returnCold();
+        tiers.add(Map.entry(new LinkedHashMap<>(16, 0.75f, true), 1));
+        tiers.add(Map.entry(new LinkedHashMap<>(16, 0.75f, true), 1));
+        tiers.add(Map.entry(new LinkedHashMap<>(16, 0.75f, true), 1));
+        tiers.add(Map.entry(new LinkedHashMap<>(16, 0.75f, true), 2));
+        insertPair("Raul", 22); insertPair("Emmanuel", 22); insertPair("Sayla", 21);
+        insertPair("Alexa", 21); insertPair("Karla", 41); insertPair("Martha", 66);
     }
 
     // Loops - Full Concept
@@ -1155,5 +1155,60 @@ public class day3 {
         public final void returnCold() {
             System.out.println("HOT: " + hot); System.out.println("WARM: " + warm); System.out.println("COLD: " + cold);
         }
+    }
+
+    // Exercise 7 - N-Tier Cascade, No Hardcoded Branches
+    // The LRUExample 4 correctly handles 3 tiers but it does so with explicit hardcoded branching for hot alone versus hot and warm both.
+    // This approach doesnt scale - a fourth tier would require a fourth hardocded combination, a fifth even more
+    // This exercise requires solving the general problem: build a cache system with an arbitrary number of tiers (test with at least 4)
+    //      where a single insertion can cascade through as many tiers as necessary in once call, without writing a separate hardcoded branch for each possible combination of how many tiers overflowed
+    // Think through the actual shape this needs: rather than checking hotExceeded && warmFUll as two named bools, you likely need some kind of loop or recursive structure that says keep push the evicted entry to the next tier, as long as the tier its landing in also now over capacity
+    //      stopping naturally once it lands somewhere with room or falls off the final tier into a bottomless cold storage
+    // Design the data structure holding the tiers (a List of LHMs, each paired with its own max size, might be the natural shape) and build the general cascade logic
+    // Test with 4 tiers, small capacities, and enough insertions to force a single insert to cascade through all four in one call, proving the logic generalizes rather than being hardocded
+    // List with LHMs -> List<Map.Entry<LinkedHashMap<String, Integer>, Integer>> tiers = new ArrayList<>();
+    //  an ArrayList (concrete implementation) held as a List (interface type) where each indiv element is itself a Map.Entry - pairing an LHM together with an Integer (that resembles its maxSize)
+    //  So tiers.get(0) would give the hot lhm and so forth - an ordered list where position is its tier rank, letting your cascade logic loop thorugh pos generally rather than naming each one respectively
+    // Building one entry to add to this list since Map.Entry isnt something you construct with new the way most classes are - use the static factory method instead 
+    //      tiers.add(Map.entry(new LinkedHashMap<>(16, 0.75f, true), 2));
+    //          Map.entry(k, v) is a static factory method (lowercase entry, on the Map interface itself) that constructs an immutable Map.Entry pairiing whathever two values you give it
+    //              here, a fresh lhm as the key and 2 as its MS as the val
+    static List<Map.Entry<LinkedHashMap<String, Integer>, Integer>> tiers = new ArrayList<>();
+
+    public static void insertPair(String keyName, Integer value) {
+        // first breaking down the structure of the ArrayList since it can be kind of confusing
+        // an entry would me the LHM obj and its max size
+        String keyName2 = keyName; Integer value2 = value;
+
+        // for (int i = 0; i < tiers.size(); i++) {
+        //     LinkedHashMap<String, Integer> currentLHM = tiers.get(i).getKey();
+        //     Integer currentMS = tiers.get(i).getValue();
+
+        //     if ( currentLHM.size() + 1 <= currentMS) {
+        //         currentLHM.put(keyName2, value2);
+        //         break;
+        //     } else if (currentLHM.size() + 1 > currentMS) {
+        //         currentLHM.put(keyName2, value2); // always gets added
+
+        //         Map.Entry<String, Integer> rp = currentLHM.entrySet().iterator().next();
+        //         keyName2 = rp.getKey(); value2 = rp.getValue();
+
+        //         currentLHM.remove(rp.getKey());
+        //     }
+        // }
+
+
+        for(Map.Entry<LinkedHashMap<String, Integer>, Integer> tier: tiers) {
+            LinkedHashMap<String, Integer> currentLHM = tier.getKey();
+            currentLHM.put(keyName2, value2);
+
+            if (currentLHM.size() > tier.getValue()) {
+                Map.Entry<String, Integer> evicted = currentLHM.entrySet().iterator().next();
+                currentLHM.remove(evicted.getKey());
+                keyName2 = evicted.getKey(); value2 = evicted.getValue();
+            } else { break; }
+        }
+
+        System.out.println(tiers);
     }
 }
