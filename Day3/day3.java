@@ -9,11 +9,10 @@ public class day3 {
     public static void main(String[] args) {
         LinkedHashMap<String, Integer> hotLRU = new LinkedHashMap<>(16, 0.75f, true);
         LinkedHashMap<String, Integer> warmLRU = new LinkedHashMap<>(16, 0.75f, true);
-        LRUExample3 lruClass = new LRUExample3(hotLRU, 2, warmLRU, 4);
-        lruClass.accessHOT("Entry 1", 1); lruClass.accessHOT("Entry 2", 2);
-        lruClass.accessHOT("Entry 3", 3); System.out.println(lruClass.promote("Entry 1")); lruClass.accessHOT("Entry 4", 4);
-        lruClass.returnLHM();
-        // 1 gets add reg at first then 2 same then 3 causes 1 to go to warm then promote 1 back to hot then 2 goes to warm due to LRU then adding 4 to hot doesnt cause eviction
+        TreeMap<String, Integer> coldTM = new TreeMap<>();
+        LRUExample4 ex4 = new LRUExample4(hotLRU, 1, warmLRU, 2, coldTM);
+        ex4.insert("Entry 1", 1); ex4.insert("Entry 2", 2); ex4.insert("Entry 3", 3); ex4.insert("Entry 4", 4); ex4.insert("Entry 5", 5);
+        ex4.returnCold();
     }
 
     // Loops - Full Concept
@@ -1061,8 +1060,9 @@ public class day3 {
         }
         public final Boolean promote(String keyName) {
             if (warmLRU.get(keyName) != null) {
+                warmLRU.remove(keyName);
                 accessHOT(keyName, warmLRU.get(keyName));
-                warmLRU.remove(keyName); return true;
+                return true;
             } else { System.out.println(hotLRU.size()); return false; }
         }
 
@@ -1077,5 +1077,83 @@ public class day3 {
                 // again eviction happens whenever a pair is read or written to so the "return value" after 5 insertions should be 3-5
             });
         }
-    } 
+    }
+
+    // Discussion With Claude - Breaking Your Own Two Tier System on Purpose
+    // This exercise is about finding its actual limits rather than proving another case that already works, think adversarially about the LRUExample3
+    // Specifically: what happens if promote() is called on a key that exists in neither hot nor warm at all?
+    // Trace the code for this case before running anything - does promote() handle a completely nonexistent key gracefull or does something break? Test it directly
+    // Separately, and more interesting structurally: what happens if the hot caches maxSize is set to something that would make a single promotion cascade trigger two or more evictions in a row
+    // is the current eviction logic (if, not while, inside accessHOT) actually sufficient for every possible scenario or could you construct a specific sequence of calls where
+    //      hot ends up sitting more than one entry over its stated limit because eviction only fires once per accessHOT call, same if vs while question in Exc1 and 3
+    // Test both scenarios directly, report what actually happens and if the second one reveals a real gap, fix it
+    // Answer to above
+    // Since the if else checks if the .get return val is not null then this is okay, the else branch does absolutely nothing
+    // what would happen if the hot caches max size is set to somethign that would make a single promototion cascade trigger two or more evictions in a row is this
+    //      lets say we have 5 pairs just like we had before, hot MS is 2 and warm is 4, hot size would be 2 and warm would be 3
+    //       and then I promote two of those, those two are inputted into hot and the two oldest pairs are then sent to warm so size of each after operations would remain the same
+    //       so final verdict is this, if the total amount of entries doesnt exceed the summed size of hot and warm then their size will remain the same after n promotions
+    //       justification of this: promote all 3 of the ones in warm, 3 get sent to hot, 3 get sent back to warm which would include one of the ones that were promoted
+    //       so this means that each lhm helps each other in this case and if there were 6 entries, any amount of promotions would send that same number of entries back to warm
+    //       but if there were 7, that final one would get sent to warms eviction
+    // The current eviction logic is complete for this particular scenario since the structure of these methods only allow single calls which are completed line by line
+
+    // Exercise 6 - A Third Tier, Built From Scratch
+    // Build a genuine three tier cache - hot, warm and cold
+    //      hot overflows into warm and warm itself now also has real eviction logic that cascades into cold
+    //      Cold can simply be a plain HashMap with no size limit and no further eviction - a "resting place"
+    // Build one method insert(String key, Integer value) that always writes to hot, and correctly lets a single insertion potentially cascase all the way through all 3 tiers in the worst case
+    //      hot evicts into warm, and that specific arrival into warm itself immediately cause warm to evict into cold, all as a consequence of one single insert call
+    // Test with small capacities on hot and warm like 1 and 2 and enough insertions to force at least one item to travel all the way to cold in a single traceable sequence
+    //      printing the state of all 3 tieres after each insertion so the full cascade is visible step by step
+    public static class LRUExample4 {
+        LinkedHashMap<String, Integer> hot; int hotMS;
+        LinkedHashMap<String, Integer> warm; int warmMS;
+        Map<String, Integer> cold;
+        public LRUExample4(LinkedHashMap<String, Integer> hot, int hotMS, LinkedHashMap<String, Integer> warm, int warmMS, Map<String, Integer> cold) {
+            this.hot = hot; this.hotMS = hotMS; this.warm = warm; this.warmMS = warmMS; this.cold = cold;
+        }
+
+        public final void insert(String keyName, Integer value) {
+            // the base case would be if both warm and hot are full so start with appending this entry
+            hot.put(keyName, value);
+            Boolean hotExceeded = hot.size() > hotMS;
+            Boolean warmFull = warm.size() == warmMS;
+            if (hotExceeded && warmFull) {
+                // get removing pair which is the lru on the lhs; remove first so it doesnt exist in 2 places at the same time
+                // since theyre both at max size, we need the lru from warm too
+                Map.Entry<String, Integer> removingHotPair = hot.entrySet().iterator().next();
+                Map.Entry<String, Integer> removingWarmPair = warm.entrySet().iterator().next();
+                hot.remove(removingHotPair.getKey());
+                warm.remove(removingWarmPair.getKey());
+                insertWarm(removingHotPair); insertCold(removingWarmPair);
+                // justification for the if logic differing is because we add regardless to hot, this causes size to exceed maxSize
+                // so we need to make sure that if this eviction causes warm to exceed then warm would then evict down to cold
+                // this ensures that in this particular scenario that the removingPair from hot does not trigger warms eviction logic, its done here
+                System.out.println(String.format("Hot exceeded its size whenever %s was added. Therefore, %s was removed from hot and placed into warm. But since warm also exceeded its size, %s had to be removed from warm and cascaded down to cold. %n Be aware that any more calls to this method will trigger this message.", keyName, removingHotPair.getKey(), removingWarmPair.getKey()));
+            } else if (hotExceeded) {
+                // this can then cleanly evict down to warm
+                Map.Entry<String, Integer> removing = hot.entrySet().iterator().next();
+                hot.remove(removing.getKey());
+                insertWarm(removing);
+                System.out.println(String.format("%s triggered this eviction. %s is now going to the warm lhm", keyName, removing.getKey()));
+            } else { System.out.println(String.format("%s was added successfully", keyName));}
+        }
+
+        private final void insertWarm(Map.Entry<String, Integer> nowWarm) {
+            warm.put(nowWarm.getKey(), nowWarm.getValue());
+            if (warm.size() > warmMS) {
+                Map.Entry<String, Integer> removing = warm.entrySet().iterator().next();
+                warm.remove(removing.getKey());
+                insertCold(removing);
+            }
+        }
+
+        private final void insertCold(Map.Entry<String, Integer> evictedPair) {
+            cold.put(evictedPair.getKey(), evictedPair.getValue());
+        }
+        public final void returnCold() {
+            System.out.println("HOT: " + hot); System.out.println("WARM: " + warm); System.out.println("COLD: " + cold);
+        }
+    }
 }
