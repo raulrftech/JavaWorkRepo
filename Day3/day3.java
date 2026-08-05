@@ -7,8 +7,8 @@ import java.util.Map; import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        ArrayList<String> words = new ArrayList<>(Arrays.asList("Raul", "emmanuel", "raul", "Raul", "Emmanuel"));
-        Exc1(words);
+        List<String> words = new ArrayList<>(Arrays.asList("Raul", "emmanuel", "raul", "Raul", "Emmanuel"));
+        Exc2(words);
     }
 
     // Loops - Full Concept
@@ -1222,5 +1222,18 @@ public class day3 {
             } else { frequencyCounter.put(word, 1); }
         }
         System.out.println(frequencyCounter); System.out.println(dupes);
+    }
+
+    // Exercise 2 - Combining TreeMap, .merge() and List interface
+    // Build a method typed to accept List<String> (interface, not ArrayList specifically)
+    //      representing product names being sold throughout a day, some repeated across multiple sales
+    // Using a TreeMap<String, Integer> and .merge (not manual if/containsKey branching this time)
+    // Build a running sales-count map
+    // Since its a TM, the final printed output should come back in guaranteed alphabeticl order by rpoduct name, regardless of the order sales actually occurred in - print and confirm
+    public static void Exc2(List<String> items) {
+        // .merge takes (k, v, rempapping function)
+        TreeMap<String, Integer> occurrences = new TreeMap<>();
+        for (String word: items) { occurrences.merge(word, 1, (currentCount, updatedCount) -> currentCount + updatedCount);}
+        System.out.println(occurrences);
     }
 }
