@@ -7,12 +7,8 @@ import java.util.Map; import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        tiers.add(Map.entry(new LinkedHashMap<>(16, 0.75f, true), 1));
-        tiers.add(Map.entry(new LinkedHashMap<>(16, 0.75f, true), 1));
-        tiers.add(Map.entry(new LinkedHashMap<>(16, 0.75f, true), 1));
-        tiers.add(Map.entry(new LinkedHashMap<>(16, 0.75f, true), 2));
-        insertPair("Raul", 22); insertPair("Emmanuel", 22); insertPair("Sayla", 21);
-        insertPair("Alexa", 21); insertPair("Karla", 41); insertPair("Martha", 66);
+        ArrayList<String> words = new ArrayList<>(Arrays.asList("Raul", "emmanuel", "raul", "Raul", "Emmanuel"));
+        Exc1(words);
     }
 
     // Loops - Full Concept
@@ -1174,7 +1170,6 @@ public class day3 {
     //          Map.entry(k, v) is a static factory method (lowercase entry, on the Map interface itself) that constructs an immutable Map.Entry pairiing whathever two values you give it
     //              here, a fresh lhm as the key and 2 as its MS as the val
     static List<Map.Entry<LinkedHashMap<String, Integer>, Integer>> tiers = new ArrayList<>();
-
     public static void insertPair(String keyName, Integer value) {
         // first breaking down the structure of the ArrayList since it can be kind of confusing
         // an entry would me the LHM obj and its max size
@@ -1197,7 +1192,6 @@ public class day3 {
         //     }
         // }
 
-
         for(Map.Entry<LinkedHashMap<String, Integer>, Integer> tier: tiers) {
             LinkedHashMap<String, Integer> currentLHM = tier.getKey();
             currentLHM.put(keyName2, value2);
@@ -1210,5 +1204,23 @@ public class day3 {
         }
 
         System.out.println(tiers);
+    }
+
+    // Ten Exercises Combining around 3 concepts covered - respectively
+    // Exercixe 1 - Combinging HM, AL, and Set
+    // Build a method that takes an ArrayList<String> of words ( with genuine dupes ) and does two things simultaneuously
+    //      builds a HM<String, Integer> frequency counter and seprately builds a Set<String> containing words that appear more than once
+    // Populated by checking the frequency map as you go, not as a separate pass forward
+    public static void Exc1(ArrayList<String> words) {
+        HashMap<String, Integer> frequencyCounter = new HashMap<>();
+        Set<String> dupes = new HashSet<>();
+
+        for (String word: words) {
+            if (frequencyCounter.containsKey(word)) { 
+                frequencyCounter.put(word, frequencyCounter.get(word) + 1);
+                if (frequencyCounter.get(word) > 1) { dupes.add(word);}
+            } else { frequencyCounter.put(word, 1); }
+        }
+        System.out.println(frequencyCounter); System.out.println(dupes);
     }
 }
