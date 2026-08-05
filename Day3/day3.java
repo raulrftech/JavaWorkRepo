@@ -7,8 +7,8 @@ import java.util.Map; import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        List<String> words = new ArrayList<>(Arrays.asList("Raul", "emmanuel", "raul", "Raul", "Emmanuel"));
-        Exc2(words);
+        Exc3("Raul"); Exc3("Raul"); Exc3("Emmanuel"); Exc3("Martha"); Exc3("Bud"); Exc3("Karla");
+        Exc3("Raul"); Exc3("Martha"); Exc3("Victor"); Exc3("Julian");
     }
 
     // Loops - Full Concept
@@ -1235,5 +1235,29 @@ public class day3 {
         TreeMap<String, Integer> occurrences = new TreeMap<>();
         for (String word: items) { occurrences.merge(word, 1, (currentCount, updatedCount) -> currentCount + updatedCount);}
         System.out.println(occurrences);
+    }
+
+    // Exercise 3 - COmbing LHM, Set and access-order eviction
+    // Build a small unique visitor tracker
+    //      an LHM<String, Integer> in access-order mode, tracking visitor names to visit counts
+    // with a fixed max size acting as an LRU cache
+    // Separately, maintain a Set<String> that accumulates every visitor ever evicted from the tracker - a perm rec of everyone whos fallen out of the currently active window with no dupes even if the same person gets evicted, re-added, evicted again later
+    // Build one method, recordVisit(String name) that increments the visitors count (or adds them fresh at 1), triggers eviction if over capacity and adds any evicted name to the Set
+    // Test with enough visits and enough distinct visitors to force multiple evictions, including at least one visitor who gets evicted then visits again later (re added fresh)
+    //      confirming they still only appear once in the evicted-names Set despite potentially being evicted a second time
+    static LinkedHashMap<String, Integer> lhm = new LinkedHashMap<>(16, 0.75f, true);
+    static Integer lhmMS = 4;
+    static Set<String> evicted = new HashSet<>();
+    public static void Exc3(String name) {
+        // this line adds or updates to lhm
+        lhm.merge(name, 1, (priorVisits, updatedVisits) -> priorVisits + updatedVisits);
+
+        // if lhm size exceeds lhmMS then evict and add to set
+        if (lhm.size() > lhmMS) {
+            Map.Entry<String, Integer> rp = lhm.entrySet().iterator().next();
+            lhm.remove(rp.getKey());
+            evicted.add(rp.getKey());
+        }
+        System.out.println("LHM: " + lhm); System.out.println("Evicted: " + evicted);
     }
 }
