@@ -7,7 +7,8 @@ import java.util.Map; import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        Exc5(List.of("Emmanuel", "emmanuel", "raul", "Raul", "ALEXA", "alexa"));
+        ArrayList<Integer> rolls = new ArrayList<>(List.of(1, 2, 5, 4, 1, 5, 6, 4, 3, 2, 6, 6, 4, 3, 1, 3));
+        Exc6(rolls);
     }
 
     // Loops - Full Concept
@@ -1302,5 +1303,25 @@ public class day3 {
             validUsers.put(username, true);
         }
         System.out.println(validUsers);
+    }
+    
+    // Exercise 6 - Combining ArrayList, HM and Collections.frequency()
+    // Collections.frequency(collection, element) 
+    //      takes any Collection and a specific value, returns how many times that exact value appears in it
+    //      Direct alternative to building a HM frequency counter by hand, when you only care about one specific vals count rather than every vals count at once
+    // Build a method that takes an AL<Integer> of dice rolls (cals 1-6, with realistic repeats) and without manually looping use .frequency() 6 times
+    //      once per possible face value to build a HM<Integer, Integer> mapping each face value to how many times it was rolled
+    // Print the resulting map and confirm the 6 frequency counts sum to the orignals lists total size, proving nothing was miscounted or double counted
+    public static void Exc6(ArrayList<Integer> rolls) {
+        HashMap<Integer, Integer> frequencyCollector = new HashMap<>();
+        Integer oneFreq = Collections.frequency(rolls, 1); Integer twoFreq = Collections.frequency(rolls, 2); Integer threeFreq = Collections.frequency(rolls, 3);
+        Integer fourFreq = Collections.frequency(rolls, 4); Integer fiFreq = Collections.frequency(rolls, 5); Integer sixFreq = Collections.frequency(rolls, 6);
+        frequencyCollector.put(1, oneFreq); frequencyCollector.put(2, twoFreq); frequencyCollector.put(3, threeFreq); frequencyCollector.put(4, fourFreq);
+        frequencyCollector.put(5, fiFreq); frequencyCollector.put(6, sixFreq);
+        Integer[] sum = {0};
+        frequencyCollector.forEach((value, amount) -> {
+            sum[0] += amount; System.out.println(sum[0]);
+        });
+        System.out.println(sum[0]);
     }
 }
