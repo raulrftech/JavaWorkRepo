@@ -7,7 +7,7 @@ import java.util.Map; import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        Exc4(Arrays.asList(50,90,95,75,87,92,67,18));
+        Exc5(List.of("Emmanuel", "emmanuel", "raul", "Raul", "ALEXA", "alexa"));
     }
 
     // Loops - Full Concept
@@ -1285,5 +1285,22 @@ public class day3 {
         gradebook.forEach((grade, scoreList) -> {
             System.out.println("Highest in " + grade + ": " + Collections.max(scoreList));
         });
-     }
+    }
+
+    // Exercise 5 - Combining TreeMap, Set and List.of
+    // Build a method taht takes a List<String> of usernames attempting to register on some system
+    // where usernamesmust be unique and are compared case-insensitivity (direclty building on the case of case-sensitivity that surfaced on Exercise 2)
+    // Use a TreeMap<String, Boolean> to track each normalized (lowercased) username against whether it was successfully registered (true) or rejected as a dupe (false)
+    // Separately, use a Set<String> built from List.of() - a small, fixed, immutable blocklist of forbidden usernames (like admin, root, sudo, test)
+    // Reject any registration attempt matching the blocklist too, before even checking the for dupes
+    public static void Exc5(List<String> usernames) {
+        TreeMap<String, Boolean> validUsers = new TreeMap<>((String a, String b) -> { return a.toLowerCase().compareTo(b.toLowerCase());});
+        Set<String> invalid = new HashSet<>(List.of("sudo", "test", "admin", "root"));
+
+        for (String username : usernames) {
+            if (invalid.contains(username)) { continue; } // using continue instead of break so it just skips this username and goes to the next one
+            validUsers.put(username, true);
+        }
+        System.out.println(validUsers);
+    }
 }
