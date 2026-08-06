@@ -7,8 +7,9 @@ import java.util.Map; import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        ArrayList<Integer> rolls = new ArrayList<>(List.of(1, 2, 5, 4, 1, 5, 6, 4, 3, 2, 6, 6, 4, 3, 1, 3));
-        Exc6(rolls);
+        LinkedHashMap<String, Integer> orders = new LinkedHashMap<>(16, 0.75f, false);
+        orders.put("Hats", 27); orders.put("Phones", 1000); orders.put("Jacket", 40); orders.put("Ski Mask", 25);
+        Exc7(orders);
     }
 
     // Loops - Full Concept
@@ -1323,5 +1324,18 @@ public class day3 {
             sum[0] += amount; System.out.println(sum[0]);
         });
         System.out.println(sum[0]);
+    }
+
+    // Exercise 7 - Combining LHM, TM and .entrySet()
+    // Build a method that takes LHM<String, Integer> already populated in some specific insertion order (representing, say, a sequence of customer orders and their totals)
+    //      and produces a second, brand new  TM<String, Integer> containing the exact same data but now sorted alphabetically by key
+    // Do this by iterating the original via .entrySet() and inserting each pair into the new TM one at a time
+    // Print both maps, rpving the LHM retains its orginal insertion order untocuhed while the newly built TM shows identical data in a different sorted order
+    public static void Exc7(LinkedHashMap<String, Integer> lhm) {
+        TreeMap<String, Integer> sorted = new TreeMap<>();
+        for(Map.Entry<String, Integer> order: lhm.entrySet()) {
+            sorted.put(order.getKey(), order.getValue());
+        }
+        System.out.println(lhm); System.out.println(sorted);
     }
 }
