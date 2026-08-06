@@ -7,9 +7,8 @@ import java.util.Map; import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        LinkedHashMap<String, Integer> orders = new LinkedHashMap<>(16, 0.75f, false);
-        orders.put("Hats", 27); orders.put("Phones", 1000); orders.put("Jacket", 40); orders.put("Ski Mask", 25);
-        Exc7(orders);
+        ArrayList<String> tags = new ArrayList<>(List.of("Emmanuel", "Raul", "Martha", "Malcolm", "Karla", "Bud"));
+        Exc8(tags);
     }
 
     // Loops - Full Concept
@@ -1337,5 +1336,20 @@ public class day3 {
             sorted.put(order.getKey(), order.getValue());
         }
         System.out.println(lhm); System.out.println(sorted);
+    }
+
+    // Exercise 8 - Combining Set, List, Collections.unmodifiable()
+    // Collections.unmodifiable(list) explained
+    //      Takes any existing list and returns a read-only wrapper around it - unlike List.of() (which builds a genuinely independent immutable list from scratch)
+    //       and Arrays.asList() (which allows l.set() but blocks resizing)
+    //       Coll.umf(list)  wrapper blcoks all mutation attempts through the wrapper (.add, .remove, .set, everything throws)
+    //          while the original list underneath remains fully mutable through its own ref - meaning changes to the original do still show up thorw the wrapper (same live view as subList()'s behavior)
+    // Build a method that takes an AL<String> of tags (with genuine duplicates), builds a Set<String> of the unique tags, converts that set into a List<String> and wraps that resulint list with collections.umf
+    // Prove 3 things directly; via try/catch, .add, .set, and actual proof of the live view behavior 
+    public static void Exc8(ArrayList<String> tags) {
+        Set<String> unique = new HashSet<>();
+        for (String tag: tags) { unique.add(tag); } List<String> converted = new ArrayList<>(unique); List<String> view = Collections.unmodifiableList(converted);
+        try { view.add("Hello"); } catch (Exception e) { System.out.println(e);} try { view.set(1, "eeee");} catch (Exception e) { System.out.println(e);}
+        System.out.println(view); converted.remove(1); System.out.println(view);
     }
 }
