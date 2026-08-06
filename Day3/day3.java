@@ -7,8 +7,7 @@ import java.util.Map; import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        Exc3("Raul"); Exc3("Raul"); Exc3("Emmanuel"); Exc3("Martha"); Exc3("Bud"); Exc3("Karla");
-        Exc3("Raul"); Exc3("Martha"); Exc3("Victor"); Exc3("Julian");
+        Exc4(Arrays.asList(50,90,95,75,87,92,67,18));
     }
 
     // Loops - Full Concept
@@ -1260,4 +1259,31 @@ public class day3 {
         }
         System.out.println("LHM: " + lhm); System.out.println("Evicted: " + evicted);
     }
+
+    // Exercise 4 - Combining HM with ArrayList vals, .computeIfAbsent() (new method) and Collections.max()
+    // .computeIfAbsent(key, remappingFunction) explanation
+    //      .computeIfAbsent(key, k -> new ArrayList<>()) checks if key exists, if not, it creates a value using hte lambda andinserts it
+    //          either way, it returns the value now associated with that key, letting you chain .add directly onto the result
+    //      functionally identical to manual if containskey else built by hand in the original HM values are lists exc
+    // Collections.max(collection) - a Collections utility method
+    //      Takes any Collection (a List, a Set, anything implementing that interface) and returns the largest element, using natural ordering - the utility class equic of Arrays.sort() for finding a single max without sorting the whole thing first
+    // Build a method grouping a list of exam scores by letter grade ( same length- grouping shape from earlier but by grade bracket this time - A/B/C/D/F bases on score thresholds you define)
+    //      using a HM<String, ArrayList<Integer>> populated via .computeIfAbsent this time, not manual branching
+    // After grouping, use Collections.max() to find and print the single highest score within each grade bracket separately
+    public static void Exc4(List<Integer> scores) {
+        HashMap<String, ArrayList<Integer>> gradebook = new HashMap<>();
+
+        for (Integer score: scores) {
+            String letterGrade;
+            if (score < 70) { letterGrade = "F"; } else if (score < 75) {
+                letterGrade = "D";
+            } else if (score < 80) { letterGrade = "C"; } else if (score < 90) {
+                letterGrade = "B";
+            } else { letterGrade = "A"; }
+            gradebook.computeIfAbsent(letterGrade, k -> new ArrayList<>()).add(score);
+        }
+        gradebook.forEach((grade, scoreList) -> {
+            System.out.println("Highest in " + grade + ": " + Collections.max(scoreList));
+        });
+     }
 }
