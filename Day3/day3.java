@@ -7,8 +7,14 @@ import java.util.Map; import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        ArrayList<String> tags = new ArrayList<>(List.of("Emmanuel", "Raul", "Martha", "Malcolm", "Karla", "Bud"));
-        Exc8(tags);
+        HashMap<String, Integer> tallies = new HashMap<>(); Set<String> votedAlready = new HashSet<>();
+        Exc9("Raul", "Trump", tallies, votedAlready); Exc9("Julian", "Trump", tallies, votedAlready);
+        Exc9("Martha", "Trump", tallies, votedAlready); Exc9("Victor", "Trump", tallies, votedAlready);
+        Exc9("Bud", "Trump", tallies, votedAlready); Exc9("Ivan", "Trump", tallies, votedAlready);
+        Exc9("Karla", "Trump", tallies, votedAlready); Exc9("Juliet", "Trump", tallies, votedAlready);
+        Exc9("Robert", "Trump", tallies, votedAlready); Exc9("Emmanuel", "Trump", tallies, votedAlready);
+        Exc9("Daniel", "Trump", tallies, votedAlready); Exc9("Raul", "Trump", tallies, votedAlready);
+        System.out.println(tallies); System.out.println(votedAlready);
     }
 
     // Loops - Full Concept
@@ -1351,5 +1357,21 @@ public class day3 {
         for (String tag: tags) { unique.add(tag); } List<String> converted = new ArrayList<>(unique); List<String> view = Collections.unmodifiableList(converted);
         try { view.add("Hello"); } catch (Exception e) { System.out.println(e);} try { view.set(1, "eeee");} catch (Exception e) { System.out.println(e);}
         System.out.println(view); converted.remove(1); System.out.println(view);
+    }
+
+    // Exercise 9 - Combining HM, Set and .compute()
+    // Build a small voting/poll tally system
+    // An HM<String, Integer> tracks candidate names to vote counts
+    // Separately, a Set<String> tracks which voters have already voted to prevent double voting
+    // Build method castVote(String name, String CandidateName, HashMap<String, Integer> tally, Set<String> votedAlready) that
+    //     first checks if voterName is already in votedAlready, rejects vote netirely if so and if not use .compute accordingly
+    // Test with several distinct voters voting for a mix of candidates and at least one voter attempting to vote a second time for a different canditate than their first vote
+    public static void Exc9(String voterName, String candidateName, HashMap<String, Integer> tally, Set<String> votedAlready) {
+        if (votedAlready.add(voterName)) {
+            tally.compute(candidateName, (k, v) -> {
+                if (v == null) { return 1; }
+                return v + 1;
+            });
+        } else { System.out.println(String.format("Rejecting %s for %s since they already voted", voterName, candidateName)); return; }
     }
 }
