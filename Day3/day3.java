@@ -3,13 +3,40 @@ import java.util.ArrayList; import java.util.Collections;
 import java.util.Arrays; import java.util.List;
 import java.util.HashMap; import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.Map; import java.util.Set; import java.util.TreeMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        
-        recordPlayer("Raul", 12); recordPlayer("Sayla", 15); recordPlayer("Mat", 8); recordPlayer("Drew", 15);
-        System.out.println(playersScores); getLeaderboard(playersScores);
+        MainLibrary library = new MainLibrary("El Paso Public Library");
+        LibraryBook book1 = new LibraryBook("Dune", "Frank Herbert", 2);
+        LibraryBook book2 = new LibraryBook("1984", "George Orwell", 1);
+        LibraryBook book3 = new LibraryBook("The Hobbit", "J.R.R. Tolkien", 1);
+
+        library.addBook(book1);
+        library.addBook(book2);
+        library.addBook(book3);
+
+        BookRenter raul = new BookRenter("Raul", "Rodriguez", library);
+        BookRenter alex = new BookRenter("Alex", "Chavez", library);
+        BookRenter sayla = new BookRenter("Sayla", "Martinez", library);
+
+        raul.submitRequest(book1);
+        alex.submitRequest(book1);
+        sayla.submitRequest(book2);
+
+        // book2 now has 0 copies - this next request should waitlist
+        raul.submitRequest(book2);
+
+        // force a tie: book1 already has 2 checkouts (raul, alex), give book3 exactly 2 too
+        alex.submitRequest(book3);
+        sayla.submitRequest(book3);
+
+        // return triggers waitlist fulfillment for book2
+        library.processReturn(sayla, book2);
+
+        library.getLibraryReport();
     }
 
     // Loops - Full Concept
@@ -1386,8 +1413,175 @@ public class day3 {
         Integer maxScore = Collections.max(tm.values());
         Set<String> tiedPlayers = new HashSet<>();
         tm.forEach((name, score) -> {
-            if (score == maxScore) { tiedPlayers.add(name);}
+            if (score.equals(maxScore)) { tiedPlayers.add(name);}
         });
         System.out.println(tiedPlayers);
     }
+
+
+    // Below are 3 exercises that require everything that is covered throughout the entirety of this file
+    // Exercise 1 - Full Toolkit Req'd
+    // Build a small library checkout system
+    // Track books (title and how many copies exist) and active checkouts (who currently has which book)
+    // A book can only be checked out if a copy is abailable; once all copies are out, further checkout attempts must be rejected and recorded somewhere as "waitlisted"
+    //      no dupes in the waitlist per book even if multiple people try and fail for the same title
+    // When a book is returned, if anyone is waitlisted for it, automatically check it out to whoever's been waiting the longest
+    // At any point, produce a report showing: every book alphabetically with its current availability, the single most-checked out book of all time
+    //      (by total historical checkouts, not current)
+    // and the complete waitlist for any book that has one
+    // HashMap is unsorted
+    // LHM keeps insertion order and can also track lru
+    // Set declines duplicates
+    // TM gives automatic sorting
+    public static class LibraryBook implements Comparable<LibraryBook> {
+        String name; String author; int copies;
+        public LibraryBook(String name, String author, int copies) {
+            this.name = name; this.author = author; this.copies = copies;
+        }
+        public LibraryBook(String name, String author) {
+            this.name = name; this.author = author;
+            this.copies = 5;
+        }
+        public final void changeCopies(int by) {
+            this.copies += by;
+        }
+        @Override
+        public boolean equals(Object other) {
+            if (!(other instanceof LibraryBook)) { return false; }
+            LibraryBook otherBook = (LibraryBook) other;
+            return this.name.equals(otherBook.name) && this.author.equals(otherBook.author);
+        }
+        // hashCode() must be overridden alongside equlas(), never one without the other
+        // Any two objs considered equal by equals() must produce the same hashCode() or HM/HashSet will silently misbehave (an object could be added but then never findable via get, contains)
+        // since thsoe methods use hashCode first to even locate which bucket to look in
+        // Objects.hash(name, author) - an utility method,  generates a combined hash from however many fields you pass it, correctly building a hash that stays consistent with whichever fiels equals actually compares
+        @Override
+        public int hashCode() {
+            return Objects.hash(name, author);
+        }
+        @Override
+        public int compareTo(LibraryBook other) {
+            return this.name.compareTo(other.name);
+        }
+    }
+    public static class MainLibrary {
+        String name;
+        Set<LibraryBook> rentableBooks = new HashSet<>();
+        TreeMap<String, Integer> mostCheckedOut = new TreeMap<>();
+        LinkedHashMap<BookRenter, Set<LibraryBook>> waitlist = new LinkedHashMap<>(16, 0.75f, true);
+        TreeMap<BookRenter, Set<LibraryBook>> currentlyRenting = new TreeMap<>();
+        List<BookRenter> toFulfill = new ArrayList<>();
+        public MainLibrary(String name) {
+            this.name = name;
+        }
+
+        public void addBook(LibraryBook book) {
+            rentableBooks.add(book);
+        }
+        public void addBooks(Set<LibraryBook> books) {
+            books.forEach(book -> {
+                rentableBooks.add(book);
+            });
+        }
+        public final Boolean processRequest(BookRenter renter, LibraryBook forBook) {
+            // check the renters renting book
+            if (renter.rentingBooks.contains(forBook)) { return false; } else {
+                if (currentlyRenting.containsKey(renter) && currentlyRenting.get(renter).contains(forBook)) { return false; }
+
+                if (forBook.copies >= 1) {
+                    mostCheckedOut.merge(forBook.name, 1, (oldCount, newCount) -> oldCount + newCount);
+                    //  this goes into currentlyRenting the renter is the key and their rented books is the value
+                    forBook.changeCopies(-1); renter.addBook(forBook);
+                    currentlyRenting.put(renter, renter.rentingBooks);
+                    System.out.println(String.format("%s is now renting %s", renter.firstName, forBook.name));
+                    return true;
+                } else {
+                    waitlist.computeIfAbsent(renter, k -> new HashSet<>()).add(forBook);
+                    return false;
+                }
+                
+            }
+        }
+        public final void processReturn(BookRenter from, LibraryBook forBook) {
+            // check renter has book
+            if (from.returnBook(forBook)) {
+                // check if library has book but since im only using one instance of a library to keep things simple well just go ahead with the return
+                forBook.changeCopies(1);
+            }
+
+            for (Map.Entry<BookRenter, Set<LibraryBook>> pair : waitlist.entrySet()) {
+                if (pair.getValue().contains(forBook)) {
+                    toFulfill.add(pair.getKey());
+                }
+            }
+            if (!toFulfill.isEmpty()) {
+                BookRenter longestWaiting = toFulfill.get(0);
+                boolean success = this.processRequest(longestWaiting, forBook);
+                if (success) { waitlist.get(longestWaiting).remove(forBook);}
+            }
+        }
+        public final void getLibraryReport() {
+            int checkedOutTheMost = Collections.max(mostCheckedOut.values());
+            Set<String> mostSoughtBooks = new HashSet<>();
+            for (Map.Entry<String, Integer> pair : mostCheckedOut.entrySet()) {
+                if (pair.getValue() == checkedOutTheMost) { mostSoughtBooks.add(pair.getKey());} else { continue; }
+            }
+            System.out.println(String.format("LISTED BOOKS TO RENT FROM %s", name));
+            rentableBooks.forEach((book) -> {
+                System.out.println(String.format("BOOK: %s has %d copies available", book.name, book.copies));
+            });
+            System.out.println(String.format("MOST CHECKED OUT: %n%s", mostCheckedOut));
+            mostSoughtBooks.forEach((name) -> System.out.println(name));
+            System.out.println("CURRENTLY RENTING");
+            currentlyRenting.forEach((renter, set) -> {
+                System.out.println(String.format("Current Rentals of %s", renter.firstName));
+                set.forEach((book) -> { System.out.println(book.name); });
+            });
+            waitlist.forEach((renter, wanting) -> {
+                System.out.println(String.format("%s is currently wanting the following book(s)", renter.firstName));
+                wanting.forEach((book) -> System.out.println(String.format("%s with %d copies available", book.name, book.copies)));
+            });
+            rentableBooks.forEach(book -> {
+                System.out.println(String.format("UPDATED INVENTORY:%nBOOK: %s has %d copies available", book.name, book.copies));
+            });
+        }
+
+    }
+    public static class BookRenter implements Comparable<BookRenter> {
+        String firstName; String lastName;
+        Set<LibraryBook> rentingBooks = new HashSet<>();
+        MainLibrary rentingFrom;
+        public BookRenter(String firstName, String lastName, MainLibrary rentingFrom) {
+            this.firstName = firstName; this.lastName = lastName; this.rentingFrom = rentingFrom;
+        }
+        public final void submitRequest(LibraryBook forBook) {
+            if (rentingBooks.contains(forBook) ) { return; } else {
+                if (rentingFrom.processRequest(this, forBook)) {
+                    System.out.println(String.format("%s successfully rented %s", this.firstName, forBook.name));
+                }
+            }
+        }
+        private final void addBook(LibraryBook book) { rentingBooks.add(book);}
+        private final Boolean returnBook(LibraryBook book) {
+            if (rentingBooks.contains(book) == false) {
+                System.out.println(String.format("%s cannot return %s since he/she is not currently renting this book", this.firstName, book.name));
+                return false;
+            } else { rentingBooks.remove(book); return true;}
+        }
+        @Override
+        public boolean equals(Object other) {
+            if (!(other instanceof BookRenter)) { return false; }
+            BookRenter otherRenter = (BookRenter) other;
+            return this.firstName.equals(otherRenter.firstName) && this.lastName.equals(otherRenter.lastName);
+        }
+        @Override
+        public int hashCode() { return Objects.hash(firstName, lastName); }
+        @Override
+        public int compareTo(BookRenter other) {
+            int lastNameCompare = this.lastName.compareTo(other.lastName);
+            if (lastNameCompare != 0) { return lastNameCompare;}
+            return this.firstName.compareTo(other.firstName);
+        }
+    }
+    
 }
