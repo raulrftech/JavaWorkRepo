@@ -7,14 +7,9 @@ import java.util.Map; import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        HashMap<String, Integer> tallies = new HashMap<>(); Set<String> votedAlready = new HashSet<>();
-        Exc9("Raul", "Trump", tallies, votedAlready); Exc9("Julian", "Trump", tallies, votedAlready);
-        Exc9("Martha", "Trump", tallies, votedAlready); Exc9("Victor", "Trump", tallies, votedAlready);
-        Exc9("Bud", "Trump", tallies, votedAlready); Exc9("Ivan", "Trump", tallies, votedAlready);
-        Exc9("Karla", "Trump", tallies, votedAlready); Exc9("Juliet", "Trump", tallies, votedAlready);
-        Exc9("Robert", "Trump", tallies, votedAlready); Exc9("Emmanuel", "Trump", tallies, votedAlready);
-        Exc9("Daniel", "Trump", tallies, votedAlready); Exc9("Raul", "Trump", tallies, votedAlready);
-        System.out.println(tallies); System.out.println(votedAlready);
+        
+        recordPlayer("Raul", 12); recordPlayer("Sayla", 15); recordPlayer("Mat", 8); recordPlayer("Drew", 15);
+        System.out.println(playersScores); getLeaderboard(playersScores);
     }
 
     // Loops - Full Concept
@@ -1373,5 +1368,26 @@ public class day3 {
                 return v + 1;
             });
         } else { System.out.println(String.format("Rejecting %s for %s since they already voted", voterName, candidateName)); return; }
+    }
+
+    // Exercise 10 - Combining LHM, TM, Set, and Collections.max()
+    // Build a small top scorers leaderboard system,, deliberately pulling together several concepts from acorss all ten exercises into one program
+    // A LHM<String, Integer> tracks players and scores in the order they first played
+    // Build a method recordScore(String player, int points) that adds a pleyer fresh at points if new or adds points onto their existing total if returning - same accumulation pattern
+    // After a batch of scores has been recorded, build a second method  getLeaderboard() that converts the LHM into a TreeMap<String, Integer>
+    //      separately finds the single highest score using collections.max() on the values (youll need .values() to get Collection<Integer> to pass in) and builds a Set<String>
+    //          containing every player whos currently tied for that highest score - since more than one player could share the max
+    static LinkedHashMap<String, Integer> playersScores = new LinkedHashMap<>(16, 0.75f, false);
+    public static void recordPlayer(String name, int points) {
+        playersScores.merge(name, points, (oldValue, newValue) -> oldValue + newValue);
+    }
+    public static void getLeaderboard(LinkedHashMap<String, Integer> returnValFrom) {
+        TreeMap<String, Integer> tm = new TreeMap<>(playersScores);
+        Integer maxScore = Collections.max(tm.values());
+        Set<String> tiedPlayers = new HashSet<>();
+        tm.forEach((name, score) -> {
+            if (score == maxScore) { tiedPlayers.add(name);}
+        });
+        System.out.println(tiedPlayers);
     }
 }
