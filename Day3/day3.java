@@ -9,34 +9,13 @@ import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        MainLibrary library = new MainLibrary("El Paso Public Library");
-        LibraryBook book1 = new LibraryBook("Dune", "Frank Herbert", 2);
-        LibraryBook book2 = new LibraryBook("1984", "George Orwell", 1);
-        LibraryBook book3 = new LibraryBook("The Hobbit", "J.R.R. Tolkien", 1);
-
-        library.addBook(book1);
-        library.addBook(book2);
-        library.addBook(book3);
-
-        BookRenter raul = new BookRenter("Raul", "Rodriguez", library);
-        BookRenter alex = new BookRenter("Alex", "Chavez", library);
-        BookRenter sayla = new BookRenter("Sayla", "Martinez", library);
-
-        raul.submitRequest(book1);
-        alex.submitRequest(book1);
-        sayla.submitRequest(book2);
-
-        // book2 now has 0 copies - this next request should waitlist
-        raul.submitRequest(book2);
-
-        // force a tie: book1 already has 2 checkouts (raul, alex), give book3 exactly 2 too
-        alex.submitRequest(book3);
-        sayla.submitRequest(book3);
-
-        // return triggers waitlist fulfillment for book2
-        library.processReturn(sayla, book2);
-
-        library.getLibraryReport();
+        MeetingBooker MB = new MeetingBooker();
+        Organizer o1 = new Organizer("Raul", MB); Organizer o2 = new Organizer("Victor", MB); Organizer o3 = new Organizer("Julian", MB);
+        MeetingRoom room1 = new MeetingRoom("r1", 3); MeetingRoom room2 = new MeetingRoom("r2", 3); MeetingRoom room3 = new MeetingRoom("r3", 3);
+        o1.submitRequest(room1, 1300, 1500); o2.submitRequest(room2, 1100, 1200); o3.submitRequest(room3, 1300, 1500); 
+        o2.submitRequest(room2, 1300, 1500); o3.submitRequest(room3, 1300, 1500); o1.submitRequest(room1, 1300, 1500); 
+        o3.submitRequest(room3, 1300, 1500); o1.submitRequest(room1, 1300, 1500); o2.submitRequest(room2, 1300, 1500);
+        MB.returnSummary();
     }
 
     // Loops - Full Concept
@@ -1584,4 +1563,118 @@ public class day3 {
         }
     }
     
+    // Exercise 2
+    // Build a small event-scheduling conflict detector
+    // Track rooms (name, capacity) and bookings (which roo,, which organizer, a start and end time, may be represented by integers)
+    // A booking request must be rejected if it would overlap with an already-confirmed booking in the same room
+    //      meaning you need real overlap-detection logic, not just an exact-match check
+    // Track, per room, every organizer whos ever successfully booked it, with no dupes
+    // Separately, track the single most booked room across the whole system (by total successful booking count)
+    // Produce a report showing, alphabetically by room name: the room's capacity, every confrimed booking in chronological order by start time
+    // And the complete list of unique organizers whove ever used that room
+    public static boolean doesOverlap(int existingStart, int existingEnd, int newStart, int newEnd) {
+        // in order to check that these two meets overlap, the end time of one has to be somewhere in between the second meeting
+        return newStart < existingEnd && existingStart < newEnd;
+    }
+    public static class MeetingBooker {
+        Set<Organizer> organizers = new HashSet<>();
+        Set<MeetingRoom> rooms = new HashSet<>();
+        Set<Booking> bookings = new HashSet<>();
+        TreeMap<MeetingRoom, Integer> roomDemand = new TreeMap<>();
+        public MeetingBooker() {}
+        
+        public final void addRooms(ArrayList<MeetingRoom> rooms) { rooms.forEach((room) -> rooms.add(room)); }
+        public final void addOrganizers(ArrayList<Organizer> organizers) { organizers.forEach((organizer) -> organizers.add(organizer)); }
+
+        public final void processRequest(Organizer organizer, Booking forBooking) {
+            organizers.add(organizer); rooms.add(forBooking.room); bookings.add(forBooking);
+            roomDemand.compute(forBooking.room, (k, v) -> {
+                if (v == null) { return 1;} else { return v + 1;}
+            });
+
+        }
+        // How Do You Get list of unique organizers per room
+        // Rooms have LHM of bookings
+        //      bookings have their designated organizer
+        public final void returnSummary() {
+            Set<String> tiedRooms = new HashSet<>();
+            int mostBooked = Collections.max(roomDemand.values());
+            roomDemand.forEach((room, bookingCount) -> {
+                if (bookingCount.equals(mostBooked)) { tiedRooms.add(room.name); }
+            });
+            System.out.println(String.format("HIGHEST BOOKED ROOM(S) OF %d BOOKINGS:%n%s", mostBooked, tiedRooms));
+            rooms.forEach((room) -> room.getSummary());
+        }
+        
+    }
+    public static class MeetingRoom implements Comparable<MeetingRoom> {
+        String name; int capacity;
+        LinkedHashMap<Booking, String> pastBookings = new LinkedHashMap<>(16, 0.75f, false);
+        public MeetingRoom(String name, int capacity) {
+            this.name = name; this.capacity = capacity;
+        }
+        public final void addBooking(Booking booking, Organizer organizer) {
+            if (pastBookings.containsKey(booking)) { return; } else {
+                pastBookings.put(booking, organizer.name);
+            }
+        }
+        public final void getSummary() {
+            pastBookings.forEach((booking, organizerName) -> {
+                System.out.println(String.format("Organized By %s%nStarted At: %d%nEnded At: %d%nAssigned Room: %s", organizerName, booking.startTime, booking.endTime, booking.room.name));
+            });
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if(!(other instanceof MeetingRoom)) { return false; }
+            MeetingRoom otherRoom = (MeetingRoom) other;
+            return this.name.equals(otherRoom.name);
+        }
+        @Override
+        public int hashCode() { return Objects.hash(name); }
+        @Override
+        public int compareTo(MeetingRoom other) {
+            int roomName = this.name.compareTo(other.name);
+            if (roomName != 0) { return roomName;}
+            return this.name.compareTo(other.name);
+        }
+    }
+    public static class Organizer {
+        String name; MeetingBooker bookingSystem;
+        Set<MeetingRoom> pastMeetings = new HashSet<>();
+        public Organizer(String name, MeetingBooker bookingSystem) {
+            this.name = name; this.bookingSystem = bookingSystem;
+        }
+        public final void submitRequest(MeetingRoom room, int startTime, int endTime) {
+            Booking desiredBooking = new Booking(this, room, startTime, endTime);
+            boolean processable = true;
+            for (Booking booking: room.pastBookings.keySet()) {
+                if (doesOverlap(booking.startTime, booking.endTime, desiredBooking.startTime, desiredBooking.endTime)) { processable = false;} 
+            }
+            if (processable) {
+                room.addBooking(desiredBooking, this);
+                pastMeetings.add(room);
+                bookingSystem.processRequest(this, desiredBooking);
+            } else { System.out.println(String.format("Unable to complete booking request for %s at %s in the %S room", this.name, desiredBooking.startTime, room.name));}
+        }
+    }
+    public static class Booking {
+        Organizer organizer;
+        MeetingRoom room;
+        int startTime;
+        int endTime;
+        public Booking(Organizer organizer, MeetingRoom room, int startTime, int endTime) {
+            this.organizer = organizer; this.room = room;
+            this.startTime = startTime; this.endTime = endTime;
+        }
+        @Override
+        public boolean equals(Object other) {
+            if (!(other instanceof Booking)) { return false;}
+            Booking otherBooking = (Booking) other;
+            return this.startTime == otherBooking.startTime && this.endTime == otherBooking.endTime;
+        }
+        @Override
+        public int hashCode() { return Objects.hash(startTime, endTime);}
+    }
+
 }
