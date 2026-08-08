@@ -9,13 +9,7 @@ import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        MeetingBooker MB = new MeetingBooker();
-        Organizer o1 = new Organizer("Raul", MB); Organizer o2 = new Organizer("Victor", MB); Organizer o3 = new Organizer("Julian", MB);
-        MeetingRoom room1 = new MeetingRoom("r1", 3); MeetingRoom room2 = new MeetingRoom("r2", 3); MeetingRoom room3 = new MeetingRoom("r3", 3);
-        o1.submitRequest(room1, 1300, 1500); o2.submitRequest(room2, 1100, 1200); o3.submitRequest(room3, 1300, 1500); 
-        o2.submitRequest(room2, 1300, 1500); o3.submitRequest(room3, 1300, 1500); o1.submitRequest(room1, 1300, 1500); 
-        o3.submitRequest(room3, 1300, 1500); o1.submitRequest(room1, 1300, 1500); o2.submitRequest(room2, 1300, 1500);
-        MB.returnSummary();
+        System.out.println(confirmAN("B7DgTmn99a"));
     }
 
     // Loops - Full Concept
@@ -1677,4 +1671,57 @@ public class day3 {
         public int hashCode() { return Objects.hash(startTime, endTime);}
     }
 
+    // Exercise 3
+    // Build a small ride-share matching system
+    // Track drivers(name, vehicle capacity) and riders(name, grou size - how many people need a seat)
+    // A ride request can only be matched to a driver whose remaining capacity can fit the riders group size
+    //      if no driver currently has room, the rider goes onto a waitlist, no dupes even if they somewhow request while already waiting
+    // When a driver completes a trip and drops off their current riders (freeing up their full capacity again)
+    //      automatically check the waitlist and fill their newly-freed seats with as many waiting riders as will fit, in the order theyve been waiting
+    //          first come first serve
+    // Track, per driver, the complete historical list of every rider theyve ever transported (allowing repeats - the same rider could ride with the same driver multiple times and each occurrence shoudl count)
+    // Separately track the single most frequently paired rider-drive combination across the whole system
+    // Produce a report:
+    //      Every driver alphabetically by name, their current remaining capacity, everyone currently in their car and their full historical rider list
+    //      Then the single most paired rider driver combination and how many times theyve ridden together
+    public static boolean confirmAN(String accountNumber) {
+        if (accountNumber == null || accountNumber.length() != 10) { return false; }
+
+        int upperCount = 0; int lowerCount = 0; int digitCount = 0; int digitSum = 0;
+        for (int i =0; i < accountNumber.length(); i++) {
+            char c = accountNumber.charAt(i);
+
+            if (Character.isUpperCase(c)) { upperCount++;} else if (Character.isLowerCase(c)) { lowerCount++; } else if (Character.isDigit(c)) {
+                digitCount++;
+                // Convert char digit to its numeric value and add to sum
+                digitSum += Character.getNumericValue(c);
+            } else {
+                return false;
+            }
+        }
+
+        return upperCount == 3 && lowerCount == 4 && digitCount == 3 && digitSum == 25;
+    }
+    public static class RideShareHandling {
+        String name; 
+
+        public RideShareHandling(String name) { this.name = name; }
+    }
+    public static class Driver {
+        String firstName; String lastName; String accountNumber; RideShareHandling rideShareApp;
+
+        public Driver(String firstName, String lastName, String accountNumber, RideShareHandling rideShareApp) {
+            this.firstName = firstName; this.lastName = lastName;
+            this.accountNumber = accountNumber; this.rideShareApp = rideShareApp;
+        }
+    }
+    public static class Rider {
+        String firstName; String lastName; int age; String accountNumber; RideShareHandling rideShareApp;
+
+        public Rider(String firstName, String lastName, int age, String accountNumber, RideShareHandling rideShareApp) {
+            this.firstName = firstName; this.lastName = lastName;
+            this.age = age; this.accountNumber = accountNumber;
+            this.rideShareApp = rideShareApp;
+        }
+    }
 }
