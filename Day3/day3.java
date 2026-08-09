@@ -1719,12 +1719,17 @@ public class day3 {
             }
         }
 
+        public final void handleWaitlist() {
+            Map.Entry<Rider, Integer> oldestWaiting = waitlist.entrySet().iterator().next();
+            oldestWaiting.getKey().submitRequest(oldestWaiting.getValue());
+        }   
+
         public static class RideResult {
             public final boolean success; public final Driver driver;
             public RideResult(boolean success, Driver driver) { this.success = success; this.driver = driver; }
         }
     }
-    public static class Driver {
+    public static class Driver implements Comparable<Driver> {
         String firstName; String lastName; String accountNumber; RideShareHandling rideShareApp; int acceptableCapacity;
         Set<Rider> riders = new HashSet<>();
         TreeMap<Rider, Integer> occurrences = new TreeMap<>();
@@ -1738,6 +1743,27 @@ public class day3 {
         public final void receiveRequest(Rider forRider, Integer forCapacity) {
             riders.add(forRider); this.acceptableCapacity -= forCapacity;
             occurrences.merge(forRider, 1, (oV, nV) -> oV + 1);
+        }
+
+        public final void returnOccurences() {
+            occurrences.forEach((rider, times) -> {
+                System.out.println(String.format("%s has ridden with %s %d times", rider.firstName, this.firstName, times));
+            });
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (!(other instanceof Driver)) { return false; }
+            Driver otherDriver = (Driver) other;
+            return this.accountNumber.equals(otherDriver.accountNumber);
+        }
+        @Override
+        public int hashCode() { return Objects.hash(accountNumber);}
+        @Override
+        public int compareTo(Driver other) {
+            int compareVal = this.accountNumber.compareTo(other.accountNumber);
+            if (compareVal != 0) { return compareVal;}
+            return this.accountNumber.compareTo(other.accountNumber);
         }
     }
     public static class Rider implements Comparable<Rider> {
@@ -1759,6 +1785,8 @@ public class day3 {
                 if (requestStatus.success == true) {
                     driversEncountered.add(requestStatus.driver);
                 } else { System.out.println(String.format("Dear %s, your request for a total of %d riders was not accepted at this time. You've been added to the waitlist", this.firstName, forCapacity)); }
+            } else {
+                System.out.println(String.format("Your account number %s does not sufffice the requirements. Fix before requesting a ride.", this.accountNumber));
             }
 
         }
