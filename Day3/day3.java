@@ -9,7 +9,17 @@ import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        System.out.println(confirmAN("B7DgTmn99a"));
+        RideShareHandling uber = new RideShareHandling("Uber");
+
+        Rider r1 = new Rider("Raul", "Rodriguez", 22, "BaDc889Vax", uber);
+        Rider r2 = new Rider("Julian", "Romero", 17, "BAdC898Zmds", uber);
+
+        Driver d1 = new Driver("Emmanuel", "Rodriguez", "n799AYaCty", uber, 3);
+
+        uber.addDriver(d1);
+        r1.submitRequest(2);
+        d1.finishRide(2);
+        r1.submitRequest(3); // Need to do logic of setting unavailability to driver
     }
 
     // Loops - Full Concept
@@ -1706,12 +1716,15 @@ public class day3 {
         LinkedHashMap<Rider, Integer> waitlist = new LinkedHashMap<>(16, 0.75f, true); // rider and its requested occuapancy
 
         public RideShareHandling(String name) { this.name = name; }
+        public final void addDriver(Driver driver) { drivers.add(driver);}
 
         public final RideResult processRequest(Rider forRider, int numberOfRiders) {
             Optional<Driver> assignableDriver = drivers.stream().filter(driver -> driver.acceptableCapacity >= numberOfRiders).findFirst();
             // Handle the result safely (similar to Swift's if let)
             if (assignableDriver.isPresent()) {
                 Driver driver = assignableDriver.get();
+                if (waitlist.get(forRider) != null) { waitlist.remove(forRider); }
+                driver.acceptableCapacity -= numberOfRiders;
                 return new RideResult(true, driver);
             } else {
                 waitlist.put(forRider, numberOfRiders); // this avoids dupes
@@ -1744,6 +1757,8 @@ public class day3 {
             riders.add(forRider); this.acceptableCapacity -= forCapacity;
             occurrences.merge(forRider, 1, (oV, nV) -> oV + 1);
         }
+
+        public final void finishRide(Integer forCapacity) { this.acceptableCapacity += forCapacity;}
 
         public final void returnOccurences() {
             occurrences.forEach((rider, times) -> {
@@ -1784,6 +1799,7 @@ public class day3 {
                 RideShareHandling.RideResult requestStatus = rideShareApp.processRequest(this, forCapacity);
                 if (requestStatus.success == true) {
                     driversEncountered.add(requestStatus.driver);
+                    System.out.println(String.format("Your ride request was succesfully fulfilled%nYour driver is %s", requestStatus.driver.firstName));
                 } else { System.out.println(String.format("Dear %s, your request for a total of %d riders was not accepted at this time. You've been added to the waitlist", this.firstName, forCapacity)); }
             } else {
                 System.out.println(String.format("Your account number %s does not sufffice the requirements. Fix before requesting a ride.", this.accountNumber));
