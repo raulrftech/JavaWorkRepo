@@ -3,7 +3,7 @@ import java.util.ArrayList; import java.util.Collections;
 import java.util.Arrays; import java.util.List;
 import java.util.HashMap; import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.Map; import java.util.Optional;
 import java.util.Objects;
 import java.util.Set; import java.util.TreeMap;
 
@@ -1686,11 +1686,9 @@ public class day3 {
     //      Then the single most paired rider driver combination and how many times theyve ridden together
     public static boolean confirmAN(String accountNumber) {
         if (accountNumber == null || accountNumber.length() != 10) { return false; }
-
         int upperCount = 0; int lowerCount = 0; int digitCount = 0; int digitSum = 0;
         for (int i =0; i < accountNumber.length(); i++) {
             char c = accountNumber.charAt(i);
-
             if (Character.isUpperCase(c)) { upperCount++;} else if (Character.isLowerCase(c)) { lowerCount++; } else if (Character.isDigit(c)) {
                 digitCount++;
                 // Convert char digit to its numeric value and add to sum
@@ -1699,29 +1697,85 @@ public class day3 {
                 return false;
             }
         }
-
         return upperCount == 3 && lowerCount == 4 && digitCount == 3 && digitSum == 25;
     }
     public static class RideShareHandling {
-        String name; 
+        String name;
+        Set<Driver> drivers = new HashSet<>(); // set to contain drivers that contain their ride history 
+        Set<Rider> riders = new HashSet<>();
+        LinkedHashMap<Rider, Integer> waitlist = new LinkedHashMap<>(16, 0.75f, true); // rider and its requested occuapancy
 
         public RideShareHandling(String name) { this.name = name; }
-    }
-    public static class Driver {
-        String firstName; String lastName; String accountNumber; RideShareHandling rideShareApp;
 
-        public Driver(String firstName, String lastName, String accountNumber, RideShareHandling rideShareApp) {
-            this.firstName = firstName; this.lastName = lastName;
-            this.accountNumber = accountNumber; this.rideShareApp = rideShareApp;
+        public final RideResult processRequest(Rider forRider, int numberOfRiders) {
+            Optional<Driver> assignableDriver = drivers.stream().filter(driver -> driver.acceptableCapacity >= numberOfRiders).findFirst();
+            // Handle the result safely (similar to Swift's if let)
+            if (assignableDriver.isPresent()) {
+                Driver driver = assignableDriver.get();
+                return new RideResult(true, driver);
+            } else {
+                waitlist.put(forRider, numberOfRiders); // this avoids dupes
+                return new RideResult(false, null);
+            }
+        }
+
+        public static class RideResult {
+            public final boolean success; public final Driver driver;
+            public RideResult(boolean success, Driver driver) { this.success = success; this.driver = driver; }
         }
     }
-    public static class Rider {
+    public static class Driver {
+        String firstName; String lastName; String accountNumber; RideShareHandling rideShareApp; int acceptableCapacity;
+        Set<Rider> riders = new HashSet<>();
+        TreeMap<Rider, Integer> occurrences = new TreeMap<>();
+
+        public Driver(String firstName, String lastName, String accountNumber, RideShareHandling rideShareApp, int acceptableCapacity) {
+            this.firstName = firstName; this.lastName = lastName;
+            this.accountNumber = accountNumber; this.rideShareApp = rideShareApp;
+            this.acceptableCapacity = acceptableCapacity;
+        }
+
+        public final void receiveRequest(Rider forRider, Integer forCapacity) {
+            riders.add(forRider); this.acceptableCapacity -= forCapacity;
+            occurrences.merge(forRider, 1, (oV, nV) -> oV + 1);
+        }
+    }
+    public static class Rider implements Comparable<Rider> {
         String firstName; String lastName; int age; String accountNumber; RideShareHandling rideShareApp;
+        Set<Driver> driversEncountered = new HashSet<>();
 
         public Rider(String firstName, String lastName, int age, String accountNumber, RideShareHandling rideShareApp) {
             this.firstName = firstName; this.lastName = lastName;
             this.age = age; this.accountNumber = accountNumber;
             this.rideShareApp = rideShareApp;
+        }
+
+        // a rider submits request to the RSH and then it finds an available driver then pairs those two
+        public final void submitRequest(int forCapacity) {
+            // since this is quite basic im going to keep it basic and not include anything considering destination/location or cost
+            // check accountNumber
+            if (confirmAN(this.accountNumber)) {
+                RideShareHandling.RideResult requestStatus = rideShareApp.processRequest(this, forCapacity);
+                if (requestStatus.success == true) {
+                    driversEncountered.add(requestStatus.driver);
+                } else { System.out.println(String.format("Dear %s, your request for a total of %d riders was not accepted at this time. You've been added to the waitlist", this.firstName, forCapacity)); }
+            }
+
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (!(other instanceof Rider)) { return false; }
+            Rider otherRider = (Rider) other;
+            return this.accountNumber.equals(otherRider.accountNumber);
+        }
+        @Override
+        public int hashCode() { return Objects.hash(accountNumber);}
+        @Override
+        public int compareTo(Rider other) {
+            int compareVal = this.accountNumber.compareTo(other.accountNumber);
+            if (compareVal != 0) { return compareVal;}
+            return this.accountNumber.compareTo(other.accountNumber);
         }
     }
 }
