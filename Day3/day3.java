@@ -9,7 +9,9 @@ import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        
+        TicketManager t1 = TicketManager.makeTicket("Travis Scott", 67.50, "2A");
+        TicketManager t2 = TicketManager.makeTicket("Travis Scott", 67.50, "2A");
+        TicketManager.getTicketsSold();
     }
 
     // Loops - Full Concept
@@ -1842,7 +1844,7 @@ public class day3 {
             this.monthlyFee = monthlyFee; this.autoRenew = autoRenew;
         }
         public Membership(String memberName, boolean autoRenew) {
-            this(memberName, "Plus", 25.00, true);
+            this(memberName, "Plus", 25.00, autoRenew);
         }
         public Membership(String memberName, String membershipTier, Double monthlyFee) {
             this(memberName, membershipTier, monthlyFee, false);
@@ -1851,7 +1853,7 @@ public class day3 {
             this(memberName, "Basic", 10.00, true);
         }
 
-        public final void getSummary() {
+        public void getSummary() {
             String tierOf = membershipTier != null ? membershipTier : "";
             String hasSub = monthlyFee != null ? String.format("%.2f", monthlyFee) : "0.00";
             System.out.println(String.format("MEMBER SUMMARY%nNAME: %s%n%nTIER: %s%nMonthly Charge: $%s%nAutoPay: %b", memberName, tierOf, hasSub, autoRenew));
@@ -1864,6 +1866,55 @@ public class day3 {
         }
         public final void getTotalCharge() {
             System.out.println(String.format("%.2f", amountOfMembers * monthlyFee));
+        }
+        @Override
+        public final void getSummary() {
+            String tierOf = membershipTier != null ? membershipTier : "";
+            String hasSub = monthlyFee != null ? String.format("%.2f", monthlyFee * amountOfMembers) : "0.00";
+            System.out.println(String.format("MEMBER SUMMARY%nNAME: %s%n%nTIER: %s%nMonthly Charge: $%s%nAutoPay: %b", memberName, tierOf, hasSub, autoRenew));
+        }
+    }
+
+    // Exercise 2 - Static Methods and Fields
+    // A static member belongs to the class itself, not any individual instance - one shared copy exists regardless of how many objs created and its accessible without instantiating
+    // A non-static member reqs an actual instance to exist first,s ince it belongs to that specific objs own memory
+    // Rule: a static method cannot directly access non-static methods or fields because a static context has no this
+    //       The reverse is fine; a non-static instance method can freely access static fields/methods, since an instance always has access to whatevers shared at the class level
+    // Static Factory Methods;
+    //      a static method that constructs and returns an instance, giving you room to do things a plain constructor cant (validate and return null, mutate external objs, choose which subclass to build)
+    // Build a class resembling a ticket booth selling event tickets
+    public static class TicketManager {
+        static LinkedHashMap<String, Double> ticketsSold = new LinkedHashMap<>(16, 0.75f, false);
+        static TreeMap<String, Integer> eventsVisited = new TreeMap<>();
+        static Integer totalTicketsSold = 0;
+
+        String eventName; double ticketPrice; String assignedSeat;
+        public TicketManager(String eventName, double ticketPrice, String assignedSeat) {
+            this.eventName = eventName; this.ticketPrice = ticketPrice; this.assignedSeat = assignedSeat;
+        }
+        public static TicketManager makeTicket(String eventName, double ticketPrice, String assignedSeat) {
+            if (!ticketsSold.containsKey(assignedSeat)) {
+                if (eventName.length() < 5) { return null; }
+                if (ticketPrice < 15.00) { return null; }
+                ticketsSold.put(assignedSeat, ticketPrice);
+                eventsVisited.merge(eventName, 1, (o, n) -> o + n);
+                totalTicketsSold += 1;
+                return new TicketManager(eventName, ticketPrice, assignedSeat);
+            } else { return null; }
+            
+        }
+        public static void getTicketsSold() { System.out.println(String.format("A total of %d tickets have been sold.", totalTicketsSold)); }
+        public static double getRevenue() {
+            double total = 0.00;
+            for (Map.Entry<String, Double> entry: ticketsSold.entrySet()) {
+                total += entry.getValue();
+            }
+            return total;
+        }
+        public static void getSummary() {
+            eventsVisited.forEach((place, visits) -> {
+                System.out.println(String.format("%s was visited %d times", place, visits));
+            });
         }
     }
 }
