@@ -9,17 +9,7 @@ import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        RideShareHandling uber = new RideShareHandling("Uber");
-
-        Rider r1 = new Rider("Raul", "Rodriguez", 22, "BaDc889Vax", uber);
-        Rider r2 = new Rider("Julian", "Romero", 17, "BAdC898Zmds", uber);
-
-        Driver d1 = new Driver("Emmanuel", "Rodriguez", "n799AYaCty", uber, 3);
-
-        uber.addDriver(d1);
-        r1.submitRequest(2);
-        d1.finishRide(2);
-        r1.submitRequest(3); // Need to do logic of setting unavailability to driver
+        
     }
 
     // Loops - Full Concept
@@ -1820,6 +1810,60 @@ public class day3 {
             int compareVal = this.accountNumber.compareTo(other.accountNumber);
             if (compareVal != 0) { return compareVal;}
             return this.accountNumber.compareTo(other.accountNumber);
+        }
+    }
+
+
+    // Refresher 1/8 -- Designated vs Convenience Initializers
+    // A designated initializer does the real work - every stored property gets a value, and if the class has a superclass, it calls super.init() as part of that responsibility. Every class needs at least one
+    // A convenience init, marked with the convenience keywork, provides a shortcut with some values pre-filled, but is req'd to delegate to another intiializer on the same class via self.init, never super.init directly
+    // This is the exact same relationship as Java's constructor overloading via this(), one constructor doing the real work, a second one delegating to it with defaults filled in
+    // Quick Question: Why can a convenience init nver call super.init*) directly but only self.init
+    // Anser to Question: A convenience init is provided defaults to its own constructor, thus less args are given to user whenever initializing a new instance of that class
+    //                    Since super.init refers to a parent's classes initis, child class might have props that arent a part of the super class overall its required to delegate
+    //                    to the childs class full constructor. the full constructor has the responsibility to call super.init. so basics: "this" isn fully put together then calls super.init
+    // Actual Answer: a designated init is the one responsible for guaranteeing every one of its own class's stored props get a value, and then handing off to super.init to guarantee
+    //                the inherited props get set too
+    //                A convenience initializer is explicitly not trusted with that full responsibility; it exists purely to provide a shortcut
+    //                If convenience init were allowed to call super.init directly, it would be bypassing the designated init entirely - meaning the class's own guarantee (everyone of my stored props always gets set, no exceptions)
+    //                could be silently skipped, since nothing would force the convenience path to actually touch every prop the designated init otherwise ensures
+    //                The rule is that every path into an obj's initialization must pass through a designated init at some point and super.init is specifically the desig init job to call
+    // Base class: Membership, four stored props, one designated init requiring all four
+    // Two convenience inits; one representing sign up for the cheapest possible tier the other representing "corporate/gifted membership"
+    // Subclass: FamilyMembership extends Membership with new prop
+    // Its own designated init takes all five vals calling super.init with the first four then setting its respective prop
+    // Its own convenience init takes only two, defaulting the rest and delegating via self.init to FamilyMemberships own designated init
+    // Biild all four initializer paths, create one instance through eac, print something confirming every property landed correctly on each instance
+    public static class Membership {
+        String memberName; String membershipTier; Double monthlyFee; boolean autoRenew;
+
+        public Membership(String memberName, String membershipTier, Double monthlyFee, boolean autoRenew) {
+            this.memberName = memberName; this.membershipTier = membershipTier;
+            this.monthlyFee = monthlyFee; this.autoRenew = autoRenew;
+        }
+        public Membership(String memberName, boolean autoRenew) {
+            this(memberName, "Plus", 25.00, true);
+        }
+        public Membership(String memberName, String membershipTier, Double monthlyFee) {
+            this(memberName, membershipTier, monthlyFee, false);
+        }
+        public Membership(String memberName) {
+            this(memberName, "Basic", 10.00, true);
+        }
+
+        public final void getSummary() {
+            String tierOf = membershipTier != null ? membershipTier : "";
+            String hasSub = monthlyFee != null ? String.format("%.2f", monthlyFee) : "0.00";
+            System.out.println(String.format("MEMBER SUMMARY%nNAME: %s%n%nTIER: %s%nMonthly Charge: $%s%nAutoPay: %b", memberName, tierOf, hasSub, autoRenew));
+        }
+    }
+    public static class FamilyMembership extends Membership {
+        int amountOfMembers;
+        public FamilyMembership(String memberName, String membershipTier, Double monthlyFee, boolean autoRenew, int amountOfMembers) {
+            super(memberName, membershipTier, monthlyFee, autoRenew); this.amountOfMembers = amountOfMembers;
+        }
+        public final void getTotalCharge() {
+            System.out.println(String.format("%.2f", amountOfMembers * monthlyFee));
         }
     }
 }
