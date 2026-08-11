@@ -9,7 +9,6 @@ import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        
     }
 
     // Loops - Full Concept
@@ -1925,6 +1924,11 @@ public class day3 {
     interface Processable {
         boolean processPayment(double amount);
         boolean processDeposit(double amount);
+        void returnAllSummaries();
+        default void attemptPayment(double amount) {
+            boolean success = processPayment(amount);
+            System.out.println(success ? "Transaction approved." : "Transaction declined");
+        }
     }
     public static class DebitCard implements Processable {
         String owningCompany; String ch_firstName; String ch_lastName;
@@ -1975,7 +1979,7 @@ public class day3 {
             return new DebitCard(owningCompany, ch_firstName, ch_lastName, cardNumber, expiration, cvc, balance, overdraft_enabled);
         }
 
-        public static void returnAllSummaries() {
+        public void returnAllSummaries() {
             System.out.println("Card Holders");
             cardHolders.forEach((owner, lastFour) -> System.out.println(String.format("CardHolder: %s%n    Last 4: %d", owner, lastFour)));
             System.out.println("Card Companies Used");
@@ -2010,34 +2014,116 @@ public class day3 {
 
     }
     public static class BankNote implements Processable {
+        int value; String serialNumber; String identifier;
+        boolean hasFSSeal; String president;
+        static int netWorth = 0;
+        static TreeMap<String, Integer> serializedBills = new TreeMap<>();
+        static TreeMap<String, Integer> presidentsEncountered = new TreeMap<>();
 
+        public BankNote(int value, String serialNumber, String identifier, boolean hasFSSeal, String president) {
+            this.value = value; this.serialNumber = serialNumber; this.identifier = identifier; this.hasFSSeal = hasFSSeal; this.president = president;
+        }
+        private static boolean checkPresident(String name, int value) {
+            switch (name) {
+                case "Washington":
+                    return value == 1;
+                case "Lincoln":
+                    return value == 5;
+                case "Hamilton":
+                    return value == 10;
+                case "Jackson":
+                    return value == 20;
+                case "Grant":
+                    return value == 50;
+                case "Franklin":
+                    return value == 100;
+                default: return false;
+            }
+        }
+        
+        public static BankNote createBankNote(int value, String serialNumber, String identifier, boolean hasFSSeal, String president) {
+            if (serializedBills.containsKey(serialNumber)) { return null; }
+            if (!hasFSSeal) { return null; }
+            if (checkPresident(president, value)) {
+                if(serialNumber == null || serialNumber.length() != 8) { return null; }
 
+                int letterSum = 0; int numberSum = 0;
+                for (int i = 0; i < serialNumber.length(); i++) {
+                    char c = serialNumber.charAt(i);
 
+                    if (Character.isDigit(c)) { numberSum++;} else if (Character.isLetter(c)) { letterSum++;} else { return null;}
+                }
+                if (numberSum != 2 && numberSum != 8) { return null; }
+                if (identifier.length() != 2) { return null; }
+
+                netWorth += value;
+                serializedBills.put(serialNumber, value); presidentsEncountered.merge(president, 1, (o, n) -> o + n);
+                return new BankNote(value, serialNumber, identifier, hasFSSeal, president);
+            } else { return null; }
+        }
+        
+        @Override
+        public void returnAllSummaries() {
+            System.out.println(String.format("NET WORTH OF BANK: %d", netWorth));
+            System.out.println("Serialized Bills with Associated Value");
+            serializedBills.forEach((sn, val) -> System.out.println(String.format("SERIAL NUMBER: %s, VALUE: $%d", sn, val))); // this is safe because no >= two bills have same sn
+            System.out.println("Presidents Encountered");
+            for (Map.Entry<String, Integer> entry: presidentsEncountered.entrySet()) {
+                System.out.println(String.format("%s was encountered %d times", entry.getKey(), entry.getValue()));
+            }
+        }
         @Override
         public boolean processPayment(double amount) {
-            
-            return true;
+            // just keeping this rather simple for sake of the exc
+            if (value < amount) { System.out.println(String.format("Cannot process payment of $%.2f. Only less than or equal to $%d is allowed", amount, value)); return false;} else {
+                System.out.println("Processed payment"); return true;
+            }
         }
 
         @Override
         public boolean processDeposit(double amount) {
-
+            System.out.println(String.format("Processed deposit of %.2f", amount));
             return true;
         }
     }
     public static class DigitalWallet implements Processable {
+        String walletAddress; double balance;
+        static double totalNW = 0.00; static LinkedHashMap<String, Double> madeAndAccessed = new LinkedHashMap<>(16, 0.75f, true);
 
+        public DigitalWallet(String walletAddress, double balance) { this.walletAddress = walletAddress; this.balance = balance;}
+        public static DigitalWallet makeWallet(String walletAddress, double balance) {
+            if (madeAndAccessed.containsKey(walletAddress)) { return null; }
+            if (balance < 0) { return null; }
+            int letterCount = 0; int numberCount = 0;
+            for (int i = 0; i < walletAddress.length(); i++) {
+                char c = walletAddress.charAt(i);
+                if (Character.isDigit(c)) { numberCount++;} if (Character.isLetter(c)) { letterCount++;}
+            }
+            if (letterCount != 8 && numberCount != 11) { return null;}
+
+            totalNW += balance; madeAndAccessed.put(walletAddress, balance);
+            return new DigitalWallet(walletAddress, balance);
+        }
 
         @Override
         public boolean processPayment(double amount) {
-            
-            return true;
+            if (amount > balance) { return false;} else {
+                double remainingBalance = balance - amount;
+                System.out.println(String.format("Processed Payment of $%.2f. Remamining Balance: $%.2f", amount, remainingBalance));
+                return true;
+            }
         }
 
         @Override
         public boolean processDeposit(double amount) {
-
+            System.out.println(String.format("Processed deposit of $%.2f. New balance: $%.2f", amount, (amount + balance)));
             return true;
+        }
+
+        @Override
+        public void returnAllSummaries() {
+            System.out.println(String.format("Total Net Worth: $%.2f", totalNW));
+            madeAndAccessed.forEach((s, d) -> System.out.println(String.format("Address: %s (value: $%.2f)", s, d)));
         }
     }
 }
