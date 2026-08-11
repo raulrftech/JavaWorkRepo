@@ -2126,4 +2126,41 @@ public class day3 {
             madeAndAccessed.forEach((s, d) -> System.out.println(String.format("Address: %s (value: $%.2f)", s, d)));
         }
     }
+
+    // Refresher 4 - Interfaces, Multiple Conformance with a Genuine Default Method Conflict
+    // When a class implements two interfaces and both happen to declare a default method with an identical name and signature
+    //      Java forces you to resolve the ambiguity explicitly - it will not the class compule without you deciding which behavior wins, or building a combined one
+    // The resolutuion sysntax is InterfaceName.super.methodname(), callable only from isnide the class doing the overriding, never from the outside
+    // Sample: A.super.greet()
+    // The domain: 
+    //      a media file thats both Playable and Exportable - two separate capability interfaces
+    //                                                        both providing a default method with the same name
+    // Build the two interfaces, each with a default method sharing a name and signature, one concrete class implementing both and resolving the confict
+    // Prove the resolution works correctly whenever called
+    interface Playable {
+        default void preview(double forDuration) {
+            System.out.println(String.format("Playing the first %.2f minutes of the video", forDuration));
+        }
+    }
+    interface Exportable {
+        default void preview(double forDuration) {
+            double sampleVideo = forDuration * 0.60;
+            System.out.println(String.format("Exporting now. Here's the current amount uploaded %.2f", sampleVideo));
+        }
+    }
+    public static class HDVideo implements Playable, Exportable {
+        String name; double duration; String format;
+        public HDVideo(String name, double duration, String format) {
+            this.name = name; this.duration = duration; this.format = format;
+        }
+        public static HDVideo makeVideo(String name, double duration, String format) {
+            if (name == null || format == null) { System.out.println("Either the name is invalid or the format is invalid. Please fix"); return null; }
+            return new HDVideo(name, duration, format);
+        }
+        @Override
+        public void preview(double forDuration) {
+            Playable.super.preview(forDuration);
+            Exportable.super.preview(forDuration);
+        }
+    }
 }
