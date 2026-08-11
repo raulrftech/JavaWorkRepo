@@ -7,12 +7,14 @@ import java.util.Map; import java.util.Optional;
 import java.util.Objects;
 import java.util.Set; import java.util.TreeMap;
 
+import Day3.day3.Operable;
+
 public class day3 {
     public static void main(String[] args) {
-        Square square1 = new Square("Red", 14.5);
-        Octagon oct1   = new Octagon("red", 22.5);
-        System.out.println(String.format("Area of Square: %.2fm", square1.calculateArea()));
-        System.out.println(String.format("Area of Octagon: %.2fm", oct1.calculateArea()));
+        Vehicle v1 = new Vehicle("Ford", "Explorer", "21A6GF87WX213450", 12);
+        Mercedez m1 = new Mercedez("A220", "M1AGF18VBS129055", 18, true, 2);
+        Ford f1 = new Ford("GT350", "1FA6F14BN893421", 13, false, 4);
+        System.out.println(m1.returnVehicleSummary(m1.confirmEmissions(m1.mpg, m1.qualifiedEmissions))); System.out.println(f1.returnVehicleSummary(f1.confirmEmissions(f1.mpg, f1.qualifiedEmissions)));
     }
 
     // Loops - Full Concept
@@ -2057,7 +2059,7 @@ public class day3 {
 
                     if (Character.isDigit(c)) { numberSum++;} else if (Character.isLetter(c)) { letterSum++;} else { return null;}
                 }
-                if (numberSum != 2 && numberSum != 8) { return null; }
+                if (letterSum != 2 && numberSum != 8) { return null; }
                 if (identifier.length() != 2) { return null; }
 
                 netWorth += value;
@@ -2203,4 +2205,72 @@ public class day3 {
             return 2 * (1 + Math.sqrt(2)) * Math.pow(sideLength, 2);
         }
     }
+
+    // Refresher 6 - Abstract Classes, Multiple Abstract Methods and a Mid-Chain Abstraction
+    // An abstract class can require more than one abstract method, forcing every subclass to independently satisfy each one
+    // An abstract class can sit in the middle of an inheritance chain, extending a concrete class below it while still being abstract itself
+    //      meaning the "cannot instantiate directly" rule applies to it even though its own parent is perfectly instantiable
+    //          the abstract keyword on a class is what blocks instantiation, not something inherited or dependent on the parents nature
+    // The domain: a vehicle rental system - a concrete base class, an abstract tier above it with two abs methods, and concrete subclasses satisfying both independently
+    // Build a concrete base class, an abs class extending it with two different abs methods, at least two concrete subclassess of that abs class, each satisfying both abs methods
+    // Prove the abstract tier itself cannot be instantiated directly, even though its own parent class can be
+    public static class Vehicle {
+        String make; String model; String vin; double mpg;
+
+        public Vehicle(String make, String model, String vin, double mpg) {
+            this.make = make; this.model = model; this.vin = vin; this.mpg = mpg;
+        }
+        public static Vehicle makeVehicle(String make, String model, String vin, double mpg) {
+            if (make == null || model == null || vin == null) { return null; }
+            if (mpg < 6.0) { return null; }
+
+            return new Vehicle(make, model, vin, mpg);
+        }
+    }
+    static abstract class Operable extends Vehicle {
+        boolean qualifiedEmissions;
+        public Operable(String make, String model, String vin, double mpg, boolean qualifiedEmissions) { 
+            super(make, model, vin, mpg);
+            this.qualifiedEmissions = qualifiedEmissions;
+        }
+        abstract boolean confirmEmissions(double mpg, boolean qualifiedEmissions);
+        abstract String returnVehicleSummary(boolean resultFrom);
+    }
+    public static class Ford extends Operable {
+        int edition;
+        public Ford(String model, String vin, double mpg, boolean qualifiedEmissions, int edition) {
+            super("Ford", model, vin, mpg, qualifiedEmissions);
+            this.edition = edition;
+        }
+        @Override
+        public boolean confirmEmissions(double mpg, boolean qualifiedEmissions) {
+            if ((this.edition * mpg) < 24) { 
+                qualifiedEmissions = false;
+            } else { qualifiedEmissions = true; }
+            return qualifiedEmissions;
+        }
+        @Override
+        public String returnVehicleSummary(boolean resultFrom) {
+            return String.format("%d Edition %s %s with vin (%s) that makes %.2f miles per gallon. %s", edition, make, model, vin, mpg, resultFrom ? "Emissions are stable." : "Emissions are unstable.");
+        }
+    }
+    public static class Mercedez extends Operable {
+        int edition;
+        public Mercedez(String model, String vin, double mpg, boolean qualifiedEmissions, int edition) {
+            super("Mercedez", model, vin, mpg, qualifiedEmissions);
+            this.edition = edition;
+        }
+        @Override
+        public boolean confirmEmissions(double mpg, boolean qualifiedEmissions) {
+            if ((this.edition * mpg) < 24) {  
+                qualifiedEmissions = false;
+            } else { qualifiedEmissions = true; }
+            return qualifiedEmissions;
+        }
+        @Override
+        public String returnVehicleSummary(boolean resultFrom) {
+            return String.format("%d Edition %s %s with vin (%s) makes %.2f miles per gallon. %s", edition, make, model, vin, mpg, resultFrom ? "Emissions are stable." : "Emissions are unstable.");
+        }
+    }
+
 }
