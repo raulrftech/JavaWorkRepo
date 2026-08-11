@@ -9,6 +9,10 @@ import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
+        Square square1 = new Square("Red", 14.5);
+        Octagon oct1   = new Octagon("red", 22.5);
+        System.out.println(String.format("Area of Square: %.2fm", square1.calculateArea()));
+        System.out.println(String.format("Area of Octagon: %.2fm", oct1.calculateArea()));
     }
 
     // Loops - Full Concept
@@ -2161,6 +2165,42 @@ public class day3 {
         public void preview(double forDuration) {
             Playable.super.preview(forDuration);
             Exportable.super.preview(forDuration);
+        }
+    }
+
+    // Refresher 5 - Abstract Classes, One Abstract Method
+    // An abstract calss can never be instantiated directly - only extended (inherited from)
+    // An abstract method has no body at all, just a signature ending in a ;
+    //      forcing every concrete subclass to supply its own implementation
+    // A non-abstract method on the same abstract class is fully implemented and can call the abstract method internally
+    //      trusting whatever subclass eventually exists to have supplied real behavior
+    // An abstract class can have its own properties but
+    //      An abstract class can hold real stored fields, whatever real data the shared concept genuinely needs
+    // The domain: a shape hierarchy where every shape computes its own area, formula differing per shape
+    // Build an abstract class, at least two concrete subclasses with genuinely different area formulas, and prove the shared printArea() style method correctly dispatches to each subclass's own implementation
+    static abstract class Shape {
+        String color; int sides;
+        public Shape(String color, int sides) { this.color = color; this.sides = sides; }
+        abstract double calculateArea();
+    }
+    static public class Square extends Shape {
+        double sideLength;
+        public Square(String color, double sideLength) {
+            super(color, 4); this.sideLength = sideLength;
+        }
+        @Override
+        public double calculateArea() {
+            return Math.pow(sideLength, 2);
+        }
+    }
+    static public class Octagon extends Shape {
+        double sideLength;
+        public Octagon(String color, double sideLength) {
+            super(color, 8); this.sideLength = sideLength;
+        }
+        @Override
+        public double calculateArea() {
+            return 2 * (1 + Math.sqrt(2)) * Math.pow(sideLength, 2);
         }
     }
 }
