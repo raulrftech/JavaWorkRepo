@@ -9,9 +9,7 @@ import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        TicketManager t1 = TicketManager.makeTicket("Travis Scott", 67.50, "2A");
-        TicketManager t2 = TicketManager.makeTicket("Travis Scott", 67.50, "2A");
-        TicketManager.getTicketsSold();
+        
     }
 
     // Loops - Full Concept
@@ -1915,6 +1913,131 @@ public class day3 {
             eventsVisited.forEach((place, visits) -> {
                 System.out.println(String.format("%s was visited %d times", place, visits));
             });
+        }
+    }
+
+    // Exercise 3 - Interfaces, basic conformance witha. default method
+    // An interface declares a contract - method signatures any conforming class must implement, with no state of its own (no fields)
+    // A class conformas via implements
+    //      Must provide a real body for every req'd method or it wont compule
+    // Can also include default methods - a method with an actual body written directly inside the interface, which is then inherited or otherwise overrridden
+    // Build a payment proessor - different payment types (card, cash, digital wallet) all conforming to one shared interface
+    interface Processable {
+        boolean processPayment(double amount);
+        boolean processDeposit(double amount);
+    }
+    public static class DebitCard implements Processable {
+        String owningCompany; String ch_firstName; String ch_lastName;
+        String cardNumber; String expiration; int cvc; double balance; boolean overdraft_enabled;
+        static Set<String> addedCards_CNs = new HashSet<>();
+        static TreeMap<String, Integer> cardCompanies = new TreeMap<>();
+        static HashMap<String, Integer> cardHolders = new HashMap<>();
+
+        public DebitCard(String owningCompany, String ch_firstName, String ch_lastName, String cardNumber, String expiration, int cvc, double balance, boolean overdraft_enabled) {
+            this.owningCompany = owningCompany; this.ch_firstName = ch_firstName;
+            this.ch_lastName = ch_lastName; this.cardNumber = cardNumber; this.expiration = expiration; 
+            this.cvc = cvc; this.balance = balance; this.overdraft_enabled = overdraft_enabled;
+        }
+        private static boolean confirmCN(String cardNumber) {
+            if (cardNumber == null || !cardNumber.matches("\\d{16}")) { return false; }
+            int sum = 0; boolean alternate = false;
+            for (int i = cardNumber.length() - 1; i >= 0; i--) {
+                int n = Integer.parseInt(cardNumber.substring(i, i + 1));
+
+                if (alternate) {
+                    n *= 2; if (n > 9) { n = (n % 10) + 1; }
+                }
+                sum += n; alternate = !alternate;
+            }
+            return (sum % 10 == 0);
+        }
+        public static DebitCard createCard(String owningCompany, String ch_firstName, String ch_lastName, String cardNumber, String expiration, int cvc, double balance, boolean overdraft_enabled) {
+            if (addedCards_CNs.contains(cardNumber)) { System.out.println("This card has already been added. Not adding it again."); return null; }
+            if (expiration == null || expiration.length() != 5) { System.out.println("There was an issue with the expiration date."); return null; }
+            if (expiration.charAt(2) != '/') { System.out.println("The expiration date was formatted incorrectly. Make sure to separate month and year with / or -"); return null; }
+            if (!confirmCN(cardNumber)) { System.out.println("The card number is incorrect. Recheck"); return null; }
+
+            try {
+                String monthStr = expiration.substring(0, 2);
+                String yearStr = expiration.substring(3, 5);
+                int month = Integer.parseInt(monthStr); int year = Integer.parseInt(yearStr);
+
+                if (month < 1 || month > 12) { return null; }
+                if (year < 0 || year > 99) { return null; }
+
+            } catch (NumberFormatException e) { return null; }
+            String interpolatedNames = String.format("%s %s", ch_firstName, ch_lastName);
+            String lastFourOf = cardNumber.substring(cardNumber.length() - 4, cardNumber.length());
+            cardHolders.put(interpolatedNames, Integer.parseInt(lastFourOf));
+
+            cardCompanies.merge(owningCompany, 1, (o, n) -> 0 +n);
+            addedCards_CNs.add(cardNumber);
+            return new DebitCard(owningCompany, ch_firstName, ch_lastName, cardNumber, expiration, cvc, balance, overdraft_enabled);
+        }
+
+        public static void returnAllSummaries() {
+            System.out.println("Card Holders");
+            cardHolders.forEach((owner, lastFour) -> System.out.println(String.format("CardHolder: %s%n    Last 4: %d", owner, lastFour)));
+            System.out.println("Card Companies Used");
+            cardCompanies.forEach((company, usedBy) -> System.out.println(String.format("%s stands for %d people", company, usedBy)));
+        }
+
+        @Override
+        public boolean processPayment(double amount) {
+            double remainingBalance = balance - amount;
+            String lastFour = cardNumber.substring(cardNumber.length() - 4, cardNumber.length());
+            if (remainingBalance <= 0.00) {
+                if (overdraft_enabled) {
+                    this.balance = remainingBalance;
+                    return true;
+                } else {
+                    System.out.println(String.format("The payment in the amount of $%.2f was unsuccessful for the card ending in %s. Current Balance: $%.2f", amount, lastFour, balance));
+                    return false;
+                }
+            } else {
+                this.balance = remainingBalance;
+                System.out.println(String.format("The payment in the amount of $%.2f was successful for the card ending in %s. Current Balance: $%.2f", amount, lastFour, balance));
+                return true;
+            }
+        }
+
+        @Override
+        public boolean processDeposit(double amount) {
+            this.balance += amount;
+            System.out.println(String.format("Deposited $%.2f. New Balance is $%.2f", amount, balance));
+            return true;
+        }
+
+    }
+    public static class BankNote implements Processable {
+
+
+
+        @Override
+        public boolean processPayment(double amount) {
+            
+            return true;
+        }
+
+        @Override
+        public boolean processDeposit(double amount) {
+
+            return true;
+        }
+    }
+    public static class DigitalWallet implements Processable {
+
+
+        @Override
+        public boolean processPayment(double amount) {
+            
+            return true;
+        }
+
+        @Override
+        public boolean processDeposit(double amount) {
+
+            return true;
         }
     }
 }
