@@ -7,14 +7,11 @@ import java.util.Map; import java.util.Optional;
 import java.util.Objects;
 import java.util.Set; import java.util.TreeMap;
 
-import Day3.day3.Operable;
+
 
 public class day3 {
     public static void main(String[] args) {
-        Vehicle v1 = new Vehicle("Ford", "Explorer", "21A6GF87WX213450", 12);
-        Mercedez m1 = new Mercedez("A220", "M1AGF18VBS129055", 18, true, 2);
-        Ford f1 = new Ford("GT350", "1FA6F14BN893421", 13, false, 4);
-        System.out.println(m1.returnVehicleSummary(m1.confirmEmissions(m1.mpg, m1.qualifiedEmissions))); System.out.println(f1.returnVehicleSummary(f1.confirmEmissions(f1.mpg, f1.qualifiedEmissions)));
+        
     }
 
     // Loops - Full Concept
@@ -2273,4 +2270,163 @@ public class day3 {
         }
     }
 
+
+    // Refresher 7 - Inheritance, MultiLevel Cahing, 3+ Deep
+    // Every level in a chain calls super() to its immediate parent, not skipping ahead
+    // Even in a 3 level chain, the middle class is responsible for reaching the top, not the bottom class reaching all the way up directly.
+    // Method overriding can also happen at any level, and super.methodName (distinct from super()) lets a level call its immediate parents version of a method before adding to it
+    //      rather than fully replacing it
+    // The domain: an employee hierarchy - worker, then supervisor, then regional manager, each level building on the one below
+    // Build three genuine levels, each with at least one new field of its own, correct super() chaining through all three levels of construction
+    //      at least one method that gets progressively built upon at each level using super.methodName() rather than being fully rewritten from scratch every time
+    static abstract class Employable {
+        String firstName; String lastName; String empID; String position; double baseRate; int scheduledHours_Weekly;
+        public Employable(String firstName, String lastName, String empID, String position, double baseRate, int scheduledHours_Weekly) {
+            this.firstName = firstName; this.lastName = lastName; this.empID = empID;
+            this.position = position; this.baseRate = baseRate; this.scheduledHours_Weekly = scheduledHours_Weekly;
+        }
+        String returnName() {
+            return String.format("%s %s", firstName, lastName);
+        }
+        abstract String returnMonthlySummary(String cocPos);
+
+    }
+    interface Payable {
+        double grossMonthlyPay();
+        double netMonthlyPay(double stateTax, double fedTax, double iraDeductions);
+        double getPaycheck(double forHours);
+    }
+    interface ControlEmployment {
+        void hireCandidate(String firstName, String lastName, String empID, String position, double baseRate, int scheduledHours_Weekly);
+        void fireEmployee(Employee employee); // not using Employable since that'll consist of Employee, Supervisor, RegManager
+    }
+    public static boolean confirmID(String employableID) {
+        int numberCount = 0; int letterCount = 0;
+        for (int letterIndex = 0; letterIndex < employableID.length(); letterIndex++) {
+            char c = employableID.charAt(letterIndex);
+            if (Character.isLetter(letterIndex)) { letterCount++; } if (Character.isDigit(letterIndex)) { numberCount++; }
+        }
+        return (numberCount == 3 && letterCount == 4);
+    }
+    private static class Employee extends Employable implements Payable {
+        static TreeMap<String, String> employees = new TreeMap<>(); // Employee firstLast with Employee empID
+        static TreeMap<String, Integer> positions = new TreeMap<>(); // position and # of occurrences
+        static TreeMap<String, Integer> employeeHours = new TreeMap<>();
+        static LinkedHashMap<String, Double> employeeComp = new LinkedHashMap<>(16, 0.75f, false); // Employee with their month sal
+        static int totalEmployeeCharge = 0;
+
+        private Employee(String firstName, String lastName, String empID, String position, double baseRate, int scheduledHours_Weekly) { 
+            super(firstName, lastName, empID, position, baseRate, scheduledHours_Weekly);
+        }
+
+        public static Employee hireEmployee(String firstName, String lastName, String empID, String position, double baseRate, int scheduledHours_Weekly) {
+            if (firstName == null || lastName == null) { return null; } if (baseRate < 7.00 ) { return null; } if (scheduledHours_Weekly < 18) { return null; }
+            String interpolatedName = String.format("%s%s", firstName, lastName);
+            if (employees.containsKey(interpolatedName)) { return null; }
+            if (employees.containsValue(empID)) { System.out.println("Cannot use an employee ID for two employees"); return null; }
+            if (!confirmID(empID)) { return null; }
+            
+            employees.put(interpolatedName, empID); positions.merge(position, 1, (o, n) -> o + n);
+            totalEmployeeCharge += baseRate; employeeComp.put(interpolatedName, (baseRate * (scheduledHours_Weekly * 4)));
+            employeeHours.put(interpolatedName, scheduledHours_Weekly);
+            return new Employee(firstName, lastName, empID, position, baseRate, scheduledHours_Weekly);
+        }
+        @Override
+        public double grossMonthlyPay() { return baseRate * (scheduledHours_Weekly * 4); }
+        @Override
+        public double netMonthlyPay(double stateTax, double fedTax, double iraDeductions) {
+            if (stateTax > 1) { stateTax = 0.20;} if (fedTax > 1) { fedTax = 0.1;}
+            double baseMP = grossMonthlyPay();
+            baseMP -= ((baseMP * stateTax) + (baseMP * fedTax));
+            if (iraDeductions > baseMP) { iraDeductions = (baseMP * 0.05);}
+            baseMP -= iraDeductions;
+            return baseMP;
+        }
+        @Override
+        public double getPaycheck(double forHours) {
+            if (forHours > (scheduledHours_Weekly) * 2) { forHours -= 0.50; }
+            double grossPay = forHours * baseRate;
+            double stateTax = 0.20; double fedTax = 0.1; double iraDeductions = grossPay * 0.05;
+            return (grossPay - ((grossPay * stateTax) + (grossPay * fedTax) + iraDeductions));
+        }
+        @Override
+        public String returnMonthlySummary(String cocPos) {
+            String identificationString = String.format("Summary for %s(%s) %s %s %s", cocPos, empID, position, firstName, lastName);
+            String salaryString = String.format("Gross Pay(monthly): $%.2f%nNet Pay(monthly): $%.2f", this.grossMonthlyPay(), this.netMonthlyPay(0.2, 0.1, 234.50));
+            return String.format("%s%n%s", identificationString, salaryString);
+        }
+    }
+    public static class Supervisor extends Employee implements ControlEmployment {
+        static TreeMap<String, String> supervisors = new TreeMap<>(); // supervisors firstLast with their respective ID
+        static LinkedHashMap<String, Integer> employeesManaging = new LinkedHashMap<>(16, 0.75f, false); // spvsr w/ $ of emps
+
+        TreeMap<String, String> managingEmployees = new TreeMap<>(); double pto_Hours; int performanceBonus;
+        public Supervisor(String firstName, String lastName, String empID, String position, double baseRate, int scheduledHours_Weekly, double pto_Hours, int performanceBonus) {
+            super(firstName, lastName, empID, position, baseRate, scheduledHours_Weekly); this.pto_Hours = pto_Hours; this.performanceBonus = performanceBonus;
+        }
+        public static Supervisor hireSupervisor(String firstName, String lastName, String empID, String position, double baseRate, int scheduledHours_Weekly, double pto_Hours, int performanceBonus) {
+            if (firstName == null || lastName == null || empID == null || position == null) { return null; } if (!confirmID(empID)) { return null; }
+            if (baseRate < 20) { return null; } if (scheduledHours_Weekly < 40) { return null; } if (pto_Hours < 60) { return null; } if (performanceBonus < 0) { return null; }
+
+            String interpolatedName = String.format("%s%s", firstName, lastName);
+            if (supervisors.containsKey(interpolatedName)) { return null; }
+
+            supervisors.put(interpolatedName, empID);
+            return new Supervisor(firstName, lastName, empID, position, baseRate, scheduledHours_Weekly, pto_Hours, performanceBonus);
+        }
+
+        public void usePTO(int hours, boolean absolutelyNecessary) {
+            if (hours > pto_Hours) { 
+                if (absolutelyNecessary) {
+                    System.out.println("Since this request is absolutely necessary to fulfill, it will be fulfilled but will be penalized with a 2% reduction on performance bonus");
+                    performanceBonus -= (performanceBonus * 0.05);
+                    pto_Hours -= hours;
+                } else { System.out.println(String.format("Cannot use %.2f hours. Only %.2f hours are available. If this is absolutely necessary, resubmit request with noted necessity.", hours, pto_Hours));}
+                
+            } else { pto_Hours -= hours; System.out.println(String.format("Used %.2f pto hours. %.2f hours of pto remaining to use", hours, pto_Hours)); }
+        }
+        @Override
+        public double grossMonthlyPay() {
+            return super.grossMonthlyPay() + performanceBonus;
+        }
+        @Override
+        public double netMonthlyPay(double stateTax, double fedTax, double iraDeductions) {
+            double regNetMonthly = super.netMonthlyPay(stateTax, fedTax, iraDeductions);
+            double feeOnPTO = (pto_Hours * baseRate) * 0.05; regNetMonthly -= feeOnPTO;
+            return regNetMonthly;
+        }
+        @Override
+        public double getPaycheck(double forHours) {
+            double preliminaryBonus = performanceBonus * 0.05;
+            return super.getPaycheck(forHours) + preliminaryBonus;
+        }
+        @Override
+        public String returnMonthlySummary(String cocPos) {
+            String perfAndPTO = String.format("%s currently has %.2f available PTO hours and will be expecting a $%d as a bonus at the end of the month", firstName, pto_Hours, performanceBonus);
+            return String.format("%s%n%s", super.returnMonthlySummary(cocPos), perfAndPTO);
+        }
+        @Override
+        public void hireCandidate(String firstName, String lastName, String empID, String position, double baseRate, int scheduledHours_Weekly) {
+            if (this.managingEmployees.containsKey(firstName) == false) { 
+                Employee employee = Employee.hireEmployee(firstName, lastName, empID, position, baseRate, scheduledHours_Weekly);
+                if (employee != null) {
+                    managingEmployees.put(employee.firstName, employee.empID);
+                    employeesManaging.merge(this.firstName, 1, (o, n) -> o +n);
+                } else { System.out.println("An error occurred while trying to hire " + firstName); }
+            } else { 
+                System.out.println(String.format("%s was already hired by %s", firstName, this.firstName)); 
+            }
+        }
+        @Override
+        public void fireEmployee(Employee employee) {
+            if (managingEmployees.containsKey(employee.firstName)) {
+                managingEmployees.remove(employee.firstName); employeesManaging.merge(this.firstName, 1, (o, n) -> o - n);
+            } else { System.out.println(String.format("It does not seem like %s is %s's supervisor.", firstName, employee.firstName)); }
+        }
+    }
+    public static class RegManager extends Supervisor {
+        public RegManager(String firstName, String lastName, String empID, String position, double baseRate, int scheduledHours_Weekly, double pto_Hours, int performanceBonus) {
+            super(firstName, lastName, empID, "Regional Manager", baseRate, scheduledHours_Weekly, pto_Hours, performanceBonus);
+        }
+    }
 }
