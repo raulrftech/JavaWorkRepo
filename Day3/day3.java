@@ -11,7 +11,7 @@ import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-
+        
     }
 
     // Loops - Full Concept
@@ -2533,4 +2533,105 @@ public class day3 {
             return String.format("%s%n%s%n%s", didConvert, performance, hoursThisMonth);
         }
     }
+
+    // Refresher 8 -- Inheritance Combined with An Interface, Closing Synthesis
+    // This pulls together the whole set - a concrete inheritance chain where only some subclassess additionally implement a separate capability interface, not all of them
+    // The domain: a notification system, different notification types sharing a common parent class but only some of them are also urgent (a separate interface capability the others dont have)
+    // Build a base notif class (shared field like message, timestamp), at least two/three concrete subclasses, where only soem of them additionally implements an Urgent interface (with something like a default escalation method)
+    //  proving the inheritance hierarchy and the interface capabiliyt are genuinely independent of each other
+    //      a subclass can be deep in the inheritance chain without being Urgent, and Urgency doesnt require any particullar position in that chain
+    interface UrgentNotification {
+        Notification raiseUrgency(int to);
+    }
+    public static abstract class Notification {
+        String appName; String title; int timeStamp; int importancy;
+        public Notification(String appName, String title, int timeStamp, int importancy) { this.appName = appName; this.title = title; this.timeStamp = timeStamp; this.importancy = importancy; }
+        String getSummary() { return String.format("Notification from %s: %s at %d. Importancy %d", appName, title, timeStamp, importancy); }
+    }
+    public static class BasicNotification extends Notification implements UrgentNotification {
+
+        private BasicNotification(String appName, String title, int timeStamp, int importancy) {
+            super(appName, title, timeStamp, importancy);
+        }
+        public static BasicNotification createBasicNotif(String appName, String title, int timeStamp, int importancy) {
+            if (appName == null || title == null) { 
+                System.out.println("An error occurred trying to process the app name and title of this notification. Resubmit");
+                return null;
+            } if (timeStamp < 0 || String.valueOf(timeStamp).length() != 4 || timeStamp > 2359) { 
+                System.out.println("There is an error with the time. The hours should be between 0 and 23, nothing greater"); return null; 
+            }
+            String timeString = String.valueOf(timeStamp);
+            String hourString = timeString.substring(0,2);
+            String minuteString = timeString.substring(2,4);
+            int hours = Integer.parseInt(hourString); if (hours > 23) { return null; }
+            int minutes = Integer.parseInt(minuteString); if (minutes > 59) { return null; }
+            if (importancy < 0 || importancy > 2) { 
+                System.out.println("Basic notifications shall have an importancy of either 1 or 2. If importancy is higher, submit a higher importancy notification");
+                return null;
+            }
+            return new BasicNotification(appName, title, timeStamp, importancy);
+        }
+        @Override
+        public Notification raiseUrgency(int to) { 
+            if (to > 6 || to < 3) { System.out.println("Importancy level cannot be higher than 6 or lower than 3"); return null; }
+            if (to == 3 || to == 4) {
+                return MidNotification.createMidNotif(appName, title, timeStamp, to);
+            } else {
+                return HighNotification.createHighNotif(appName, title, timeStamp, to);
+            }
+        }
+    }
+    public static class MidNotification extends Notification implements UrgentNotification {
+        private MidNotification(String appName, String title, int timeStamp, int importancy) {
+            super(appName, title, timeStamp, importancy);
+        }
+        public static MidNotification createMidNotif(String appName, String title, int timeStamp, int importancy) {
+            if (appName == null || title == null) { 
+                System.out.println("An error occurred trying to process the app name and title of this notification. Resubmit");
+                return null;
+            } if (timeStamp < 0 || String.valueOf(timeStamp).length() != 4 || timeStamp > 2359) { 
+                System.out.println("There is an error with the time. The hours should be between 0 and 23, nothing greater"); return null; 
+            }
+            String timeString = String.valueOf(timeStamp);
+            String hourString = timeString.substring(0,2);
+            String minuteString = timeString.substring(2,4);
+            int hours = Integer.parseInt(hourString); if (hours > 23) { return null; }
+            int minutes = Integer.parseInt(minuteString); if (minutes > 59) { return null; }
+            if (importancy < 3 || importancy > 4) { 
+                System.out.println("Mid-Level notifications shall have an importancy of either 1 or 2. If importancy is higher, submit a higher importancy notification");
+                return null;
+            }
+            return new MidNotification(appName, title, timeStamp, importancy);
+        }
+
+        @Override
+        public Notification raiseUrgency(int to) { 
+            if (to > 6 || to < 5) { System.out.println("Importancy level cannot be higher than 6 or lower than 3"); return null; }
+            return HighNotification.createHighNotif(appName, title, timeStamp, to);
+        }
+    }
+    public static class HighNotification extends Notification {
+        private HighNotification(String appName, String title, int timeStamp, int importancy) {
+            super(appName, title, timeStamp, importancy);
+        }
+        public static HighNotification createHighNotif(String appName, String title, int timeStamp, int importancy) {
+            if (appName == null || title == null) { 
+                System.out.println("An error occurred trying to process the app name and title of this notification. Resubmit");
+                return null;
+            } if (timeStamp < 0 || String.valueOf(timeStamp).length() != 4 || timeStamp > 2359) { 
+                System.out.println("There is an error with the time. The hours should be between 0 and 23, nothing greater"); return null; 
+            }
+            String timeString = String.valueOf(timeStamp);
+            String hourString = timeString.substring(0,2);
+            String minuteString = timeString.substring(2,4);
+            int hours = Integer.parseInt(hourString); if (hours > 23) { return null; }
+            int minutes = Integer.parseInt(minuteString); if (minutes > 59) { return null; }
+            if (importancy < 5 || importancy > 6) { 
+                System.out.println("High-Level notifications shall have an importancy of either 1 or 2. If importancy is higher, submit a higher importancy notification");
+                return null;
+            }
+            return new HighNotification(appName, title, timeStamp, importancy);
+        }
+    }
+
 }
