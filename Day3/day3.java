@@ -2028,18 +2028,9 @@ public class day3 {
         }
         private static boolean checkPresident(String name, int value) {
             switch (name) {
-                case "Washington":
-                    return value == 1;
-                case "Lincoln":
-                    return value == 5;
-                case "Hamilton":
-                    return value == 10;
-                case "Jackson":
-                    return value == 20;
-                case "Grant":
-                    return value == 50;
-                case "Franklin":
-                    return value == 100;
+                case "Washington": return value == 1; case "Lincoln": return value == 5;
+                case "Hamilton": return value == 10;  case "Jackson": return value == 20;
+                case "Grant": return value == 50;    case "Franklin": return value == 100;
                 default: return false;
             }
         }
@@ -2304,9 +2295,11 @@ public class day3 {
         int numberCount = 0; int letterCount = 0;
         for (int letterIndex = 0; letterIndex < employableID.length(); letterIndex++) {
             char c = employableID.charAt(letterIndex);
-            if (Character.isLetter(letterIndex)) { letterCount++; } if (Character.isDigit(letterIndex)) { numberCount++; }
+            if (Character.isLetter(c)) { letterCount++; } if (Character.isDigit(c)) { numberCount++; }
         }
-        return (numberCount == 3 && letterCount == 4);
+        boolean isValid = (numberCount == 3 && letterCount == 4);
+        System.out.println(isValid ? "ID is valid" : "ID is not valid");
+        return isValid;
     }
     private static class Employee extends Employable implements Payable {
         static TreeMap<String, String> employees = new TreeMap<>(); // Employee firstLast with Employee empID
@@ -2361,7 +2354,7 @@ public class day3 {
         static LinkedHashMap<String, Integer> employeesManaging = new LinkedHashMap<>(16, 0.75f, false); // spvsr w/ $ of emps
 
         TreeMap<String, String> managingEmployees = new TreeMap<>(); double pto_Hours; int performanceBonus;
-        public Supervisor(String firstName, String lastName, String empID, String position, double baseRate, int scheduledHours_Weekly, double pto_Hours, int performanceBonus) {
+        private Supervisor(String firstName, String lastName, String empID, String position, double baseRate, int scheduledHours_Weekly, double pto_Hours, int performanceBonus) {
             super(firstName, lastName, empID, position, baseRate, scheduledHours_Weekly); this.pto_Hours = pto_Hours; this.performanceBonus = performanceBonus;
         }
         public static Supervisor hireSupervisor(String firstName, String lastName, String empID, String position, double baseRate, int scheduledHours_Weekly, double pto_Hours, int performanceBonus) {
@@ -2395,6 +2388,7 @@ public class day3 {
             double feeOnPTO = (pto_Hours * baseRate) * 0.05; regNetMonthly -= feeOnPTO;
             return regNetMonthly;
         }
+        public double accessEmpVersion_NETMONTHLY(double stateTax, double fedTax, double iraDeductions) { return super.netMonthlyPay(stateTax, fedTax, iraDeductions); }
         @Override
         public double getPaycheck(double forHours) {
             double preliminaryBonus = performanceBonus * 0.05;
@@ -2405,7 +2399,6 @@ public class day3 {
             String perfAndPTO = String.format("%s currently has %.2f available PTO hours and will be expecting a $%d as a bonus at the end of the month", firstName, pto_Hours, performanceBonus);
             return String.format("%s%n%s", super.returnMonthlySummary(cocPos), perfAndPTO);
         }
-        @Override
         public void hireCandidate(String firstName, String lastName, String empID, String position, double baseRate, int scheduledHours_Weekly) {
             if (this.managingEmployees.containsKey(firstName) == false) { 
                 Employee employee = Employee.hireEmployee(firstName, lastName, empID, position, baseRate, scheduledHours_Weekly);
@@ -2417,16 +2410,95 @@ public class day3 {
                 System.out.println(String.format("%s was already hired by %s", firstName, this.firstName)); 
             }
         }
-        @Override
         public void fireEmployee(Employee employee) {
             if (managingEmployees.containsKey(employee.firstName)) {
                 managingEmployees.remove(employee.firstName); employeesManaging.merge(this.firstName, 1, (o, n) -> o - n);
             } else { System.out.println(String.format("It does not seem like %s is %s's supervisor.", firstName, employee.firstName)); }
         }
     }
-    public static class RegManager extends Supervisor {
-        public RegManager(String firstName, String lastName, String empID, String position, double baseRate, int scheduledHours_Weekly, double pto_Hours, int performanceBonus) {
-            super(firstName, lastName, empID, "Regional Manager", baseRate, scheduledHours_Weekly, pto_Hours, performanceBonus);
+    public static class RegionalManager extends Supervisor {
+        int storesManaging;
+        boolean vacationBonusApproved = false;
+        boolean canConvert_PTOtoBonus;
+        static TreeMap<String, String> regManagersCreated = new TreeMap<>();
+        static LinkedHashMap<String, String> supervisorsManaging = new LinkedHashMap<>(16, 0.75f, false); // Name w/ empID
+
+        private RegionalManager(String firstName, String lastName, String empID, String position, double baseRate, int scheduledHours_Weekly, double pto_Hours, int performanceBonus, int storesManaging, boolean canConvert_PTOtoBonus) {
+            super(firstName, lastName, empID, position, baseRate, scheduledHours_Weekly, pto_Hours, performanceBonus);
+            this.storesManaging = storesManaging; this.canConvert_PTOtoBonus = canConvert_PTOtoBonus;
+        }
+        public static RegionalManager createRegionalManger(String firstName, String lastName, String empID, String position, double baseRate, int scheduledHours_Weekly, double pto_Hours, int performanceBonus, int storesManaging, boolean canConvert_PTOtoBonus) {
+            if (firstName == null || lastName == null || empID == null || position == null) { return null; }
+            if (!confirmID(empID)) { return null; } if (baseRate < 60) { return null; }
+            if (scheduledHours_Weekly < 45) { return null; } if (pto_Hours < 80) { return null; }
+            if (performanceBonus < 8000) { return null; } if (storesManaging < 1) { return null; }
+
+            String interpolatedName = String.format("", firstName, lastName);
+            if (regManagersCreated.containsKey(interpolatedName)) { return null; }
+            regManagersCreated.put(interpolatedName, empID);
+            return new RegionalManager(firstName, lastName, empID, position, baseRate, scheduledHours_Weekly, pto_Hours, performanceBonus, storesManaging, canConvert_PTOtoBonus);
+        }
+
+        public void createSupervisor(String firstName, String lastName, String empID, String position, double baseRate, int scheduledHours_Weekly, double pto_Hours, int performanceBonus) {
+            Supervisor hiredSup = super.hireSupervisor(firstName, lastName, empID, position, baseRate, scheduledHours_Weekly, pto_Hours, performanceBonus);
+            String interpolatedName = String.format("%s%s", firstName, lastName);
+            if (hiredSup != null) {
+                if (supervisorsManaging.containsKey(interpolatedName)) { System.out.println("This supervisor has already been hired"); return; } else {
+                    supervisorsManaging.put(interpolatedName, empID);
+                }
+            } else {
+                System.out.println("Something wrong occurred while trying to hire this supervisor");
+            }
+        }
+        public void approveVacationRequest() {
+            this.vacationBonusApproved = (this.scheduledHours_Weekly > 55 && this.baseRate > 70 && this.performanceBonus > 10000);
+            System.out.println(this.vacationBonusApproved ? String.format("Vacation has been approved for %s", firstName) : String.format("Vacation was not approved for %s", firstName));
+        }
+        public String convertPTOtoBonus() {
+            if (canConvert_PTOtoBonus) {
+                if (pto_Hours > 0) {
+                    double converted = (pto_Hours * baseRate);
+                    performanceBonus += converted; double preConversion = pto_Hours; pto_Hours = 0.00;
+                    return String.format("Successfully converted %s's %.2f PTO hours to be added to their bonus. Adding a total of $%.2f to bonus. Bonus will now be $%d", firstName, preConversion, converted, performanceBonus);
+                } else {
+                    return String.format("Since %s has %.2f PTO hours available, we cannot add it to their bonus", firstName, pto_Hours);
+                }
+            } else {
+                return String.format("%s cannot convert their PTO hours to be added to thier bonus", firstName);
+            }
+        }
+
+        @Override
+        public void usePTO(int hours, boolean absolutelyNecessary) {
+            if (absolutelyNecessary) {
+                if (hours > pto_Hours) {
+                    System.out.println("Since this request is absolutely necessary to fulfill, it will be fulfilled and will not be penalized against bonus nor pto hours");
+                } else {
+                    pto_Hours -= hours; System.out.println(String.format("Used %.2f pto hours. %.2f hours of pto remaining to use", hours, pto_Hours));
+                }
+            } else {
+                if (hours > pto_Hours) {
+                    pto_Hours -= hours;
+                    System.out.println(String.format("%s cannot use %.2f hours. Only %.2f hours are available. PTO will be approved but will be deducted from next set of PTO hours awarded", firstName, hours, pto_Hours));
+                } else {
+                    pto_Hours -= hours; System.out.println(String.format("Used %.2f pto hours. %.2f hours of pto remaining to use", hours, pto_Hours));
+                }
+            }
+        }
+        @Override
+        public double getPaycheck(double forHours) {
+            return super.getPaycheck(forHours) + (performanceBonus * 0.05);
+        }
+        @Override
+        public double netMonthlyPay(double stateTax, double fedTax, double iraDeductions) {
+            return super.accessEmpVersion_NETMONTHLY(stateTax, fedTax, iraDeductions) + baseRate;
+        }
+        @Override
+        public String returnMonthlySummary(String cocPos) {
+            String didConvert = (canConvert_PTOtoBonus && pto_Hours == 0.00) ? String.format("%s %s chose to convert their PTO hours to be applied to their bonus", cocPos, firstName) : String.format("%s has not chose to convert their pto hours to be applied to their bonus so they have %.2f pto hours", firstName, pto_Hours);
+            String performance = String.format("%s will be expecting a $%d as a bonus at the end of the month", firstName, performanceBonus);
+            String hoursThisMonth = String.format("%s was scheduled for %d hours this month accmulating to a gross check of $%.2f", firstName, scheduledHours_Weekly * 4, grossMonthlyPay());
+            return String.format("%s%n%s%n%s", didConvert, performance, hoursThisMonth);
         }
     }
 }
