@@ -11,7 +11,7 @@ import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        
+
     }
 
     // Loops - Full Concept
@@ -2308,6 +2308,18 @@ public class day3 {
         static LinkedHashMap<String, Double> employeeComp = new LinkedHashMap<>(16, 0.75f, false); // Employee with their month sal
         static int totalEmployeeCharge = 0;
 
+        public static void getEmployeeInfo() { employees.forEach((name, id) -> System.out.println(String.format("Employees Created%nNAME: %s, ID: %s", name, id))); }
+        public static void getPosSummary() { 
+            for (Map.Entry<String, Integer> numOfPos: positions.entrySet()) { 
+                System.out.println(String.format("There are %d employees that are a %s", numOfPos.getValue(), numOfPos.getKey()));
+            }
+        }
+        public static void getHourSummary() { employeeHours.forEach((name, hrs) -> System.out.println(String.format("Employee Hours%n  %s works %d hours per week", name, hrs))); }
+        public static void getMonthlySal() { 
+            employeeComp.forEach((name, comp) -> System.out.println(String.format("Employee Monthly Compensation%n  %s makes $%.2f per month", name, comp)));
+            System.out.println(String.format("It costs the business %d per hour to compensate each employee", totalEmployeeCharge));
+        }
+
         private Employee(String firstName, String lastName, String empID, String position, double baseRate, int scheduledHours_Weekly) { 
             super(firstName, lastName, empID, position, baseRate, scheduledHours_Weekly);
         }
@@ -2351,9 +2363,17 @@ public class day3 {
     }
     public static class Supervisor extends Employee implements ControlEmployment {
         static TreeMap<String, String> supervisors = new TreeMap<>(); // supervisors firstLast with their respective ID
-        static LinkedHashMap<String, Integer> employeesManaging = new LinkedHashMap<>(16, 0.75f, false); // spvsr w/ $ of emps
+        static LinkedHashMap<String, Integer> employeesManaging = new LinkedHashMap<>(16, 0.75f, false); // spvsr w/ # of emps
 
         TreeMap<String, String> managingEmployees = new TreeMap<>(); double pto_Hours; int performanceBonus;
+
+        public static void getSupervisorsSummary() {
+            supervisors.forEach((name, id) -> System.out.println(String.format("Supervisors Created%nNAME: %s, ID: %s", name, id)));
+        }
+        public static void employeesManagingSummary() {
+            employeesManaging.forEach((name, amt) -> System.out.println(String.format("%s manages %d employees", name, amt)));
+        }
+
         private Supervisor(String firstName, String lastName, String empID, String position, double baseRate, int scheduledHours_Weekly, double pto_Hours, int performanceBonus) {
             super(firstName, lastName, empID, position, baseRate, scheduledHours_Weekly); this.pto_Hours = pto_Hours; this.performanceBonus = performanceBonus;
         }
@@ -2368,7 +2388,11 @@ public class day3 {
             return new Supervisor(firstName, lastName, empID, position, baseRate, scheduledHours_Weekly, pto_Hours, performanceBonus);
         }
 
-        public void usePTO(int hours, boolean absolutelyNecessary) {
+        public void getManagingEmpSummary() {
+            managingEmployees.forEach((name, id) -> System.out.println(String.format("Employees that %s Manages%nNAME: %s, ID: %s", firstName, name, id)));
+        }
+
+        public void usePTO(double hours, boolean absolutelyNecessary) {
             if (hours > pto_Hours) { 
                 if (absolutelyNecessary) {
                     System.out.println("Since this request is absolutely necessary to fulfill, it will be fulfilled but will be penalized with a 2% reduction on performance bonus");
@@ -2421,7 +2445,15 @@ public class day3 {
         boolean vacationBonusApproved = false;
         boolean canConvert_PTOtoBonus;
         static TreeMap<String, String> regManagersCreated = new TreeMap<>();
-        static LinkedHashMap<String, String> supervisorsManaging = new LinkedHashMap<>(16, 0.75f, false); // Name w/ empID
+        static LinkedHashMap<String, String> supervisorsManaging = new LinkedHashMap<>(16, 0.75f, false); // Name w/ empID]
+        // compareTo isnt necessary here since the maps work with only strings not objs
+
+        public static void managersCreated() {
+            regManagersCreated.forEach((name, id) -> System.out.println(String.format("Regional Managers Created: %nNAME: %s, ID: %s", name, id)));
+        }
+        public static void managingSupes() {
+            for (Map.Entry<String, String> supes : supervisorsManaging.entrySet()) { System.out.println(String.format("Managing Supervisors%nNAME: %s, ID: %s", supes.getKey(), supes.getValue())); }
+        }
 
         private RegionalManager(String firstName, String lastName, String empID, String position, double baseRate, int scheduledHours_Weekly, double pto_Hours, int performanceBonus, int storesManaging, boolean canConvert_PTOtoBonus) {
             super(firstName, lastName, empID, position, baseRate, scheduledHours_Weekly, pto_Hours, performanceBonus);
@@ -2433,7 +2465,7 @@ public class day3 {
             if (scheduledHours_Weekly < 45) { return null; } if (pto_Hours < 80) { return null; }
             if (performanceBonus < 8000) { return null; } if (storesManaging < 1) { return null; }
 
-            String interpolatedName = String.format("", firstName, lastName);
+            String interpolatedName = String.format("%s%s", firstName, lastName);
             if (regManagersCreated.containsKey(interpolatedName)) { return null; }
             regManagersCreated.put(interpolatedName, empID);
             return new RegionalManager(firstName, lastName, empID, position, baseRate, scheduledHours_Weekly, pto_Hours, performanceBonus, storesManaging, canConvert_PTOtoBonus);
@@ -2469,7 +2501,7 @@ public class day3 {
         }
 
         @Override
-        public void usePTO(int hours, boolean absolutelyNecessary) {
+        public void usePTO(double hours, boolean absolutelyNecessary) {
             if (absolutelyNecessary) {
                 if (hours > pto_Hours) {
                     System.out.println("Since this request is absolutely necessary to fulfill, it will be fulfilled and will not be penalized against bonus nor pto hours");
