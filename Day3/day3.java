@@ -2643,14 +2643,23 @@ public class day3 {
         //          to track their own state, not just as method parameters
         // So Im going to build a bank system with a signup class and eligibility and accounts like savings/checkings with own features
         // The client will have a prop to each, and will have their beneficiaries which will be a set which would have to be a person of age
-        public static class Person implements Comparable<Person> {
-            static String todaysDate = "08142026";
+        public static abstract class PersonalDetails {
             String firstName; String lastName; String dob; int idNumber; int idExpiry;
-
-            private Person(String firstName, String lastName, String dob, int idNumber, int idExpiry) {
-                this.firstName = firstName; this.lastName = lastName; this.dob = dob; this.idExpiry = idExpiry;
+            public PersonalDetails(String firstName, String lastName, String dob, int idNumber, int idExpiry) {
+                this.firstName = firstName; this.lastName = lastName; this.dob = dob;
+                this.idNumber = idNumber; this.idExpiry = idExpiry;
             }
-            public static Person createPerson(String firstName, String lastName, String dob, int idNumber, int idExpiry) {
+        }
+        public static class Person extends PersonalDetails implements Comparable<Person>{
+            static String todaysDate = "08142026";
+
+
+            double cashOnHand; Transferrable checkings = null; Transferrable savings = null;
+
+            private Person(String firstName, String lastName, String dob, int idNumber, int idExpiry, double cashOnHand) {
+                super(firstName, lastName, dob, idNumber, idExpiry); this.cashOnHand = cashOnHand;
+            }
+            public static Person createPerson(String firstName, String lastName, String dob, int idNumber, int idExpiry, double cashOnHand) {
                 if (firstName == null || lastName == null) {
                     System.out.println("An error occurred whilst trying to set the name parameters to this Person obj. Recheck");
                     return null;
@@ -2695,17 +2704,107 @@ public class day3 {
                     System.out.println("We're sorry but we do not accept expired ID's");
                     return null;
                 }
+                if (cashOnHand < 0.00) { System.out.println("You cannot try to register an account with debt."); return null; }
 
-                System.out.println(String.format("Successfully created new Person Obj%nNAME: %s %s%nDOB: %s%nID NUMBER: %d%nID EXPIRY: %d", firstName, lastName, dob, idNumber, idExpiry));
-                return new Person(firstName, lastName, dob, idNumber, idExpiry);
+                System.out.println(String.format("Successfully created new Person Obj%nNAME: %s %s%nDOB: %s%nID NUMBER: %d%nID EXPIRY: %d%nAVAILABLE CASH: $%.2f", firstName, lastName, dob, idNumber, idExpiry, cashOnHand));
+                return new Person(firstName, lastName, dob, idNumber, idExpiry, cashOnHand);
             }
 
-
+            @Override public boolean equals(Object other) {
+                String thisIDNumber = String.valueOf(this.idNumber);
+                if (this == other) { return true; }
+                if (!(other instanceof Person)) { return false; }
+                Person otherperson = (Person) other;
+                String otherIDNUmber = String.valueOf(otherperson.idNumber);
+                return thisIDNumber.equals(otherIDNUmber);
+            }
 
             @Override
             public int compareTo(Person other) {
-                return 1;
+                String thisIDNum = String.valueOf(this.idNumber);
+                String otherIDNum = String.valueOf(other.idNumber);
+                return thisIDNum.compareTo(otherIDNum);
             }
         }
+        public abstract static class AccountRegistration {
+            public AccountRegistration() {}
+            abstract boolean RegisterAccount(Person forPerson, String accountType);
+        }
+        public abstract static class BasicAccountFeatures {
+            Person person; int AccountNumber; int RoutingNumber; double balance;
+            public BasicAccountFeatures(Person person, int AccountNumber, int RoutingNumber, double balance) {
+                this.person = person; this.AccountNumber = AccountNumber;
+                this.RoutingNumber = RoutingNumber; this.balance = balance;
+            }
+            abstract boolean deposit(double amount);
+            abstract boolean withdraw(double amount);
+        }
+        interface Transferrable {
+            default boolean transferTo(Person person, double amount, BasicAccountFeatures from, BasicAccountFeatures to) {
+                if ((from instanceof CheckingAccount && to instanceof CheckingAccount || (from instanceof SavingsAccount && to instanceof SavingsAccount))) { return false; }
+                if (!from.person.equals(person)) { return false; }
+                if (!to.person.equals(person))   { return false; }
 
+                if (from instanceof CheckingAccount) {
+                    if (amount > from.balance) { 
+                        System.out.println(String.format("You cannot perform a transfer more than your current balance which stands at $%.2f", from.balance));
+                        return false;
+                    } else {
+
+                        return true;
+                    }
+                } else {
+                    if (amount > to.balance) { 
+                        System.out.println(String.format("You cannot perform a transfer more than your current balance which stands at $%.2f", from.balance));
+                        return false;
+                    } else {
+
+                        return true;
+                    }
+                }
+            }
+        }
+        public static class CheckingAccount extends BasicAccountFeatures implements Transferrable {
+            boolean overdraftEnabled;
+            public CheckingAccount(Person person, int AccountNumber, int RoutingNumber, double balance, boolean overdraftEnabled) {
+                super(person, AccountNumber, RoutingNumber, balance); this.overdraftEnabled = overdraftEnabled;
+            }
+            @Override
+            public boolean deposit(double amount) {
+                if (amount < 0) { System.out.println(String.format("Dear %s, you cannot deposit an amount less than 0", person.firstName)); return false; }
+                balance += amount; System.out.println(String.format("Succesfully deposited $%.2f, new balance stands at $%.2f", amount, balance));
+                return true;
+            }
+            @Override
+            public boolean withdraw(double amount) {
+                if (amount > balance) {
+                    if (overdraftEnabled) {
+                        balance -= amount; System.out.println(String.format("Overdraft has been enabled, new balance stands at $%.2f", balance)); return true;
+                    } else { 
+                        System.out.println(String.format("%s you only have $%.2f; you cannot withdraw $%.2f since you do not have overdraft enabled", person.firstName, balance, amount));
+                        return false;
+                    }
+                } else {
+                    balance -= amount; System.out.println(String.format("%s you just withdrew $%.2f, your new balance is $%.2f", person.firstName, amount, balance)); return true;
+                }
+            }
+        }
+        public static class SavingsAccount extends BasicAccountFeatures implements Transferrable {
+            double api;
+            public SavingsAccount(Person person, int AccountNumber, int RoutingNumber, double balance, double api) {
+                super(person, AccountNumber, RoutingNumber, balance); this.api = api;
+            }
+            @Override
+            public boolean deposit(double amount) {
+
+
+                return true;
+            }
+            @Override
+            public boolean withdraw(double amount) {
+
+
+                return true;
+            }
+        }
 }
