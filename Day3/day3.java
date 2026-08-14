@@ -11,7 +11,7 @@ import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        
+       
     }
 
     // Loops - Full Concept
@@ -2633,5 +2633,79 @@ public class day3 {
             return new HighNotification(appName, title, timeStamp, importancy);
         }
     }
+
+    // Exercise 1 of 5 - Full OOP Wrapping, No Scaffold
+        // This stretch requires genuine class hierarchies (inheritance and/or interfaces)) wrapping around Day 3's container work
+        //      not containers used standalone the way most of this file has been
+        // Design a system of your choosing - abstract class or interface as the backbone
+        // At least two conrete subclasses
+        //      where the classes themselves use at least two different Day3 container types internally (any combination of Map, List or Set)
+        //          to track their own state, not just as method parameters
+        // So Im going to build a bank system with a signup class and eligibility and accounts like savings/checkings with own features
+        // The client will have a prop to each, and will have their beneficiaries which will be a set which would have to be a person of age
+        public static class Person implements Comparable<Person> {
+            static String todaysDate = "08142026";
+            String firstName; String lastName; String dob; int idNumber; int idExpiry;
+
+            private Person(String firstName, String lastName, String dob, int idNumber, int idExpiry) {
+                this.firstName = firstName; this.lastName = lastName; this.dob = dob; this.idExpiry = idExpiry;
+            }
+            public static Person createPerson(String firstName, String lastName, String dob, int idNumber, int idExpiry) {
+                if (firstName == null || lastName == null) {
+                    System.out.println("An error occurred whilst trying to set the name parameters to this Person obj. Recheck");
+                    return null;
+                }
+                if (dob.length() != 8) {
+                    System.out.println("Make sure the dob of this person is MMDDYYYY");
+                    return null;
+                }
+                if (String.valueOf(idNumber).length() != 8) {
+                    System.out.println("ID numbers shall be exactly 8 digits"); return null;
+                }
+                if (idExpiry < Integer.parseInt(todaysDate)) {
+                    System.out.println("You cannot make a person with an expired ID"); return null;
+                }
+                int dob_day = Integer.parseInt(dob.substring(2, 4));
+                int dob_month = Integer.parseInt(dob.substring(0, 2));
+                int dob_year = Integer.parseInt(dob.substring(4, 8));
+                if (dob_month > 12 || dob_month < 0) {
+                    System.out.println("The month should not be greater than 12"); return null;
+                } else {
+                    if (dob_month != 1 || dob_month != 3 || dob_month != 5 || dob_month != 7 || dob_month != 8 || dob_month != 10 || dob_month !=12) {
+                        if (dob_month == 2) {
+                            if (dob_day > 28) {
+                                System.out.println("February does not have more than 28 days"); return null;
+                            }
+                        } else {
+                            if (dob_day > 30) {
+                                System.out.println("The month you passed in does not have more than 30 days. Reevaluate");
+                                return null;
+                            }
+                        }
+                    } else {
+                        if (dob_day > 31) {
+                            System.out.println("No months in the year have more than 31 days. Resubmit"); return null;
+                        }
+                    }
+                }
+                if ((dob_year + 18) > Integer.parseInt(todaysDate.substring(4, 8))) {
+                    System.out.println("We do not accept minors"); return null;
+                }
+                if (idExpiry <= Integer.parseInt(todaysDate)) {
+                    System.out.println("We're sorry but we do not accept expired ID's");
+                    return null;
+                }
+
+                System.out.println(String.format("Successfully created new Person Obj%nNAME: %s %s%nDOB: %s%nID NUMBER: %d%nID EXPIRY: %d", firstName, lastName, dob, idNumber, idExpiry));
+                return new Person(firstName, lastName, dob, idNumber, idExpiry);
+            }
+
+
+
+            @Override
+            public int compareTo(Person other) {
+                return 1;
+            }
+        }
 
 }
