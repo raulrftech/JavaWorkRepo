@@ -11,7 +11,10 @@ import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-       
+        Person p1 = Person.createPerson("Raul", "Rodriguez", "11182003", 49327080, 11182031, 235.60);
+        SavingsAccount s1 = SavingsAccount.createSavings(p1, "2735480432", "112000066", 234.50, 2.3);
+        p1.recieveMoney(300); p1.savings.deposit(12); p1.savings.withdraw(200);
+        System.out.println(p1.getNetworth());
     }
 
     // Loops - Full Concept
@@ -2653,8 +2656,9 @@ public class day3 {
         public static class Person extends PersonalDetails implements Comparable<Person>{
             static String todaysDate = "08142026";
 
+            // static maps resembling history of deposits/withdrawals/receivals
 
-            double cashOnHand; Transferrable checkings = null; Transferrable savings = null;
+            double cashOnHand; CheckingAccount checkings = null; SavingsAccount savings = null;
 
             private Person(String firstName, String lastName, String dob, int idNumber, int idExpiry, double cashOnHand) {
                 super(firstName, lastName, dob, idNumber, idExpiry); this.cashOnHand = cashOnHand;
@@ -2710,6 +2714,15 @@ public class day3 {
                 return new Person(firstName, lastName, dob, idNumber, idExpiry, cashOnHand);
             }
 
+
+            public String recieveMoney(double amount) { 
+                if (amount < 0) { return null; }
+                this.cashOnHand += amount; return String.format("%s received $%.2f, now has $%.2f cash on hand.", firstName, amount, cashOnHand);
+            }
+            public String giveMoney(double amount) {
+                if (amount < 0 || amount > cashOnHand) { return null; }
+                this.cashOnHand -= amount; return String.format("%s gave $%.2f, now has $%.2f cash on hand.", firstName, amount, cashOnHand);
+            }
             @Override public boolean equals(Object other) {
                 String thisIDNumber = String.valueOf(this.idNumber);
                 if (this == other) { return true; }
@@ -2725,14 +2738,18 @@ public class day3 {
                 String otherIDNum = String.valueOf(other.idNumber);
                 return thisIDNum.compareTo(otherIDNum);
             }
+
+            public String getNetworth() {
+                return String.format("%s has a net worth of $%.2f.", firstName, (checkings == null ? 0 : checkings.balance) + savings.balance + this.cashOnHand);
+            }
         }
         public abstract static class AccountRegistration {
             public AccountRegistration() {}
             abstract boolean RegisterAccount(Person forPerson, String accountType);
         }
         public abstract static class BasicAccountFeatures {
-            Person person; int AccountNumber; int RoutingNumber; double balance;
-            public BasicAccountFeatures(Person person, int AccountNumber, int RoutingNumber, double balance) {
+            Person person; String AccountNumber; String RoutingNumber; double balance;
+            public BasicAccountFeatures(Person person, String AccountNumber, String RoutingNumber, double balance) {
                 this.person = person; this.AccountNumber = AccountNumber;
                 this.RoutingNumber = RoutingNumber; this.balance = balance;
             }
@@ -2750,7 +2767,9 @@ public class day3 {
                         System.out.println(String.format("You cannot perform a transfer more than your current balance which stands at $%.2f", from.balance));
                         return false;
                     } else {
-
+                        from.balance -= amount;
+                        to.balance += amount;
+                        System.out.println(String.format("Successfully transferred $%.2f from your checking account.%nCurrent Balances:%n  Checking: $%.2f%n  Savings: $%.2f", amount, from.balance, to.balance));
                         return true;
                     }
                 } else {
@@ -2758,7 +2777,9 @@ public class day3 {
                         System.out.println(String.format("You cannot perform a transfer more than your current balance which stands at $%.2f", from.balance));
                         return false;
                     } else {
-
+                        from.balance -= amount;
+                        to.balance += amount;
+                        System.out.println(String.format("Successfully transferred $%.2f from your savings account.%nCurrent Balances:%n  Checking: $%.2f%n  Savings: $%.2f", amount, from.balance, to.balance));
                         return true;
                     }
                 }
@@ -2766,12 +2787,19 @@ public class day3 {
         }
         public static class CheckingAccount extends BasicAccountFeatures implements Transferrable {
             boolean overdraftEnabled;
-            public CheckingAccount(Person person, int AccountNumber, int RoutingNumber, double balance, boolean overdraftEnabled) {
+            public CheckingAccount(Person person, String AccountNumber, String RoutingNumber, double balance, boolean overdraftEnabled) {
                 super(person, AccountNumber, RoutingNumber, balance); this.overdraftEnabled = overdraftEnabled;
             }
+            public static CheckingAccount createCheckings(Person person, String AccountNumber, String RoutingNumber, double balance, boolean overdraftEnabled) {
+
+                return new CheckingAccount(person, AccountNumber, RoutingNumber, balance, overdraftEnabled);
+            }
+
             @Override
             public boolean deposit(double amount) {
                 if (amount < 0) { System.out.println(String.format("Dear %s, you cannot deposit an amount less than 0", person.firstName)); return false; }
+                if (amount > person.cashOnHand) { System.out.println("You need to have money in order to deposit. You do not have enough"); return false; }
+                this.person.giveMoney(amount);
                 balance += amount; System.out.println(String.format("Succesfully deposited $%.2f, new balance stands at $%.2f", amount, balance));
                 return true;
             }
@@ -2779,31 +2807,57 @@ public class day3 {
             public boolean withdraw(double amount) {
                 if (amount > balance) {
                     if (overdraftEnabled) {
-                        balance -= amount; System.out.println(String.format("Overdraft has been enabled, new balance stands at $%.2f", balance)); return true;
+                        balance -= amount; System.out.println(String.format("Overdraft has been enabled, new balance stands at $%.2f", balance));
+                        System.out.println(this.person.recieveMoney(amount)); return true;
                     } else { 
                         System.out.println(String.format("%s you only have $%.2f; you cannot withdraw $%.2f since you do not have overdraft enabled", person.firstName, balance, amount));
                         return false;
                     }
                 } else {
+                    System.out.println(this.person.recieveMoney(amount));
                     balance -= amount; System.out.println(String.format("%s you just withdrew $%.2f, your new balance is $%.2f", person.firstName, amount, balance)); return true;
                 }
             }
         }
         public static class SavingsAccount extends BasicAccountFeatures implements Transferrable {
             double api;
-            public SavingsAccount(Person person, int AccountNumber, int RoutingNumber, double balance, double api) {
+            public SavingsAccount(Person person, String AccountNumber, String RoutingNumber, double balance, double api) {
                 super(person, AccountNumber, RoutingNumber, balance); this.api = api;
             }
+            public static SavingsAccount createSavings(Person person, String AccountNumber, String RoutingNumber, double balance, double api) {
+                if (person == null) { System.out.println("There must have been something wrong whenever settign this persons information up"); return null; }
+                if (!AccountNumber.matches("\\d+")) { System.out.println("Account Numbers only contain digits"); return null; }
+                if (!RoutingNumber.matches("\\d+")) { System.out.println("Routing Numbers only contain digits"); return null; }
+                if (!AccountNumber.startsWith("273")) {
+                    System.out.println("This bank enforces Account Numbers to start with '273'"); return null;
+                }
+                if (!RoutingNumber.startsWith("112")) {
+                    System.out.println("This bank enforces Routing Numbers to start with '112'"); return null;
+                }
+                if (balance < 0) { System.out.println("You cannot create an account with a negative balance"); return null;}
+                if (balance > person.cashOnHand) { System.out.println("We cannot start an account with an amount greater than what you have on hand"); return null; }
+                if (api < 0) { System.out.println("API rates cannot start below 0"); return null; }
+                
+                person.cashOnHand -= balance; 
+                SavingsAccount newSavings = new SavingsAccount(person, AccountNumber, RoutingNumber, balance, api);
+                person.savings = newSavings;
+                System.out.println(String.format("NEW SAVINGS ACCOUNT:%n NAME: %s%n AN: %s%n RN: %s%nBAL: $%.2f%n API: %.2f percent", person.firstName, AccountNumber, RoutingNumber, balance, api * 100));
+                System.out.println(String.format("%s now has $%.2f left on hand", person.firstName, person.cashOnHand));
+                return newSavings;
+            }
+
             @Override
             public boolean deposit(double amount) {
-
-
+                if (amount < 0) { System.out.println("If you are trying to perform a withdrawal, please use the respective method."); return false; }
+                if (amount > person.cashOnHand) { System.out.println("You cannot deposit more than you have");return false; } System.out.println(this.person.giveMoney(amount));
+                balance += amount; System.out.println(String.format("Succesfully deposited $%.2f, new balance is $%.2f", amount, balance));
                 return true;
             }
             @Override
             public boolean withdraw(double amount) {
-
-
+                if (amount > balance) { System.out.println("We do not allow wihtdrawals greater than your current balance on a Savings account."); return false; }
+                System.out.println(this.person.recieveMoney(amount)); balance -= amount; 
+                System.out.println(String.format("Succesfully withdrew $%.2f, new balance is $%.2f", amount, balance));
                 return true;
             }
         }
