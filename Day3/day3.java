@@ -7,8 +7,6 @@ import java.util.Map; import java.util.Optional;
 import java.util.Objects;
 import java.util.Set; import java.util.TreeMap;
 
-import Day3.day3.Person;
-
 
 
 public class day3 {
@@ -2645,9 +2643,9 @@ public class day3 {
         //          to track their own state, not just as method parameters
         // So Im going to build a bank system with a signup class and eligibility and accounts like savings/checkings with own features
         // The client will have a prop to each, and will have their beneficiaries which will be a set which would have to be a person of age
-        public static abstract class PersonalDetails {
-            String firstName; String lastName; String dob; int idNumber; int idExpiry;
-            public PersonalDetails(String firstName, String lastName, String dob, int idNumber, int idExpiry) {
+    public static abstract class PersonalDetails {
+            String firstName; String lastName; String dob; int idNumber; String idExpiry;
+            public PersonalDetails(String firstName, String lastName, String dob, int idNumber, String idExpiry) {
                 this.firstName = firstName; this.lastName = lastName; this.dob = dob;
                 this.idNumber = idNumber; this.idExpiry = idExpiry;
             }
@@ -2659,10 +2657,10 @@ public class day3 {
 
             double cashOnHand; CheckingAccount checkings = null; SavingsAccount savings = null;
 
-            private Person(String firstName, String lastName, String dob, int idNumber, int idExpiry, double cashOnHand) {
+            private Person(String firstName, String lastName, String dob, int idNumber, String idExpiry, double cashOnHand) {
                 super(firstName, lastName, dob, idNumber, idExpiry); this.cashOnHand = cashOnHand;
             }
-            public static Person createPerson(String firstName, String lastName, String dob, int idNumber, int idExpiry, double cashOnHand) {
+            public static Person createPerson(String firstName, String lastName, String dob, int idNumber, String idExpiry, double cashOnHand) {
                 if (firstName == null || lastName == null) {
                     System.out.println("An error occurred whilst trying to set the name parameters to this Person obj. Recheck");
                     return null;
@@ -2674,7 +2672,7 @@ public class day3 {
                 if (String.valueOf(idNumber).length() != 8) {
                     System.out.println("ID numbers shall be exactly 8 digits"); return null;
                 }
-                if (idExpiry < Integer.parseInt(todaysDate)) {
+                if (Integer.parseInt(idExpiry) < Integer.parseInt(todaysDate)) {
                     System.out.println("You cannot make a person with an expired ID"); return null;
                 }
                 int dob_day = Integer.parseInt(dob.substring(2, 4));
@@ -2703,13 +2701,13 @@ public class day3 {
                 if ((dob_year + 18) > Integer.parseInt(todaysDate.substring(4, 8))) {
                     System.out.println("We do not accept minors"); return null;
                 }
-                if (idExpiry <= Integer.parseInt(todaysDate)) {
+                if (Integer.parseInt(idExpiry) <= Integer.parseInt(todaysDate)) {
                     System.out.println("We're sorry but we do not accept expired ID's");
                     return null;
                 }
                 if (cashOnHand < 0.00) { System.out.println("You cannot try to register an account with debt."); return null; }
 
-                System.out.println(String.format("Successfully created new Person Obj%nNAME: %s %s%nDOB: %s%nID NUMBER: %d%nID EXPIRY: %d%nAVAILABLE CASH: $%.2f", firstName, lastName, dob, idNumber, idExpiry, cashOnHand));
+                System.out.println(String.format("Successfully created new Person Obj%nNAME: %s %s%nDOB: %s%nID NUMBER: %d%nID EXPIRY: %s%nAVAILABLE CASH: $%.2f", firstName, lastName, dob, idNumber, idExpiry, cashOnHand));
                 return new Person(firstName, lastName, dob, idNumber, idExpiry, cashOnHand);
             }
 
@@ -2741,7 +2739,7 @@ public class day3 {
             }
 
             public String getNetworth() {
-                return String.format("%s has a net worth of $%.2f.", firstName, (checkings == null ? 0 : checkings.balance) + savings.balance + this.cashOnHand);
+                return String.format("%s has a net worth of $%.2f.", firstName, (checkings == null ? 0 : checkings.balance) + (savings == null ? 0 : savings.balance) + this.cashOnHand);
             }
         }
         public abstract static class AccountRegistration {
@@ -2775,13 +2773,13 @@ public class day3 {
                         return true;
                     }
                 } else {
-                    if (amount > to.balance) { 
+                    if (amount > from.balance) { 
                         System.out.println(String.format("You cannot perform a transfer more than your current balance which stands at $%.2f", from.balance));
                         return false;
                     } else {
                         from.balance -= amount;
                         to.balance += amount;
-                        System.out.println(String.format("Successfully transferred $%.2f from your savings account.%nCurrent Balances:%n  Checking: $%.2f%n  Savings: $%.2f", amount, from.balance, to.balance));
+                        System.out.println(String.format("Successfully transferred $%.2f from your savings account.%nCurrent Balances:%n  Savings: $%.2f%n  Checkings: $%.2f", amount, from.balance, to.balance));
                         staticFrequencyTracker.merge(person, 1, (o, n) -> o + n); selfTransferTracker.merge(amount, 1, (o, n) -> o +n);
                         return true;
                     }
@@ -2841,6 +2839,7 @@ public class day3 {
                 if (amount > person.cashOnHand) { System.out.println("You need to have money in order to deposit. You do not have enough"); return false; }
                 this.person.giveMoney(amount);
                 balance += amount; System.out.println(String.format("Succesfully deposited $%.2f, new balance stands at $%.2f", amount, balance));
+                depositOccurrences.merge(amount, 1, (o, n) -> o +n); depositFrequency.merge(this.person, 1, (o, n) -> o + n);
                 return true;
             }
             @Override
@@ -2848,6 +2847,7 @@ public class day3 {
                 if (amount > balance) {
                     if (overdraftEnabled) {
                         balance -= amount; System.out.println(String.format("Overdraft has been enabled, new balance stands at $%.2f", balance));
+                        withdrawalOccurrences.merge(amount, 1, (o, n) -> o +n); withdrawalFrequency.merge(this.person, 1, (o, n) -> o + n);
                         System.out.println(this.person.recieveMoney(amount)); return true;
                     } else { 
                         System.out.println(String.format("%s you only have $%.2f; you cannot withdraw $%.2f since you do not have overdraft enabled", person.firstName, balance, amount));
@@ -2855,7 +2855,9 @@ public class day3 {
                     }
                 } else {
                     System.out.println(this.person.recieveMoney(amount));
-                    balance -= amount; System.out.println(String.format("%s you just withdrew $%.2f, your new balance is $%.2f", person.firstName, amount, balance)); return true;
+                    balance -= amount; System.out.println(String.format("%s you just withdrew $%.2f, your new balance is $%.2f", person.firstName, amount, balance));
+                    withdrawalOccurrences.merge(amount, 1, (o, n) -> o +n); withdrawalFrequency.merge(this.person, 1, (o, n) -> o + n);
+                    return true;
                 }
             }
             @Override
