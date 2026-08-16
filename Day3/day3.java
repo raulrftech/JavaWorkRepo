@@ -7,14 +7,13 @@ import java.util.Map; import java.util.Optional;
 import java.util.Objects;
 import java.util.Set; import java.util.TreeMap;
 
+import Day3.day3.Person;
+
 
 
 public class day3 {
     public static void main(String[] args) {
-        Person p1 = Person.createPerson("Raul", "Rodriguez", "11182003", 49327080, 11182031, 235.60);
-        SavingsAccount s1 = SavingsAccount.createSavings(p1, "2735480432", "112000066", 234.50, 2.3);
-        p1.recieveMoney(300); p1.savings.deposit(12); p1.savings.withdraw(200);
-        System.out.println(p1.getNetworth());
+        
     }
 
     // Loops - Full Concept
@@ -2731,6 +2730,8 @@ public class day3 {
                 String otherIDNUmber = String.valueOf(otherperson.idNumber);
                 return thisIDNumber.equals(otherIDNUmber);
             }
+            @Override
+            public int hashCode() { return Objects.hash(String.valueOf(idNumber)); }
 
             @Override
             public int compareTo(Person other) {
@@ -2757,7 +2758,7 @@ public class day3 {
             abstract boolean withdraw(double amount);
         }
         interface Transferrable {
-            default boolean transferTo(Person person, double amount, BasicAccountFeatures from, BasicAccountFeatures to) {
+            default boolean transferTo(Person person, double amount, BasicAccountFeatures from, BasicAccountFeatures to, LinkedHashMap<Person, Integer> staticFrequencyTracker, LinkedHashMap<Double, Integer> selfTransferTracker) {
                 if ((from instanceof CheckingAccount && to instanceof CheckingAccount || (from instanceof SavingsAccount && to instanceof SavingsAccount))) { return false; }
                 if (!from.person.equals(person)) { return false; }
                 if (!to.person.equals(person))   { return false; }
@@ -2770,6 +2771,7 @@ public class day3 {
                         from.balance -= amount;
                         to.balance += amount;
                         System.out.println(String.format("Successfully transferred $%.2f from your checking account.%nCurrent Balances:%n  Checking: $%.2f%n  Savings: $%.2f", amount, from.balance, to.balance));
+                        staticFrequencyTracker.merge(person, 1, (o, n) -> o + n); selfTransferTracker.merge(amount, 1, (o, n) -> o +n);
                         return true;
                     }
                 } else {
@@ -2780,13 +2782,47 @@ public class day3 {
                         from.balance -= amount;
                         to.balance += amount;
                         System.out.println(String.format("Successfully transferred $%.2f from your savings account.%nCurrent Balances:%n  Checking: $%.2f%n  Savings: $%.2f", amount, from.balance, to.balance));
+                        staticFrequencyTracker.merge(person, 1, (o, n) -> o + n); selfTransferTracker.merge(amount, 1, (o, n) -> o +n);
                         return true;
                     }
                 }
             }
         }
-        public static class CheckingAccount extends BasicAccountFeatures implements Transferrable {
-            boolean overdraftEnabled;
+        public static class CheckingAccount extends BasicAccountFeatures implements Transferrable, Comparable<CheckingAccount> {
+            static Set<Person> peopleEnrolled = new HashSet<>();
+            static LinkedHashMap<Person, Double> startingBalances = new LinkedHashMap<>(16, 0.75f, false);
+            static TreeMap<Person, Integer> depositFrequency = new TreeMap<>(); // this works because Person uses compareTo based on ID number
+            static TreeMap<Person, Integer> withdrawalFrequency = new TreeMap<>();
+            static LinkedHashMap<Person, Integer> transferFrequency = new LinkedHashMap<>(16, 0.75f, false);
+
+            public static void getTransferFrequency() {
+                for (Map.Entry<Person, Integer> pair: transferFrequency.entrySet()) {
+                    System.out.println(String.format("%s has transferred %d times", pair.getKey().firstName, pair.getValue()));
+                }
+            }
+            public static void getPeopleEnrolled() {
+                for (Person personEnrolled: peopleEnrolled) { System.out.println(String.format("%s %s enrolled successfully", personEnrolled.firstName, personEnrolled.lastName)); }
+            }
+            public static void getStartingBalance() {
+                startingBalances.forEach((person, balance) -> {
+                    System.out.println(String.format("%s opened an account wtih $%.2f", person.firstName, balance));
+                });
+            }
+            public static void getDepositFrequency() {
+                for (Map.Entry<Person, Integer> pair: depositFrequency.entrySet()) {
+                    System.out.println(String.format("%s deposited %d times", pair.getKey().firstName, pair.getValue()));
+                }
+            }
+            public static void getWithdrawalFrequency() {
+                for (Map.Entry<Person, Integer> pair: withdrawalFrequency.entrySet()) {
+                    System.out.println(String.format("%s withdrew %d times", pair.getKey().firstName, pair.getValue()));
+                }
+            }
+
+            boolean overdraftEnabled; LinkedHashMap<Double, Integer> depositOccurrences = new LinkedHashMap<>(16, 0.75f, false);
+            LinkedHashMap<Double, Integer> withdrawalOccurrences = new LinkedHashMap<>(16, 0.75f, false);
+            LinkedHashMap<Double, Integer> transferredTimes = new LinkedHashMap<>(16, 0.75f, false);
+
             public CheckingAccount(Person person, String AccountNumber, String RoutingNumber, double balance, boolean overdraftEnabled) {
                 super(person, AccountNumber, RoutingNumber, balance); this.overdraftEnabled = overdraftEnabled;
             }
@@ -2794,7 +2830,11 @@ public class day3 {
 
                 return new CheckingAccount(person, AccountNumber, RoutingNumber, balance, overdraftEnabled);
             }
-
+            public void getTransferredAmounts() {
+                transferredTimes.forEach((amount, times) -> {
+                    System.out.println(String.format("%s has transferred $%.2f %d times", this.person.firstName, amount, times));
+                });
+            }
             @Override
             public boolean deposit(double amount) {
                 if (amount < 0) { System.out.println(String.format("Dear %s, you cannot deposit an amount less than 0", person.firstName)); return false; }
@@ -2818,13 +2858,70 @@ public class day3 {
                     balance -= amount; System.out.println(String.format("%s you just withdrew $%.2f, your new balance is $%.2f", person.firstName, amount, balance)); return true;
                 }
             }
+            @Override
+            public boolean equals(Object other) {
+                if (this == other) { return true; }
+                if (!(other instanceof CheckingAccount)) { return false; }
+                CheckingAccount otherCA = (CheckingAccount) other;
+                return this.AccountNumber.equals(otherCA.AccountNumber);
+            }
+            @Override
+            public int hashCode() { return Objects.hash(AccountNumber); }
+            @Override
+            public int compareTo(CheckingAccount other) {
+                return this.AccountNumber.compareTo(other.AccountNumber);
+            }
+            public void getDepositHistory() {
+                depositOccurrences.forEach((amount, times) -> {
+                    System.out.println(String.format("%s deposited $%.2f %d times", this.person.firstName, amount, times));
+                });
+            }
+            public void getWithdrawalHistory() {
+                withdrawalOccurrences.forEach((amount, times) -> {
+                    System.out.println(String.format("%s withdrew $%.2f %d times", this.person.firstName, amount, times));
+                });
+            }
         }
-        public static class SavingsAccount extends BasicAccountFeatures implements Transferrable {
-            double api;
+        public static class SavingsAccount extends BasicAccountFeatures implements Transferrable, Comparable<SavingsAccount> {
+            static Set<Person> peopleEnrolled = new HashSet<>();
+            static LinkedHashMap<Person, Double> startingBalances = new LinkedHashMap<>(16, 0.75f, false);
+            static TreeMap<Person, Integer> depositFrequency = new TreeMap<>(); // this works because Person uses compareTo based on ID number
+            static TreeMap<Person, Integer> withdrawalFrequency = new TreeMap<>();
+            static LinkedHashMap<Person, Integer> transferFrequency = new LinkedHashMap<>(16, 0.75f, false);
+
+            public static void getTransferFrequency() {
+                for (Map.Entry<Person, Integer> pair: transferFrequency.entrySet()) {
+                    System.out.println(String.format("%s has transferred %d times", pair.getKey().firstName, pair.getValue()));
+                }
+            }
+            public static void getPeopleEnrolled() {
+                for (Person personEnrolled: peopleEnrolled) { System.out.println(String.format("%s %s enrolled successfully", personEnrolled.firstName, personEnrolled.lastName)); }
+            }
+            public static void getStartingBalance() {
+                startingBalances.forEach((person, balance) -> {
+                    System.out.println(String.format("%s opened an account wtih $%.2f", person.firstName, balance));
+                });
+            }
+            public static void getDepositFrequency() {
+                for (Map.Entry<Person, Integer> pair: depositFrequency.entrySet()) {
+                    System.out.println(String.format("%s deposited %d times", pair.getKey().firstName, pair.getValue()));
+                }
+            }
+            public static void getWithdrawalFrequency() {
+                for (Map.Entry<Person, Integer> pair: withdrawalFrequency.entrySet()) {
+                    System.out.println(String.format("%s withdrew %d times", pair.getKey().firstName, pair.getValue()));
+                }
+            }
+ 
+            double api; LinkedHashMap<Double, Integer> depositOccurrences = new LinkedHashMap<>(16, 0.75f, false);
+            LinkedHashMap<Double, Integer> withdrawalOccurrences = new LinkedHashMap<>(16, 0.75f, false);
+            LinkedHashMap<Double, Integer> transferredTimes = new LinkedHashMap<>(16, 0.75f, false);
+
             public SavingsAccount(Person person, String AccountNumber, String RoutingNumber, double balance, double api) {
                 super(person, AccountNumber, RoutingNumber, balance); this.api = api;
             }
             public static SavingsAccount createSavings(Person person, String AccountNumber, String RoutingNumber, double balance, double api) {
+                if (startingBalances.containsKey(person)) { return null; }
                 if (person == null) { System.out.println("There must have been something wrong whenever settign this persons information up"); return null; }
                 if (!AccountNumber.matches("\\d+")) { System.out.println("Account Numbers only contain digits"); return null; }
                 if (!RoutingNumber.matches("\\d+")) { System.out.println("Routing Numbers only contain digits"); return null; }
@@ -2843,7 +2940,20 @@ public class day3 {
                 person.savings = newSavings;
                 System.out.println(String.format("NEW SAVINGS ACCOUNT:%n NAME: %s%n AN: %s%n RN: %s%nBAL: $%.2f%n API: %.2f percent", person.firstName, AccountNumber, RoutingNumber, balance, api * 100));
                 System.out.println(String.format("%s now has $%.2f left on hand", person.firstName, person.cashOnHand));
+                peopleEnrolled.add(person); // this will work since Person overrides equals and hashCode
+                startingBalances.put(person, balance); // no merge needed since we enforce that they have not been added to this map at a preceding time
                 return newSavings;
+            }
+            public void getTransferredAmounts() {
+                transferredTimes.forEach((amount, times) -> {
+                    System.out.println(String.format("%s has transferred $%.2f %d times", this.person.firstName, amount, times));
+                });
+            }
+            public String getCurrentInterest(int months) {
+                if (api < 0 || api > 0.99) { api = 0.23; System.out.println("Since the api rate was either below 0 or above 1 at instantiation, we set it to 23 percent for you");}
+                System.out.println(String.format("Balance before interest: $%.2f", balance));
+                balance *= (Math.pow(1 + (api /12), 12));
+                return String.format("Balance after interest applied: $%.2f", balance);
             }
 
             @Override
@@ -2851,6 +2961,7 @@ public class day3 {
                 if (amount < 0) { System.out.println("If you are trying to perform a withdrawal, please use the respective method."); return false; }
                 if (amount > person.cashOnHand) { System.out.println("You cannot deposit more than you have");return false; } System.out.println(this.person.giveMoney(amount));
                 balance += amount; System.out.println(String.format("Succesfully deposited $%.2f, new balance is $%.2f", amount, balance));
+                depositOccurrences.merge(amount, 1, (o, n) -> o +n); depositFrequency.merge(this.person, 1, (o, n) -> o + n);
                 return true;
             }
             @Override
@@ -2858,7 +2969,32 @@ public class day3 {
                 if (amount > balance) { System.out.println("We do not allow wihtdrawals greater than your current balance on a Savings account."); return false; }
                 System.out.println(this.person.recieveMoney(amount)); balance -= amount; 
                 System.out.println(String.format("Succesfully withdrew $%.2f, new balance is $%.2f", amount, balance));
+                withdrawalOccurrences.merge(amount, 1, (o, n) -> o +n); withdrawalFrequency.merge(this.person, 1, (o, n) -> o + n);
                 return true;
+            }
+            public void getDepositHistory() {
+                depositOccurrences.forEach((amount, times) -> {
+                    System.out.println(String.format("%s deposited $%.2f %d times", this.person.firstName, amount, times));
+                });
+            }
+            public void getWithdrawalHistory() {
+                withdrawalOccurrences.forEach((amount, times) -> {
+                    System.out.println(String.format("%s withdrew $%.2f %d times", this.person.firstName, amount, times));
+                });
+            }
+            @Override
+            public boolean equals(Object other) {
+                // equals and hashCode is used for anything that places an obj into a hash such as HashSet/Map
+                if (this == other) { return true; }
+                if (!(other instanceof SavingsAccount)) { return false; }
+                SavingsAccount otherSA = (SavingsAccount) other;
+                return this.AccountNumber.equals(otherSA.AccountNumber);
+            }
+            @Override
+            public int hashCode() { return Objects.hash(AccountNumber); }
+            @Override
+            public int compareTo(SavingsAccount other) {
+                return this.AccountNumber.compareTo(other.AccountNumber);
             }
         }
 }
