@@ -11,7 +11,7 @@ import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        
+        Game g1 = new Game(); g1.addPlayer("Raul"); g1.addPlayer("Raul");
     }
 
     // Loops - Full Concept
@@ -2997,6 +2997,70 @@ public class day3 {
             @Override
             public int compareTo(SavingsAccount other) {
                 return this.AccountNumber.compareTo(other.AccountNumber);
+            }
+        }
+
+        // Exrecise 2 - Build a small competive tournament bracket system
+        // Lean on List/ArrayList as a first-class structural piece this time
+        //      something that genuinely needs ordered, indexed access ( not just iteration )
+        // and at least one Collections utility methods doing real work beyond a single demonstration call
+        // Design it your way, your classes, hierarchy, your choise of waht needs equals/hashCode/Comparable
+        // so since I need to recreate a game of some sort and have rounds that means I need to have an even number of players
+        // so we can implement a Player obj with name, wins, losses
+        // a Game class that has a prop AL for all players and another for the winning and losing
+        private static class Player {
+            String name; int specialNumber;
+            int wins; int lossess;
+            private Player(String name, int wins, int losses, int specialNumber) {
+                this.name = name;
+                this.wins = wins;
+                this.lossess = losses; this.specialNumber = specialNumber;
+            }
+            public Player(String name, int specialNumber) {
+                this(name, 0, 0, specialNumber);
+            }
+            
+            public void noteWin() { this.wins += 1; }
+            public void noteLoss() { this.lossess += 1; }
+
+            @Override
+            public boolean equals(Object other) {
+                if (this == other) { return true; }
+                if (!(other instanceof Player)) { return false; }
+                Player otherPlayer = (Player) other;
+                return this.name.equals(otherPlayer.name);
+            }
+            @Override
+            public int hashCode() { return Objects.hash(name); }
+        }
+        public static class Game {
+            static List<Player> players = new ArrayList<>();
+            static List<Player> winners = new ArrayList<>();
+            static List<Player> losers = new ArrayList<>();
+
+            public Game() {};
+
+            public void addPlayer(String name, int specialNumber) {
+                Player newPlayer = new Player(name, specialNumber);
+                if (players.contains(newPlayer)) { System.out.println("There's already a player with that name"); return; }
+                if (players.size() == 6) { return; }
+                players.add(newPlayer);
+            }
+            private Player determineWinner(Player leftPlayer, Player rightPlayer) {
+                int leftSNLength = String.valueOf(leftPlayer.specialNumber).length();
+                int rightSNLength = String.valueOf(rightPlayer.specialNumber).length();
+
+                return null;
+            }
+            public void playGame() {
+               for (int left = 0; left < players.size() - 1;  left += 2) {
+                int right = left +1;
+                Player leftPlayer = players.get(left);
+                Player rightPlayer = players.get(right);
+                System.out.println(String.format("Round between  %s and %s is happening now.", leftPlayer.name, rightPlayer.name));
+
+                // the method for the winner needs to return player to remove
+               }
             }
         }
 }
