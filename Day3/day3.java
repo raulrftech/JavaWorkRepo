@@ -1,5 +1,6 @@
 package Day3;
 import java.util.ArrayList; import java.util.Collections;
+import java.util.Comparator;
 import java.util.Arrays; import java.util.List;
 import java.util.HashMap; import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -11,7 +12,7 @@ import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        Game g1 = new Game(); g1.addPlayer("Raul"); g1.addPlayer("Raul");
+        
     }
 
     // Loops - Full Concept
@@ -3034,33 +3035,75 @@ public class day3 {
             public int hashCode() { return Objects.hash(name); }
         }
         public static class Game {
-            static List<Player> players = new ArrayList<>();
             static List<Player> winners = new ArrayList<>();
             static List<Player> losers = new ArrayList<>();
 
-            public Game() {};
+            List<Player> players = new ArrayList<>();
+            private Game(ArrayList<Player> players) { this.players = players; }
+            public static Game createGame(ArrayList<Player> players) {
+                if (players.size() % 2 > 0) { System.out.println("Make sure the number of players is even"); return null;}
+                return new Game(players);
+            }
 
             public void addPlayer(String name, int specialNumber) {
                 Player newPlayer = new Player(name, specialNumber);
                 if (players.contains(newPlayer)) { System.out.println("There's already a player with that name"); return; }
-                if (players.size() == 6) { return; }
                 players.add(newPlayer);
             }
-            private Player determineWinner(Player leftPlayer, Player rightPlayer) {
+            private Player determineLoser(Player leftPlayer, Player rightPlayer) {
                 int leftSNLength = String.valueOf(leftPlayer.specialNumber).length();
                 int rightSNLength = String.valueOf(rightPlayer.specialNumber).length();
+                
+                int leftNameLength = String.valueOf(leftPlayer.name).length();
+                int righNameLength = String.valueOf(rightPlayer.name).length();
 
-                return null;
+                boolean longestSN = leftSNLength > rightSNLength; // if true then left else then right
+                boolean longestName = leftNameLength > righNameLength;
+                
+                // so we have a 2 way win which only winner can have both
+                return (longestSN && longestName) ? rightPlayer : leftPlayer;
             }
-            public void playGame() {
+            private void initiateMatch(List<Player> players) {
                for (int left = 0; left < players.size() - 1;  left += 2) {
-                int right = left +1;
+                int right = left++;
                 Player leftPlayer = players.get(left);
                 Player rightPlayer = players.get(right);
                 System.out.println(String.format("Round between  %s and %s is happening now.", leftPlayer.name, rightPlayer.name));
 
                 // the method for the winner needs to return player to remove
+                // since determineLoser returns loser we can remove it from players, add into losers
+                if (determineLoser(leftPlayer, rightPlayer).equals(leftPlayer)) {
+                    System.out.println(String.format("%s lost this round, adding to the losers list and adding %s to the winners list", leftPlayer.name, rightPlayer.name));
+
+                    players.remove(players.indexOf(leftPlayer)); players.remove(players.indexOf(rightPlayer)); losers.add(leftPlayer); winners.add(rightPlayer);
+                    leftPlayer.noteLoss(); rightPlayer.noteWin();
+                } else {
+                    players.remove(players.indexOf(rightPlayer)); players.remove(players.indexOf(leftPlayer)); losers.add(rightPlayer); winners.add(leftPlayer);
+                    leftPlayer.noteWin(); rightPlayer.noteLoss();
+                    System.out.println(String.format("%s lost this round, adding to the losers list and adding %s to the winners list", rightPlayer.name, leftPlayer.name));
+                }
                }
             }
+            public void playGame() {
+                do {
+                    initiateMatch(this.players);
+                    System.out.println(String.format("SIZES:%n Winners: %d%n Losers: %d%n Players: %d", winners.size(), losers.size(), this.players.size()));
+                } while (players.size() != 0);
+
+                if (winners.size() >= 2 && winners.size() % 2 == 0) {
+                    do {
+                        initiateMatch(winners);
+                    } while (winners.size() != 1);
+                }
+                winners.forEach((player) -> System.out.println(String.format("Winner %s has now won %d times and has lost %d times", player.name, player.wins, player.lossess)));
+                losers.forEach((player) -> System.out.println(String.format("Loser %s has lost %d times and has won %d times", player.name, player.lossess, player.wins)));
+                Player mostWins = Collections.max(winners, new Comparator<Player>() {
+                    @Override
+                    public int compare(Player p1, Player p2) { return Integer.compare(p1.wins, p2.wins); }
+                });
+                System.out.println(String.format("%S has won the most, has won %d games", mostWins.name, mostWins.wins));
+            }
         }
+
+    
 }
