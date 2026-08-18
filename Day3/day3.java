@@ -10,9 +10,30 @@ import java.util.Set; import java.util.TreeMap;
 
 
 
+
 public class day3 {
     public static void main(String[] args) {
-        
+        PackageMaker maker = new PackageMaker();
+
+        PackageSender raul = PackageSender.createSender("Raul", "Rodriguez", 4931234);
+        PackageReceiver alex = PackageReceiver.createReceiver("Alex", "Chavez", 4935678);
+        PackageSender elena = PackageSender.createSender("Elena", "Castillo", 4939012);
+        PackageReceiver martha = PackageReceiver.createReceiver("Martha", "Mack", 4933456);
+
+        maker.acceptOrder("SHP001", "1A76B001XJ", "El Paso, Texas", "Fort Worth, Texas", 590.5, "Standard", raul, alex);
+        maker.acceptOrder("SHP002", "1A76B001XK", "El Paso, Texas", "Austin, Texas", 575.0, "Express", elena, martha);
+        maker.acceptOrder("SHP003", "1A76B001XL", "El Paso, Texas", "Houston, Texas", 745.2, "Standard", raul, martha);
+        maker.acceptOrder("SHP004", "1A76B001XM", "El Paso, Texas", "Dallas, Texas", 600.8, "Express", elena, alex);
+
+        // deliberate duplicate tag number, should be rejected
+        maker.acceptOrder("SHP001", "1A76B001XN", "El Paso, Texas", "San Antonio, Texas", 550.0, "Standard", raul, alex);
+
+        Warehouse warehouse = new Warehouse(maker);
+        warehouse.requestOrders(3);
+        warehouse.processOrders(2);
+
+        System.out.println(raul.getSummaryOfPerson());
+
     }
 
     // Loops - Full Concept
@@ -3114,22 +3135,34 @@ public class day3 {
     // shipments shall have weight, destination, origin, distance form orgin-destination to sort into a warehouse dept such as heavy shipments
     public static abstract class FirstAndThirdParties {
         boolean isSender; String firstName; String lastName; int IDNumber; ShipmentPackage pkg;
-        public FirstAndThirdParties(boolean isSender, String firstName, String lastName, int IDNumber, ShipmentPackage pkg) {
-            this.firstName = firstName; this.lastName = lastName; this.IDNumber = IDNumber; this.pkg = pkg;
+        public FirstAndThirdParties(boolean isSender, String firstName, String lastName, int IDNumber) {
+            this.isSender = isSender; this.firstName = firstName; this.lastName = lastName; this.IDNumber = IDNumber; this.pkg = null;
         }
+        void assingPackage(ShipmentPackage pkg) { this.pkg = pkg; }
         String getSummaryOfPerson() {
             return String.format("%s%nName: %s %s%nID Number: %s%nPackage Information: %n%s", isSender ? "Sender's Information" : "Receiver's Information", firstName, lastName, IDNumber, pkg.getPackageSummary());
         }
     }
     public static class PackageSender extends FirstAndThirdParties {
-        private PackageSender(boolean isSender, String firstName, String lastName, int IDNumber, ShipmentPackage pkg) {
-            super(true, firstName, lastName, IDNumber, pkg);
+        private PackageSender(boolean isSender, String firstName, String lastName, int IDNumber) {
+            super(true, firstName, lastName, IDNumber);
         }
-        public static PackageSender createSender(String firstName, String lastName, int IDNumber, ShipmentPackage pkg) {
-            if (firstName == null || lastName == null || pkg == null) { System.out.println("Either the first/last name or the package associated with this person didn't contstruct properly"); return null; }
+        public static PackageSender createSender(String firstName, String lastName, int IDNumber) {
+            if (firstName == null || lastName == null) { System.out.println("Either the first/last name or the package associated with this person didn't contstruct properly"); return null; }
             if (String.valueOf(IDNumber).length() != 7) { System.out.println("The length of the ID number must be exactly 7 digits"); return null; }
             if (!String.valueOf(IDNumber).startsWith("493")) { System.out.println("The ID number must start with 493"); return null; }
-            return new PackageSender(true, firstName, lastName, IDNumber, pkg);
+            return new PackageSender(true, firstName, lastName, IDNumber);
+        }
+    }
+    public static class PackageReceiver extends FirstAndThirdParties {
+        private PackageReceiver(boolean isSender, String firstName, String lastName, int IDNumber) {
+            super(false, firstName, lastName, IDNumber);
+        }
+        public static PackageReceiver createReceiver(String firstName, String lastName, int IDNumber) {
+            if (firstName == null || lastName == null) { System.out.println("Either the first/last name or the package associated with this person didn't contstruct properly"); return null; }
+            if (String.valueOf(IDNumber).length() != 7) { System.out.println("The length of the ID number must be exactly 7 digits"); return null; }
+            if (!String.valueOf(IDNumber).startsWith("493")) { System.out.println("The ID number must start with 493"); return null; }
+            return new PackageReceiver(false, firstName, lastName, IDNumber);
         }
     }
     public static abstract class Shippable {
@@ -3141,7 +3174,7 @@ public class day3 {
             this.distanceToDest = distanceToDest; this.type = type; this.sentFrom = sentFrom; this.personToReceive = personToReceive;
         }
         String getPackageSummary() {
-            return String.format("SHIPMENT INFORMATION OF :%nTagNumber: %s%nTrackingNumber:%s%nOrigin: %s%nDestination: %sDistance To Destination: %.2f miles%nShipment Type: %s", tagNumber, trackingNumber, origin, destination, distanceToDest, type, sentFrom.firstName, personToReceive.firstName);
+            return String.format("SHIPMENT INFORMATION OF :%nTagNumber: %s%nTrackingNumber:%s%nOrigin: %s%nDestination: %s%nDistance To Destination: %.2f miles%nShipment Type: %s%nSent From: %s%nWill Be Received By: %s", tagNumber, trackingNumber, origin, destination, distanceToDest, type, sentFrom.firstName, personToReceive.firstName);
         }
     }
     interface VerifiedPackage {
@@ -3207,7 +3240,7 @@ public class day3 {
     }
     public static class PackageMaker implements VerifiedPackage {
         ArrayList<ShipmentPackage> packages = new ArrayList<>();
-        public PackageMaker(Warehouse warehouse) {}
+        public PackageMaker() {}
 
         // since this class makes methods or in other words accepts orders, we store these into packages in order to send to the warehouse so the warehouse needs to be a prop
         // also since the Shipment static method uses a verifier, it is guaranteed that the obj passed into here will not be accepted
@@ -3217,7 +3250,7 @@ public class day3 {
                 // saying this right here because i do need to make sure there arent any dupes and .contains uses .equals whenever iterating over the List
                 // that is now complete, now I can check that if the AL already has it, its based on tagNumber
                 ShipmentPackage newPkg = new ShipmentPackage(tagNumber, trackingNumber, origin, destination, distanceToDest, type, sentFrom, personToReceive);
-                if (packages.contains(newPkg)) { System.out.println("This package has already been added, if the other information (not counting the tagNumber) is different than a previous version, please change the tag number"); return; } else { packages.add(newPkg); }
+                if (packages.contains(newPkg)) { System.out.println("This package has already been added, if the other information (not counting the tagNumber) is different than a previous version, please change the tag number"); return; } else { sentFrom.assingPackage(newPkg); personToReceive.assingPackage(newPkg); packages.add(newPkg); }
             } else { System.out.println("Oopsies...Something wrong happened trying to make this package. Call this method again but correctly :)"); }
         }
 
