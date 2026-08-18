@@ -13,26 +13,10 @@ import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        PackageMaker maker = new PackageMaker();
-
-        PackageSender raul = PackageSender.createSender("Raul", "Rodriguez", 4931234);
-        PackageReceiver alex = PackageReceiver.createReceiver("Alex", "Chavez", 4935678);
-        PackageSender elena = PackageSender.createSender("Elena", "Castillo", 4939012);
-        PackageReceiver martha = PackageReceiver.createReceiver("Martha", "Mack", 4933456);
-
-        maker.acceptOrder("SHP001", "1A76B001XJ", "El Paso, Texas", "Fort Worth, Texas", 590.5, "Standard", raul, alex);
-        maker.acceptOrder("SHP002", "1A76B001XK", "El Paso, Texas", "Austin, Texas", 575.0, "Express", elena, martha);
-        maker.acceptOrder("SHP003", "1A76B001XL", "El Paso, Texas", "Houston, Texas", 745.2, "Standard", raul, martha);
-        maker.acceptOrder("SHP004", "1A76B001XM", "El Paso, Texas", "Dallas, Texas", 600.8, "Express", elena, alex);
-
-        // deliberate duplicate tag number, should be rejected
-        maker.acceptOrder("SHP001", "1A76B001XN", "El Paso, Texas", "San Antonio, Texas", 550.0, "Standard", raul, alex);
-
-        Warehouse warehouse = new Warehouse(maker);
-        warehouse.requestOrders(3);
-        warehouse.processOrders(2);
-
-        System.out.println(raul.getSummaryOfPerson());
+        Professor p1 = Professor.createProfessor("Raul", "rodriguez", "UTP3467", "PhD");
+        Professor p2 = Professor.createProfessor("Sandra", "rodriguez", "UTP3967", "PhD");
+        Course c1 = Course.createCourse("Discrete Math", "UTP3333", 3.0);
+        c1.assignProfessor(c1, p1); p1.assignCourse(p2, c1); // implement logic to ensure that the arg matches the obj calling it
 
     }
 
@@ -3266,5 +3250,110 @@ public class day3 {
             sublistView.clear(); // this removes the packages from the "this"'s AL of packages
             return packagesToSend;
         }
+    }
+
+    // Exercise 4 of 5 (maybe, might be the last or will fulfill all 5)
+    // Build a small course registration waitlist system for an university
+    //      course with seat limits, students enrolling, a waitlist that activates once a course fills
+    //      And some mechanism for automatic promotion when a seat opens up
+    // Design the hierarchy and container choices yourself
+    // First things first, waitlist filling depends on the eviction logic of an lhm
+    // maybe since an lhm either depends on
+    interface ClassInvolved {
+        // assign prof and course
+        default boolean confirmRelationship(Professor professor, Course course) {
+            if (professor.course.equals(course) && course.professor.equals(professor)) { return true; } else { return false; }
+        }
+        default void assignProfessor(Course course, Professor professor) { 
+            if (course != this) { System.out.println("The course parameter shall be the obj calling this method, not any other instance of the Course class"); return; }
+            if (professor.course != null ) { if (professor.course.equals(course)) {
+                course.professor = professor;
+                System.out.println(confirmRelationship(professor, course) ? String.format("The course(%s) and Prof. %s are correctly related", course.courseName, professor.firstName) : "Something weird has happened, check relationship again.");
+            }} else {
+                course.professor = professor;
+            }
+        }
+        default void assignCourse(Professor professor, Course course) { 
+            if (professor != this) { System.out.println("The professor parameter shall be the obj calling this method, not any other instance of the Professor class"); return; }
+            if (course.professor != null ) { if (course.professor.equals(professor)) {
+                professor.course = course;
+                System.out.println(confirmRelationship(professor, course) ? String.format("The course(%s) and Prof. %s are correctly related", course.courseName, professor.firstName) : "Something weird has happened, check relationship again.");
+            }} else {
+                professor.course = course;
+            }
+        }
+        
+    }
+    public static class Course implements ClassInvolved {
+
+        String courseName; String crn; double credits; Professor professor;
+        public Course(String courseName, String crn, double credits) {
+            this.courseName = courseName; this.crn = crn;
+            this.credits = credits; this.professor = null;
+        }
+        public static Course createCourse(String courseName, String crn, double credits) {
+            if (courseName == null || crn == null) { System.out.println("Please make sure that the course anme and crn is not empty"); return null; }
+            if (!crn.startsWith("UTP") || crn.length() != 7) { System.out.println("Please make sure that the crn is exactly 7 characters long and starts with UTP"); return null; }
+            if (credits < 0 || credits > 4.5) { System.out.println("Please make sure the course credits is not less than 0 and not greater than 4.5"); return null; }
+            return new Course(courseName, crn, credits);
+        }
+
+
+        @Override
+        public void assignCourse(Professor professor, Course course) { System.out.println("Courses do not have permission to set the professor prop of course to itself. Only able to assign its prof prop to the certain");}
+
+        @Override
+        public boolean equals(Object other) {
+            if (this == other) { return true; }
+            if (!(other instanceof Course)) { return false; }
+            Course otherCourse = (Course) other;
+            return this.crn.equals(otherCourse.crn);
+        }
+        @Override
+        public int hashCode() { return Objects.hash(crn); }
+
+    }
+    public static abstract class UniversityInvolved {
+        String firstName; String lastName; String universityID;
+        public UniversityInvolved(String firstName, String lastName, String universityID) {
+            this.firstName = firstName; this.lastName = lastName; this.universityID = universityID;
+        }
+        String getSummary() {
+            return String.format("First Name: %s%nLast Name: %s%nUni ID: %s", firstName, lastName, universityID);
+        }
+    }
+    public static class CollegeStudent extends UniversityInvolved {
+        String major;
+        public CollegeStudent(String firstName, String lastName, String universityID, String major) {
+            super(firstName, lastName, universityID);
+            this.major = major;
+        }
+    }
+
+    public static class Professor implements ClassInvolved {
+        String firstName; String lastName; String universityID; String degree; Course course;
+
+        public Professor(String firstName, String lastName, String universityID, String degree) {
+            this.firstName = firstName; this.lastName = lastName;
+            this.degree = degree; this.course = null;
+        }
+        public static Professor createProfessor(String firstName, String lastName, String universityID, String degree) {
+            if (firstName == null || lastName == null || universityID == null || degree == null) {
+                System.out.println("Please make sure all fields contain some value"); return null;
+            }
+            if (!universityID.startsWith("UTP")) { System.out.println("University ID must start with UTP"); return null; }
+            if (degree == "Master's" || degree == "PhD") { } else { System.out.println("Degree shall only be 'Master's' or 'PhD'"); return null; }
+            return new Professor(firstName, lastName, universityID, degree);
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (this == other) { return true; }
+            if (!(other instanceof Professor)) { return false; }
+            Professor otherProf = (Professor) other;
+            return this.universityID.equals(otherProf.universityID);
+        }
+        @Override
+        public int hashCode() { return Objects.hash(universityID); }
     }
 }
