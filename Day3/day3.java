@@ -3065,7 +3065,7 @@ public class day3 {
             }
             private void initiateMatch(List<Player> players) {
                for (int left = 0; left < players.size() - 1;  left += 2) {
-                int right = left++;
+                int right = left + 1;
                 Player leftPlayer = players.get(left);
                 Player rightPlayer = players.get(right);
                 System.out.println(String.format("Round between  %s and %s is happening now.", leftPlayer.name, rightPlayer.name));
@@ -3105,5 +3105,133 @@ public class day3 {
             }
         }
 
-    
+    // Exercise 3 of 5
+    // Build a small warehouse inventory system with shipment tracking
+    //      items moving in and out of storage locations
+    //      some kind of hierarchy or capability split
+    //          design yourself (which classes, whether abs or intf)
+    // First things first; shipment should rely on FIFO wich means either LHM, List, Set thatll be the first index whilst LHM is non-assertion-mode
+    // shipments shall have weight, destination, origin, distance form orgin-destination to sort into a warehouse dept such as heavy shipments
+    public static abstract class FirstAndThirdParties {
+        boolean isSender; String firstName; String lastName; int IDNumber; ShipmentPackage pkg;
+        public FirstAndThirdParties(boolean isSender, String firstName, String lastName, int IDNumber, ShipmentPackage pkg) {
+            this.firstName = firstName; this.lastName = lastName; this.IDNumber = IDNumber; this.pkg = pkg;
+        }
+        String getSummaryOfPerson() {
+            return String.format("%s%nName: %s %s%nID Number: %s%nPackage Information: %n%s", isSender ? "Sender's Information" : "Receiver's Information", firstName, lastName, IDNumber, pkg.getPackageSummary());
+        }
+    }
+    public static class PackageSender extends FirstAndThirdParties {
+        private PackageSender(boolean isSender, String firstName, String lastName, int IDNumber, ShipmentPackage pkg) {
+            super(true, firstName, lastName, IDNumber, pkg);
+        }
+        public static PackageSender createSender(String firstName, String lastName, int IDNumber, ShipmentPackage pkg) {
+            if (firstName == null || lastName == null || pkg == null) { System.out.println("Either the first/last name or the package associated with this person didn't contstruct properly"); return null; }
+            if (String.valueOf(IDNumber).length() != 7) { System.out.println("The length of the ID number must be exactly 7 digits"); return null; }
+            if (!String.valueOf(IDNumber).startsWith("493")) { System.out.println("The ID number must start with 493"); return null; }
+            return new PackageSender(true, firstName, lastName, IDNumber, pkg);
+        }
+    }
+    public static abstract class Shippable {
+        String tagNumber; String trackingNumber; String origin; String destination;
+        double distanceToDest; String type; FirstAndThirdParties sentFrom; FirstAndThirdParties personToReceive;
+
+        public Shippable(String tagNumber, String trackingNumber, String origin, String destination, double distanceToDest, String type, FirstAndThirdParties sentFrom, FirstAndThirdParties personToReceive) {
+            this.tagNumber = tagNumber; this.trackingNumber = trackingNumber; this.origin = origin; this.destination = destination;
+            this.distanceToDest = distanceToDest; this.type = type; this.sentFrom = sentFrom; this.personToReceive = personToReceive;
+        }
+        String getPackageSummary() {
+            return String.format("SHIPMENT INFORMATION OF :%nTagNumber: %s%nTrackingNumber:%s%nOrigin: %s%nDestination: %sDistance To Destination: %.2f miles%nShipment Type: %s", tagNumber, trackingNumber, origin, destination, distanceToDest, type, sentFrom.firstName, personToReceive.firstName);
+        }
+    }
+    interface VerifiedPackage {
+        static boolean verifyPackage(String tagNumber, String trackingNumber, String origin, String destination, double distanceToDest, String type, FirstAndThirdParties sentFrom, FirstAndThirdParties personToReceive) {
+            if (tagNumber == null || trackingNumber == null || origin == null || destination == null || type == null || sentFrom == null || personToReceive == null) {
+                System.out.println("One of the fields were invalid. Please check and resubmit"); return false;
+            }
+            if (!tagNumber.startsWith("SHP")) { System.out.println("TagNumber must start with SHP"); return false; }
+            if (!trackingNumber.startsWith("1A76B001")) { System.out.println("TrackingNumber must start with 1A76B001"); return false;}
+            if (origin.length() == 2 || origin.length() == 3) { System.out.println("Please write the origin completely such as El Paso, Texas for example"); return false; }
+            if (destination.length() == 2 || destination.length() == 3) { System.out.println("Please write the destination completely such as Fort Worth, Texas for example"); return false; }
+            if (distanceToDest < 0) { System.out.println(String.format("The value %.2f cannot be negative for the distance to the destination", distanceToDest)); return false; }
+            return true;
+        }
+    }
+    private static class ShipmentPackage extends Shippable implements Comparable<ShipmentPackage> {
+        private ShipmentPackage(String tagNumber, String trackingNumber, String origin, String destination, double distanceToDest, String type, FirstAndThirdParties sentFrom, FirstAndThirdParties personToReceive) {
+            super(tagNumber, trackingNumber, origin, destination, distanceToDest, type, sentFrom, personToReceive);
+        }
+        
+        @Override
+        public boolean equals(Object other) {
+            if (this == other) { return true; }
+            if (!(other instanceof ShipmentPackage)) { return false; }
+            ShipmentPackage otherPackage = (ShipmentPackage) other;
+            return this.tagNumber.equals(otherPackage.tagNumber);
+        }
+        @Override
+        public int hashCode() { return Objects.hash(tagNumber); }
+
+        @Override
+        public int compareTo(ShipmentPackage other) {
+            return this.tagNumber.compareTo(other.tagNumber);
+        }
+    }
+    public static class Warehouse {
+        PackageMaker orderRetriever;
+        public Warehouse(PackageMaker orderRetriever) { this.orderRetriever = orderRetriever; }
+        TreeMap<ShipmentPackage, Double> sortedByDistance = new TreeMap<>(
+            Comparator.comparingDouble((ShipmentPackage p) -> p.distanceToDest).thenComparing(p -> p.tagNumber)
+        );
+
+        public void requestOrders(int amount) {
+            // first call func to retrivee the AL of packages needed to sort
+            // since we need to sort, if we sort based on distance and weight that means that one or more
+            // shipments can be in two different locations at the same time which is not possible
+            // however, they are overall organized by FIFO or insertion order with removing lru's
+            // considering this, the most feasible way to sort these would be by distance
+            ArrayList<ShipmentPackage> retrievedOrders = orderRetriever.sendPkgsToWarehouse(amount);
+            retrievedOrders.forEach((p) -> sortedByDistance.put(p, p.distanceToDest));
+        }
+        public void processOrders(int amount) {
+            int limit = Math.min(amount, sortedByDistance.size());
+            ArrayList<ShipmentPackage> processing = new ArrayList<>();
+            for (Map.Entry<ShipmentPackage, Double> entry: sortedByDistance.entrySet()) {
+                if (processing.size() == limit) { break; }
+                processing.add(entry.getKey());
+            }
+            ShipmentPackage furthest = Collections.max(processing, Comparator.comparingDouble(p -> p.distanceToDest));
+            System.out.println(String.format("Furthest Package Description:%n Senders Summary:%n%s Package Summary:%n%s", furthest.sentFrom.getSummaryOfPerson() ,furthest.getPackageSummary() ));
+            processing.forEach((p) -> System.out.println(p.getPackageSummary()));
+        }
+    }
+    public static class PackageMaker implements VerifiedPackage {
+        ArrayList<ShipmentPackage> packages = new ArrayList<>();
+        public PackageMaker(Warehouse warehouse) {}
+
+        // since this class makes methods or in other words accepts orders, we store these into packages in order to send to the warehouse so the warehouse needs to be a prop
+        // also since the Shipment static method uses a verifier, it is guaranteed that the obj passed into here will not be accepted
+        public void acceptOrder(String tagNumber, String trackingNumber, String origin, String destination, double distanceToDest, String type, FirstAndThirdParties sentFrom, FirstAndThirdParties personToReceive) {
+            if (VerifiedPackage.verifyPackage(tagNumber, trackingNumber, origin, destination, distanceToDest, type, sentFrom, personToReceive)) {
+                // since the packages are going to be compared and also sorted they need to implement equals, hc, and compareTo
+                // saying this right here because i do need to make sure there arent any dupes and .contains uses .equals whenever iterating over the List
+                // that is now complete, now I can check that if the AL already has it, its based on tagNumber
+                ShipmentPackage newPkg = new ShipmentPackage(tagNumber, trackingNumber, origin, destination, distanceToDest, type, sentFrom, personToReceive);
+                if (packages.contains(newPkg)) { System.out.println("This package has already been added, if the other information (not counting the tagNumber) is different than a previous version, please change the tag number"); return; } else { packages.add(newPkg); }
+            } else { System.out.println("Oopsies...Something wrong happened trying to make this package. Call this method again but correctly :)"); }
+        }
+
+        // so now we have accepted valid packages in this objs prop of the AL, now its time to send it to the warehouse
+        // this class does what its called, it just accepts orders and the wh has teh responsibility of sorting etc
+        public ArrayList<ShipmentPackage> sendPkgsToWarehouse(int amount) {
+            // so since the warehouse owns an instance of this class itll call this method in that case itll be its responsibility to add
+            // the packages to its whatever it has which means that this method needs to return a list of that # of paackages
+            // make sure we send a valid amount to return
+            int limit = Math.min(amount, packages.size());
+            List<ShipmentPackage> sublistView = packages.subList(0, limit);
+            ArrayList<ShipmentPackage> packagesToSend = new ArrayList<>(sublistView);
+            sublistView.clear(); // this removes the packages from the "this"'s AL of packages
+            return packagesToSend;
+        }
+    }
 }
