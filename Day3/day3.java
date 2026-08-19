@@ -13,10 +13,38 @@ import java.util.Set; import java.util.TreeMap;
 
 public class day3 {
     public static void main(String[] args) {
-        Professor p1 = Professor.createProfessor("Raul", "rodriguez", "UTP3467", "PhD");
-        Professor p2 = Professor.createProfessor("Sandra", "rodriguez", "UTP3967", "PhD");
-        Course c1 = Course.createCourse("Discrete Math", "UTP3333", 3.0);
-        c1.assignProfessor(c1, p1); p1.assignCourse(p2, c1); // implement logic to ensure that the arg matches the obj calling it
+        College uofTexasPaso = new College();
+
+        Professor prof1 = uofTexasPaso.newProfessor("Marcus", "Webb", "UTP4821", "PhD");
+        Professor prof2 = uofTexasPaso.newProfessor("Elena", "Castillo", "UTP3956", "Master's");
+
+        Course course1 = uofTexasPaso.newCourse("Data Structures", "UTP1234", 3, 2);
+        Course course2 = uofTexasPaso.newCourse("Calculus II", "UTP5678", 4, 3);
+
+        uofTexasPaso.assignProfTo(course1, prof1);
+        uofTexasPaso.assignCourseTo(prof1, course1);
+
+        uofTexasPaso.assignCourseTo(prof2, course2);
+        uofTexasPaso.assignProfTo(course2, prof2);
+
+
+        CollegeStudent s1 = uofTexasPaso.newStudent("Raul", "Rodriguez", "UTP9001", "Computer Science", 15);
+        CollegeStudent s2 = uofTexasPaso.newStudent("Alex", "Chavez", "UTP9002", "Computer Science", 15);
+        CollegeStudent s3 = uofTexasPaso.newStudent("Sandra", "Martinez", "UTP9003", "Mathematics", 12);
+
+        uofTexasPaso.enrollStudent(s1, course1);
+        uofTexasPaso.enrollStudent(s2, course1);
+
+        // course1 maxSize is 2, already full - this should waitlist
+        System.out.println(String.format("Course 1 current size: %d", course1.students.size()));
+        uofTexasPaso.enrollStudent(s3, course1);
+
+        uofTexasPaso.enrollStudent(s1, course2);
+
+        // s2 drops course1, freeing a seat - does anything currently pull s3 off the waitlist automatically?
+        uofTexasPaso.dropClassFor(s2, course1);
+
+        uofTexasPaso.enrollStudent(s3, course1);
 
     }
 
@@ -3257,8 +3285,6 @@ public class day3 {
     //      course with seat limits, students enrolling, a waitlist that activates once a course fills
     //      And some mechanism for automatic promotion when a seat opens up
     // Design the hierarchy and container choices yourself
-    // First things first, waitlist filling depends on the eviction logic of an lhm
-    // maybe since an lhm either depends on
     interface ClassInvolved {
         // assign prof and course
         default boolean confirmRelationship(Professor professor, Course course) {
@@ -3270,7 +3296,7 @@ public class day3 {
                 course.professor = professor;
                 System.out.println(confirmRelationship(professor, course) ? String.format("The course(%s) and Prof. %s are correctly related", course.courseName, professor.firstName) : "Something weird has happened, check relationship again.");
             }} else {
-                course.professor = professor;
+                course.professor = professor; System.out.println(String.format("Since Course(%s) had a null val for its professor, we assigned %s to it successfully. Now call the professors method to assign the course to its course prop", course.courseName, professor.firstName));
             }
         }
         default void assignCourse(Professor professor, Course course) { 
@@ -3279,28 +3305,43 @@ public class day3 {
                 professor.course = course;
                 System.out.println(confirmRelationship(professor, course) ? String.format("The course(%s) and Prof. %s are correctly related", course.courseName, professor.firstName) : "Something weird has happened, check relationship again.");
             }} else {
-                professor.course = course;
+                professor.course = course; System.out.println(String.format("Since Professor %s had a null val for its course, we assigned Course(%s) to it successfully. Now call the course's method to assign the professor to its professor prop", professor.firstName, course.courseName));
             }
         }
         
     }
     public static class Course implements ClassInvolved {
+        static Set<Course> createdCourses = new HashSet<>();
+        Set<CollegeStudent> students = new HashSet<>();
 
-        String courseName; String crn; double credits; Professor professor;
-        public Course(String courseName, String crn, double credits) {
+        String courseName; String crn; int credits; Professor professor; int maxSize;
+        private Course(String courseName, String crn, int credits, int maxSize) {
             this.courseName = courseName; this.crn = crn;
             this.credits = credits; this.professor = null;
+            this.maxSize = maxSize;
         }
-        public static Course createCourse(String courseName, String crn, double credits) {
+        public static Course createCourse(String courseName, String crn, int credits, int maxSize) {
             if (courseName == null || crn == null) { System.out.println("Please make sure that the course anme and crn is not empty"); return null; }
             if (!crn.startsWith("UTP") || crn.length() != 7) { System.out.println("Please make sure that the crn is exactly 7 characters long and starts with UTP"); return null; }
             if (credits < 0 || credits > 4.5) { System.out.println("Please make sure the course credits is not less than 0 and not greater than 4.5"); return null; }
-            return new Course(courseName, crn, credits);
+            if (maxSize < 0 || maxSize > 60) { return null; }
+            Course madeCourse = new Course(courseName, crn, credits, maxSize);
+            if (createdCourses.contains(madeCourse)) { System.out.println("A course with the same crn was made before, not accepting this creation. Try changing the crn"); return null; }
+            return madeCourse;
         }
 
-
+        public void addStudent(CollegeStudent student) {
+            // safeguard that student isnt already there
+            if (students.contains(student)) { System.out.println(String.format("%s has already been enrolled in this class", student.firstName)); return; }
+            // this method supercedes students responsibility of enrolling this into said course and the college has main control of calling this method
+            student.enrollCourse(this); students.add(student);
+        }
+        public void unenrollStudent(CollegeStudent student) {
+            if (!students.contains(student)) { System.out.println(String.format("%s was never enrolled in this class.", student.firstName)); return; }
+            students.remove(student);
+        }
         @Override
-        public void assignCourse(Professor professor, Course course) { System.out.println("Courses do not have permission to set the professor prop of course to itself. Only able to assign its prof prop to the certain");}
+        public void assignCourse(Professor professor, Course course) { System.out.println("Courses do not have permission to set the professor prop of course to itself. Only able to assign its prof prop to the certain professor");}
 
         @Override
         public boolean equals(Object other) {
@@ -3323,18 +3364,45 @@ public class day3 {
         }
     }
     public static class CollegeStudent extends UniversityInvolved {
+        static Set<CollegeStudent> createdStudents = new HashSet<>();
+        Set<Course> courses = new HashSet<>(); int enrolledCredits = 0; int maxCredits;
         String major;
-        public CollegeStudent(String firstName, String lastName, String universityID, String major) {
+        private CollegeStudent(String firstName, String lastName, String universityID, String major, int maxCredits) {
             super(firstName, lastName, universityID);
-            this.major = major;
+            this.major = major; this.maxCredits = maxCredits;
+        }
+        public static CollegeStudent createStudent(String firstName, String lastName, String universityID, String major, int maxCredits) {
+            if (firstName == null || lastName == null || universityID == null || !universityID.startsWith("UTP") || major == null || maxCredits < 0 || maxCredits > 15) {
+                return null;
+            } // idk why i just havent chained all the necesarry validation like this before lol, so much easier and shorter
+            CollegeStudent newStudent = new CollegeStudent(firstName, lastName, universityID, major, maxCredits);
+            if (createdStudents.contains(newStudent)) { System.out.println("A student with the same ID was made therefore we are denying the creation of this student. Try again"); return null;}
+            return newStudent;
+        }
+        public void enrollCourse(Course course) {
+            if (courses.contains(course)) { System.out.println(String.format("%s cannot enroll in course %s more than once", firstName, course.crn)); return ;}
+            courses.add(course); System.out.println(String.format("%s successfully enrolled into %s", firstName, course.courseName));
+            this.enrolledCredits += course.credits;
+        }
+        public void dropCourse(Course course) {
+            if (!courses.contains(course)) { System.out.println(String.format("%s was never an enrolled course", course.courseName)); return; }
+            courses.remove(course); course.unenrollStudent(this);
+        }
+        @Override
+        public boolean equals(Object other) {
+            if (this == other) { return true; }
+            if (!(other instanceof CollegeStudent)) { return false; }
+            CollegeStudent otherStudent = (CollegeStudent) other;
+            return this.universityID.equals(otherStudent.universityID);
         }
     }
-
     public static class Professor implements ClassInvolved {
+        static Set<Professor> createdProfessors = new HashSet<>();
         String firstName; String lastName; String universityID; String degree; Course course;
 
         public Professor(String firstName, String lastName, String universityID, String degree) {
             this.firstName = firstName; this.lastName = lastName;
+            this.universityID = universityID;
             this.degree = degree; this.course = null;
         }
         public static Professor createProfessor(String firstName, String lastName, String universityID, String degree) {
@@ -3343,9 +3411,13 @@ public class day3 {
             }
             if (!universityID.startsWith("UTP")) { System.out.println("University ID must start with UTP"); return null; }
             if (degree == "Master's" || degree == "PhD") { } else { System.out.println("Degree shall only be 'Master's' or 'PhD'"); return null; }
-            return new Professor(firstName, lastName, universityID, degree);
+            Professor newProf = new Professor(firstName, lastName, universityID, degree);
+            if (createdProfessors.contains(newProf)) { System.out.println("A professor with the same ID was made before, we are denying the creation of this professor. Try again."); return null; }
+            return newProf;
         }
 
+        @Override
+        public void assignProfessor(Course course, Professor professor) { System.out.println("Professors do not have permission to set the course prop of professor to itself. Only able to assign its course prop to the certain course"); }
         @Override
         public boolean equals(Object other) {
             if (this == other) { return true; }
@@ -3355,5 +3427,63 @@ public class day3 {
         }
         @Override
         public int hashCode() { return Objects.hash(universityID); }
+    }
+    public static class College {
+        LinkedHashMap<CollegeStudent, Set<Course>> waitList = new LinkedHashMap<>(16, 0.75f, false);
+        Set<Professor> professors = new HashSet<>(); Set<Course> courses = new HashSet<>(); Set<CollegeStudent> students = new HashSet<>();
+        public College() {}
+        // below methods are so that College is the only class that needs to be used
+
+        // create professor
+        public Professor newProfessor(String firstName, String lastName, String unviersityID, String degree) {
+            Professor newProf = Professor.createProfessor(firstName, lastName, unviersityID, degree);
+            if (newProf != null) { System.out.println(String.format("Succesfully created Professor %s", firstName));}
+            return newProf;
+        }
+        // create course
+        public Course newCourse(String courseName, String crn, int credits, int maxSize) {
+            Course newClass = Course.createCourse(courseName, crn, credits, maxSize);
+            if (newClass != null) { System.out.println(String.format("Succesfully created Course %s", courseName));}
+            return newClass;
+        }
+        // assign professor
+        public void assignProfTo(Course course, Professor professor) { course.assignProfessor(course, professor); }
+        // assign course
+        public void assignCourseTo(Professor professor, Course course) { professor.assignCourse(professor, course); }
+        // create student
+        public CollegeStudent newStudent(String firstName, String lastName, String universityID, String major, int maxCredits) {
+            CollegeStudent newEnrollee = CollegeStudent.createStudent(firstName, lastName, universityID, major, maxCredits);
+            if (newEnrollee != null) { System.out.println(String.format("Succesfully created Student %s", firstName));}
+            return newEnrollee;
+        }
+        // enroll student
+        public void enrollStudent(CollegeStudent student, Course inCourse) {
+            if (inCourse.students.size() < inCourse.maxSize) {
+                // always add student to course
+                inCourse.addStudent(student);
+                // check if theyre in the waitlist
+                if (waitList.containsKey(student)) {
+                    Set<Course> waitlistedCourses = waitList.get(student);
+                    // remove from waitlist
+                    if (waitlistedCourses != null && waitlistedCourses.contains(inCourse)) {
+                        waitlistedCourses.remove(inCourse);
+                        if (waitlistedCourses.isEmpty()) { waitList.remove(student); }
+                    }
+                } 
+            } else {
+                Set<Course> waitListedCourses = waitList.computeIfAbsent(student, k -> new HashSet<>());
+                waitListedCourses.add(inCourse);
+            }
+        }
+        public void dropClassFor(CollegeStudent student, Course forCourse) {
+            if (!student.courses.contains(forCourse) || !forCourse.students.contains(student)) {
+                System.out.println(String.format("%s either never had %s or vice versa", student.firstName, forCourse.courseName)); return;
+            }
+            student.dropCourse(forCourse);
+        }
+        public void kickoutStudent(CollegeStudent student) {
+            for (Course course: student.courses) { student.dropCourse(course);}
+            students.remove(student);
+        }
     }
 }
