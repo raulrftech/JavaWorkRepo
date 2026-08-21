@@ -1,13 +1,13 @@
 package Day4;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.HashMap;
 import java.util.Map;
 
 public class day4 {
     
     public static void main(String[] args) {
-        System.out.println("Found with regular throws"); foundWReg("eastWing"); foundWReg("whoKnows");
-        System.out.println("Found with custom implementation"); foundWCustom("westWing"); foundWCustom("idkEither");
+        checkOverride("Genera");
     }
 
     // Optional <T> - full picture
@@ -241,4 +241,59 @@ public class day4 {
             System.out.println(String.format("Found item %s", found));
         } catch (ItemNotFound e) { System.out.println(e.getMessage()); }
     }
+    // Exercise 4 - All Three .orElse Variants in One Method, Layered Fallback Chain
+    // This is the actual escalation - isntead of three separate consumer methods each demonstrating one strategy
+    //      build one method that genuinely needds all three working together, not just sitting side by side
+    // Build a small configuration-resolution system:
+    //      a setting might be found in a user-specific override (Optional<String>) and if not there, checked against a system-default (also Optional<String>, itself possibly absent) and if neither exists
+    //          the request shoud fail loudly rather than silently fall back to some arbitrary value
+    // Design the methods actual logic: check the user override first, if present, use it directly, if not, fall back to chekcing the system default, but do this check lazily
+    //      only actually look up the system default if the user override was genuinely missing, using .orElseGet() with a lambda that itself performs the system default lookup
+    //          If this is also empty, .orElseThrow() with a custome xception naming which setting couldnt be resolved at all
+    // Test three scenarios: user override present (system default should never even be consulted - prove this with a print statement inside the system-defaul lokkup that shouldnt fire)
+    //      user override absent but system default present
+    //      and both absent, throwing and catching the custom exception
+    // Two questions before building:
+    //      Given the method needs to chain user override -> system default -> throw, why does .orElseGet() specifically have to be the tool connecting the first two steps, rather than .orElse()
+    //          what would break, or what would silently happen wrong, if you used .orElse() there instead
+    //              so the main method would take the parameter of an Optional<String>, we can perform orElseGet on it with calling the systemDefault in the lambda so that if it isnt present the systemDefault is supplied
+    //              but since we need to use orElseThrow with the custom exception so that in case the systemDefault doesnt exist, it fails loudly
+    //      Can .orElseGet's lambda itself contain a second Optional lookup with its own .orElseThrow() chained onto it, or does that kind of nesting run into any real problem
+    //          so the orElseGet lambda calls a function and orElseGet() is unlike ifPresent in which the unwrapped value is usable within its lambda but since the fucntion that is called can return an Optional<String>
+    //          such checking settingName supplied then that can but if that is the case then all this would need ot be within a try/catch
+    //      Product
+    //          After testing with "Setting1" and "Seting1", both cases are verified where Setting1 returns Menu1 which the return value from userOverride which was set to uo
+    //              then was checked if it was empty with systemDefault(uo) and if that was empty was well which is correct because an incorrect name supplied to userOverride propagated an empty value to systemDefault
+    //              which then propagated its own returned empty value that was then checked by orElseThrow which would throw the exception if it was in fact empty
+    public static Optional<String> userOverride(String settingName) {
+        HashMap<String, String> settings = new HashMap<>(Map.of("Setting1", "Menu1"));
+        if (settingName.isEmpty() || !settings.containsKey(settingName)) { return Optional.empty(); } else { return Optional.of(settings.get(settingName));}
+    }
+    public static Optional<String> systemDefault(String SD) {
+        HashMap<String, String> systemDefaults = new HashMap<>(Map.of("General", "Various General Settings", "Cellular", "Data Usage"));
+        if (!systemDefaults.containsKey(SD)) { return Optional.empty();} else { return Optional.of(systemDefaults.get(SD)); }
+    }
+    public static void checkOverride(String settingName) {
+        if (settingName.isEmpty()) { System.out.println("Please input a setting name to run this method"); return; }
+        Optional<String> uo = userOverride(settingName);
+        try {
+            System.out.println(uo.orElseGet(() -> systemDefault(settingName).orElseThrow()));
+        } catch (Exception e) { System.out.println(e.getMessage()); }
+    }
+    // Exercise 5 - .map() chained with .orElse(), Transforming Before Falling back
+    // Everything so far has used the raw wrapped value directly. This exercise introduced .map() - a method that transforms the value inside an Optional if present
+    //      leaving it untouched (still empty) if not
+    // Full mechanics before building: 
+    //      .map(function) takes a lambda describing how to transform the wrapped value, applies it only if a value exists, and returns a new Optional wrapping the transformed result
+    //          chaining.map() on an already-empty Optional is always safe and simply stays empty, no exception, no special handling needed
+    //      Optional<String> name = Optional.of("Raul");
+    //      Optional<Integer> length = name.map(n -> n.lgenth()) // optional[4], no unwrapping needed to transform
+    // Build a small system
+    //      a method returns Optional<String> representing a raw phone number that might not exist for a contact
+    //      Chain .map() onto that result to transform the raw string into a formatted version (your choise of formatting; dashes, parantheses, whatever)
+    //      Then chain .orElse() or .orElseGet() onto the result of the map() to supply a fallback if the original was empty
+    //          proving .map() and a fallback strategy can be chained together in one fluent expression, not used as separate, disconnected steps
+    // Two questions before building
+    //      Why is it safe to call .map() on an Optional that might be emtpy, without needing to check .isPresent() first
+    //      If the original Optional was empty, does .map() transformation lambda ever actually run at all
 }
