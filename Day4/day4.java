@@ -7,7 +7,8 @@ import java.util.Map;
 public class day4 {
     
     public static void main(String[] args) {
-        checkOverride("Genera");
+        System.out.println(getDiscountedPrice("Apple Mouse", 0.50));
+        System.out.println(getDiscountedPrice("Nonexistent", 0.20));
     }
 
     // Optional <T> - full picture
@@ -18,7 +19,7 @@ public class day4 {
     // Creating one:
     //      Optional.of(value) - wraps a value yorue certain isnt null, throws immediately if youre wrong
     //      Optional.ofNullable(value) - safely wraps something that might genuinely be null, producing an empty Optional if it is
-    //      Optional.empty() - explicitly represent "nothing here"
+    //      Optional.empty() - explicitly represents "nothing here"
     // The full method set
     //      .isPresent/.isEmpty - boolean checks
     //      .get() - the dangerous one, direct equivalent of Swifts force-unwraps !; throws NoSuchElementException if empty
@@ -295,5 +296,56 @@ public class day4 {
     //          proving .map() and a fallback strategy can be chained together in one fluent expression, not used as separate, disconnected steps
     // Two questions before building
     //      Why is it safe to call .map() on an Optional that might be emtpy, without needing to check .isPresent() first
+    //          we havent used or gone over isPresent so this question wont be answered
     //      If the original Optional was empty, does .map() transformation lambda ever actually run at all
+    //          no, it just returns empty which then the orElseGet receives an empty and it is so it conditionally runs the return value of the string depending on the return value of the map which depends on the value of the Optional<String> val
+    public static Optional<String> getPhoneNumber(String contactName) {
+        HashMap<String, Optional<String>> contactBook = new HashMap<>(Map.of("Martha", Optional.of("9153298148"), "Malacolm", Optional.of("9157316796"), "Karla", Optional.of("9156269967"), "Myself", Optional.of("9152164363")));
+        if (!contactBook.containsKey(contactName)) { return Optional.empty(); } else { return contactBook.get(contactName); }
+    }
+    public static String formatPhoneNumber(String contactName) {
+        return getPhoneNumber(contactName).map(num -> num.replaceFirst("(\\d{3})(\\d{3})(\\d+)", "$1-$2-$3")).orElseGet(() -> "No phone number is associated with this contact name");
+    }
+    // Exercise 6 - isPrsent() as a Genuine Precondition, Not Paired with .isEmpty()
+    // .isPresent() Full Mechanics
+    //      returns a plain boolean, true if the Optional genuinely holds a value, false if its empty
+    //      It performs a direct internal check of the Optional's state, nothing more
+    //          it doesnt unwrap, doesnt transform, doesnt throw
+    //          Purely a yes/no question you can safely ask before deciding whether to call something riskier like .get()
+    /*
+            Optional<String> maybeCode = Optional.ofNullable(getCode());
+            if (maybeCode.isPresent()) { String code = maybeCode.get(); Sysoutprntln code } else { sysoutprntln no code available }
+    */
+   //       This is the literal translation of manually checking if x != nil in swift before force unwrapping
+   //           .isPrsent() gives you the boolean and within that ture branch, calling .get() is genuinely safe, since youve just confirmed it is beforehand
+   //       Why it might get chosen over .isEmpty() specifically, worht thinking through as the actual question underneath this exercise
+   //           theyre logical opposites, so either can drive the same branching but which one you reach for often comes down to which case you want to read as the "main"
+   //               first mentioned path
+   //           if the "value exists, do the primary thing" case is the one you want front and center in your code
+   //           .isPresent() as the if condition puts that case first
+   //           If the "handle the missing case" logic is what you want emphasized or is genuinely the more complex branch, .isEmpty() as the leading condition puts that first isntead
+   //       Its a readability/emphasis choice, not a functional one - both are always available and picking one over the other doesnt change what the code does, only how it reads
+   // Build a method returning Optional<Double> representing a product's discount percentage, which might not exist for a given product
+   // Using only .isPresent()  (not .isEmpty() alongside it, not a guard style early return either - genuinely just .isPresent() as the condition of one if/else), branch between
+   //   "discount exits, apply it to a base price" and "no discount, use the base price unchanged"
+   // This forces .isPresent() to carry the full weight o fthe branching on its own, rather than sharing the job with its inverse
+   // One question before building:
+   //       What is the actual difference in intent between raching for .isPresent() versus reaching for .isEmpty(), given theyre logical opposites and iether could technically do the same code
+   //           the answer was given above specifally whenever you mentioned that which one I reach for depends on which case Id like to read as the main, first mentioned path. Purely a readability/emphasis choice
+   // So the first thing I want to do is an hm that has k: productName, v: double<price>
+    public static Optional<Double> getDiscountedPrice(String productName, Double discount) {
+        HashMap<String, Optional<Double>> inventory = new HashMap<>(Map.of("bananas", Optional.of(12.5), "Phone", Optional.of(450.50), "Monitor", Optional.of(345.80), "Apple Mouse", Optional.of(120.50)));
+        // before is present is used we need to confirm that the productName is there
+        if (inventory.containsKey(productName)) {
+            if (inventory.get(productName).isPresent() && discount > 0 && discount < 1.0) {
+                return Optional.of(inventory.get(productName).get() * discount);
+            } else { return Optional.empty(); }
+        } else { return Optional.empty(); }
+    }
+    // Exercise 7 - .filter(), New Method, CHained with Everything Built So Far
+    // Full explanation first, .fitler(predicate) takes a lambda returning boolean, and keeps the wrapped value only if that predicate returns true for it
+    //      if the Optional is already empty, or if the predicate returns false for a rpesent value, .filter() produces an emtpy Optional either way
+    //      This is the tool for "I have a value, but I only want to keep it if it also satisfies some condition" - distinct from .map() which transforms a value.
+    //          .filter() only ever keeps or discards, never changes what the value actually is
+    
 }
