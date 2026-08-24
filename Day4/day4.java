@@ -347,5 +347,10 @@ public class day4 {
     //      if the Optional is already empty, or if the predicate returns false for a rpesent value, .filter() produces an emtpy Optional either way
     //      This is the tool for "I have a value, but I only want to keep it if it also satisfies some condition" - distinct from .map() which transforms a value.
     //          .filter() only ever keeps or discards, never changes what the value actually is
-    
+    // The actual exercise, harder this time - chain .filter(), .map() and .orElseGet() together in one fluent expression, all 3 working in sequence
+    // Build a method returning Optional<Integer> representing a coupon code's discount value, which might not exist
+    // Chain .filter to keep it only if the discount is within some valid range (reject anything avoce a sensible cap, treating an out of range value as if it didnt exist at all)
+    // Then .map() the surviving value into a formatted discount string, then .orElseGet() to supply a fallback message if either the original was empty or it got filtered out for being invalid
+    // Test three cases: a valid discount that survives the whole chain, a discount that exists but gets filtered out for being out of range, and a coupon that doesnt exist at all
+    //      confirm all three correctly land on the appropriate branch of the fluent chain   
 }
