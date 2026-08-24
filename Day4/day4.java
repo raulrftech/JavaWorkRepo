@@ -7,8 +7,7 @@ import java.util.Map;
 public class day4 {
     
     public static void main(String[] args) {
-        System.out.println(getDiscountedPrice("Apple Mouse", 0.50));
-        System.out.println(getDiscountedPrice("Nonexistent", 0.20));
+        checkPictureURL(Optional.empty()); checkPictureURL(Optional.of("https://www.instagram.com"));
     }
 
     // Optional <T> - full picture
@@ -352,5 +351,34 @@ public class day4 {
     // Chain .filter to keep it only if the discount is within some valid range (reject anything avoce a sensible cap, treating an out of range value as if it didnt exist at all)
     // Then .map() the surviving value into a formatted discount string, then .orElseGet() to supply a fallback message if either the original was empty or it got filtered out for being invalid
     // Test three cases: a valid discount that survives the whole chain, a discount that exists but gets filtered out for being out of range, and a coupon that doesnt exist at all
-    //      confirm all three correctly land on the appropriate branch of the fluent chain   
+    //      confirm all three correctly land on the appropriate branch of the fluent chain
+    public static String filterMethod(Optional<Integer> discountValue) {
+        Optional<String> validValue = discountValue.filter(a -> a < 10).map(b -> String.format("Valid Discount Value: %d", b));
+        return validValue.orElseGet(() -> "Invalid value");
+    }
+    // Exercise 8 - .ifPresent() and .ifPresentOrElse(), the Actual "if let/ if let else" Equivs
+    // .ifPresent(consumer) takes a lambda that receives the unwrapped value directly inside its scope and only runs if a value exists - nothing happens at all if the Optional is emtpy, no fallback either
+    // Optional<String> name = Optional.of("Raul"); name.ifPresent(unwrapped -> Sysout unwrapped)
+    // .ifPresentOrElse(consumer, runnable) adds the issing half, a second lambda taking zero args that runs specifically when the Optional is empty
+    // name.ifPresentOrElse(unwrapped -> Sysout SF unwrapped, () Sysout no name provided)
+    // This is genuinely, literally the closest Java gets to Swifts if let or if let else - the unwrapped value lives isnide the lambdas own scope, not extracted into a variable you then use across like a guard let
+    // Build a method that takes Optional<String> representing a users uploaded profile picture URL, which might not exist
+    // Using .ifPresentOrElse(), print a personalized message using the unwrapped URL if present, or a message suggesting they upload one if otherwise
+    // Then, separately, use plain .ifPresent() alone to demonstrate a case where genuinely doing nothing on the empty case is the correct behavior
+    //      like logging an analytics even only when a value exists, where silence is the right response to absence, not an error or fallback message
+    public static void checkPictureURL(Optional<String> urlOf) {
+        urlOf.ifPresent(unwrapped_Valid -> System.out.println(String.format("%s is a valid url", unwrapped_Valid)));
+        urlOf.ifPresentOrElse(unwrapped_Valid -> System.out.println(String.format("Successfully loaded %s for the profile picture", unwrapped_Valid)), () -> System.out.println("The url provided is incorrect and/or in the wrong format"));
+    }
+    // Exercise 9 - Every Optional Method COvered So Far, One Cohesive Systme
+    // This is the actual synthesis test for the whole Optional arc - a single, real program requiring most of whats been built ( creation: .of, ofNullable, empty), presence checking, guard let pattern
+    //      all three fallback strats; .map, .filter, .ifPresent/orElse, each used where its actually the right tool, not forced arbitrarily
+    // Build a small job applicaton screening system
+    //      Candidate has an Optional<Integer> years of experience and Optional<String> referral-source field both of which might be absent (not every applicant provides them)
+    // Design a method that:
+    //      uses guard let pattern to reject the application if years of experience is absent
+    //      uses .filter() to ensure the experience value is realistic (reject negative numbers or absurdly high numbers)
+    //      uses .map() to transform a valid experience number into a tier lable (jr, mid, senior, or whatever thresholds)
+    //      uses .ifPresentOrElse() on the referral source specifically, logging a different message depending on whether one was provided
+    //      uses .orElseGet() somewhere in the chain to supply a sensible default tier label if the experience value existed but got filtered out as unrealistic, rather than rejecting it whole
 }
