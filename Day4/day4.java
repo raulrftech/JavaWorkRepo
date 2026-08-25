@@ -1,13 +1,21 @@
 package Day4;
 import java.util.Optional;
 import java.util.TreeMap;
+
+import Day4.day4.Candidate;
+
 import java.util.HashMap;
 import java.util.Map;
 
 public class day4 {
     
     public static void main(String[] args) {
-        checkPictureURL(Optional.empty()); checkPictureURL(Optional.of("https://www.instagram.com"));
+        checkApplicant(new Candidate("raul", Optional.of(29), Optional.of("Indeed")));
+        checkApplicant(new Candidate("Alexandra", Optional.of(6), Optional.of("Indeed")));
+        checkApplicant(new Candidate("fail case", Optional.of(34), Optional.empty()));
+        checkApplicant(new Candidate("Sandra", Optional.of(14), Optional.of("LinkedIn")));
+        checkApplicant(new Candidate("Marky", Optional.of(-4), Optional.of("Indeed")));
+        checkApplicant(new Candidate("other fail case", Optional.of(50), Optional.of("indeed")));
     }
 
     // Optional <T> - full picture
@@ -381,4 +389,27 @@ public class day4 {
     //      uses .map() to transform a valid experience number into a tier lable (jr, mid, senior, or whatever thresholds)
     //      uses .ifPresentOrElse() on the referral source specifically, logging a different message depending on whether one was provided
     //      uses .orElseGet() somewhere in the chain to supply a sensible default tier label if the experience value existed but got filtered out as unrealistic, rather than rejecting it whole
+    public static class Candidate {
+        String name; Optional<Integer> yOE; Optional<String> referralSource;
+        public Candidate(String name, Optional<Integer> yOE, Optional<String> referralSource) {
+            this.name = name; this.yOE = yOE; this.referralSource = referralSource;
+        }
+    }
+    public static String returnDefaultTier(int yoe) {
+        if (yoe < 0 || yoe < 10) { return "Basic"; } else if (yoe < 20) { return "Mid-Level";} else { return "Experienced"; }
+    }
+    public static void checkApplicant(Candidate applicant) {
+        if (applicant.yOE.isEmpty()) { return; } else {
+            System.out.println("------------------------------");
+            String tierOf = applicant.yOE.filter(a -> a > 0 && a < 30).map(b -> returnDefaultTier(applicant.yOE.get())).orElseGet(() -> "Default");
+            applicant.referralSource.ifPresentOrElse(unwrapped -> System.out.println(String.format("%s was referred by %s", applicant.name, unwrapped)), () -> System.out.println(String.format("%s has an invalid referral source", applicant.name)));
+            System.out.println(String.format("%s is in the %s tier", applicant.name, tierOf));
+        }
+    }
+    // Exercise 10 - Everything Plus a Real Design Decision You Have To Justify
+    // Build a small subscription-renewal system. A subscriber has an Optional<String> payment method on file and an Optional<Integer> loyalty points based balance, both possibly absent
+    // Design the full renewal-check method yourself, using whichever combination of everything covered feels correct for each piece
+    //      but the actual req is this:
+    //          decide and be ready to justify, whether a missing payment method should be a guard let style rejection or .orElseGet() styel fallback to a default payment method
+    // Finally, implement whichever you choose, correctly, with real reasoning behind the choice rather than picking arbitrarily
 }
