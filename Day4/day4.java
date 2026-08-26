@@ -1,17 +1,14 @@
 package Day4;
 import java.util.Optional;
 import java.util.TreeMap;
-
-import Day4.day4.Candidate;
-
+import java.util.Scanner;
 import java.util.HashMap;
 import java.util.Map;
 
 public class day4 {
     
     public static void main(String[] args) {
-        Subscriber s1 = Subscriber.createSubscriber("Raul", "Rodriguez", Optional.of("capital one"), Optional.empty());
-        System.out.println(checkRenewalStatus(s1));
+        createUser();
     }
 
     // Optional <T> - full picture
@@ -437,6 +434,63 @@ public class day4 {
             subscriber.loyaltyPoints.ifPresentOrElse(unwrapped -> System.out.println(String.format("%s currently has %d loyalty points", subscriber.firstName, unwrapped)), () -> System.out.println(String.format("%s has had no loyalty point balance set", subscriber.firstName)));
             // this is the end of this exercise, i couldve used subscriber.paymentMethod.isPresent() for the boolean check in the if statement above but this .orElseGet variant suffices
             return true;
+        }
+    }
+
+
+    // Scanner - full mechanics before anything else
+    // Scanner reads input from a source - most commonly System.in, the standard input stream, meaning whatever the user types into the terminal while the program is running
+    // Scanner scanner = new Scanner(System.in); Sysout(print your name); String name = scanner.nextLine()
+    // nextLine() reads an entire line of text as String, waiting until the user presses Enter
+    // .nextInt(), .nextDouble(), .nextBoolean() read and parse a single token as that specific type
+    //      throwing InputMismatchException if whats types doesnt amtch (typing letters where .nextInt() expects a number)
+    // The classic gotcha
+    //      .nextInt() and Double with .nextLine() in sequence causes a well known bug - .nextInt() only consumes the number itself, leaving the trailing newline character sitting unread in the buffer
+    //          which the next .nextLine() call then immediately consumes an empty string, silently skipping whatever you actually wanted the user to type
+    //      The standard fix is calling a throwaway scanner.nextLine() immediately after any .nextInt/Double call, specifically to consume that leftover newline before the next real read
+    //      When you call .nextInt(), Scanner reads only the numeric characters themselves - it stops the instant it hits the numbers end, leaving the trailing newline character (from the user pressing Enter)
+    //          still sitting unread in the input buffer. .nextInt() nver consumes that newLine, it only consumes the digits
+    //          Now, if the very next call is .nextLine() expecting to read the next full line the user types - it doesnt wait for new input at all. It immediately finds that left over
+    //              already-present newlin character sitting in the buffer from the precious .nextInt() call, treats that as the line has ended already, and returns an empty string, without every actually waiting for new stuff
+    //          Modeled Below:
+    //              int age = scanner.nextInt(); scanner.nextLine(); this consumers the leftover newLine (pressing Enter), and discards
+    //              String name = scanner.nextLine(); this now correctly waits for real input
+    // Scanner can read from several different sources beyond System.in - same class, different constructor argument
+    // Scanner(String source) - reads directly from a String you already have in memory, rather than waiting on live user input
+    //      Genuinely useful for testing, or parsing a chunk of text youve already received from somewhere else
+    //      Scanner stringScanner = new Scanner("42 hello 3.14"); int num = stringScanner.nextInt(); String word = stringScanner.next(); double dec = stringScanner.nextDouble();
+    //   .next() reads a single token, meaning one contiguous chunk of non-whitespace characters, stopping at the next space, tab, or newline
+    //      Its the generic, string returning version, distinct from .nextLine() in a specific, important way worth being precise about
+    //      This is genuinely useful when you expect input structured as multiple separate values on one line, and want to process them individually rather than getting the whole line back and having to split it yourself
+    // Scanner(File file) - reads from an actual file on disk, line by line or token by token, same methods (.nextLine(), .nextInt(), etc) as System.in
+    //      import java.io.File; import java.io.FileNotFoundException;
+    //      try { Scanner fileScanner = new Scanner(new File("data.txt")); while (fileScanner.hasNextLine()) { Sysoutprntln(fileScanner.nextLine())}} catch (FileNotFoundException e) [ sysoutprntln e]
+    //    new File() can throow the exception, a checked exception, meaning Java forces you to either catch it or declare that your method might throw it
+    // The .hasNext() family - .hasNextLine(), hasNextInt(), hasNextDouble() - check whether more input of that type is actually available before trying to read it, letting you loop safely until input runs out
+    //
+    // Start of 15 Exercises with progressive complexity
+    // Exercise 1 - .nextLine() from System.in, Guard-Let Pattern, Minimal OOP
+    // Build a class representing a simple sign up form entry - fields for a username and an email, both optional<String>
+    // Using Scanner reading from System.in, prompt the user for a username via .nextLine()
+    // Using the guard let pattern (.isEmpty()-style check on whatever validity condition you choose) either construct a vlaid instance of your class or reject the input and print why
+    // Keep this one intentionally simple - one field, ine prompt, prving the basic read-validate-construct flow works before layering complexity on top
+    public static class SignedUp {
+        Optional<String> username; Optional<String> email;
+        public SignedUp(Optional<String> username, Optional<String> email) { this.username = username; this.email = email; }
+    }
+    public static SignedUp createUser() {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.println("Enter an username below");
+        Optional<String> username = Optional.of(sc.nextLine()).filter(s -> !s.trim().isEmpty());
+        // the two filters here return an empty optional if trimming the string inputted is truly empty, assigns a value to username if it isnt empty
+        System.out.println("Enter an email address below");
+        Optional<String> email = Optional.of(sc.nextLine()).filter(s -> !s.trim().isEmpty());
+
+        if (username.isEmpty() || email.isEmpty()) { System.out.println("Both fields require a value to be passed in"); return null; } else {
+            if (!email.get().contains("@")) { System.out.println("Rejecting this sign up due to a missing @ in the email address"); return null; } else {
+                System.out.println(String.format("Welcome %s, you signed up using %s", username.get(), email.get())); return new SignedUp(username, email);
+            }
         }
     }
 }
