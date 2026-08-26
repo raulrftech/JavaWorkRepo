@@ -8,7 +8,7 @@ import java.util.Map;
 public class day4 {
     
     public static void main(String[] args) {
-        InventoryItem item1 = InventoryItem.createItem();
+        Ingredient ing1 = Ingredient.createIngredient();
     }
 
     // Optional <T> - full picture
@@ -513,6 +513,32 @@ public class day4 {
             if (name.isEmpty() || quant.isEmpty()) { System.out.println("Both fields need to have a value supplied. Try again"); return null; } else {
                 // since we make sure that either field is not empty and valid we dont have to perform orElseGet etc
                 System.out.println(String.format("New Item: %s with quantity of %d", name.get(), quant.get())); return new InventoryItem(name, quant);
+            }
+        }
+    }
+    // Exercise 3 - .next() for Token by Token Reading, Full OOP, Optional Required
+    // Build a class representing a simple recipe ingredient - a name (Optional<String>) and a unit of measurement (Optional<String>)
+    // like flour and cups
+    // Prompt the user to type both values on the same line, separated by a space and use .next() twice to read them as two sep. tokens in one line of input
+    // Apply the guard let patter on both, validating non blank values for each and construct the obj only on success
+    // Before building - trace and predict after ttwo next calls consume both tokens on that line, does the newline gotcha from nextInt/Double still apply here
+    //      or does next behave differently regarding what it leaves behind in the buffer
+    public static class Ingredient {
+        static Scanner sc = new Scanner(System.in);
+        Optional<String> name; Optional<String> measurement;
+        private Ingredient(Optional<String> name, Optional<String> measurement) {
+            this.name = name; this.measurement = measurement;
+        }
+        public static Ingredient createIngredient() {
+            System.out.println("Enter name and mesaurement to create an ingredient. Space-separated");
+            if (!sc.hasNext()) { return null; } String name = sc.next();
+            if (!sc.hasNext()) { return null; } String measurement = sc.next(); sc.nextLine(); // consumer
+            if (name.isEmpty() || measurement.isEmpty()) { 
+                System.out.println("Failed to create ingredient due to lack of input");
+                return null;
+            } else {
+                System.out.println(String.format("Made new ingredient %s using %s as a measurement", name, measurement));
+                return new Ingredient(Optional.of(name), Optional.of(measurement));
             }
         }
     }
