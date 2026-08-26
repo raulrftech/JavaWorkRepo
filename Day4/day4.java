@@ -10,12 +10,8 @@ import java.util.Map;
 public class day4 {
     
     public static void main(String[] args) {
-        checkApplicant(new Candidate("raul", Optional.of(29), Optional.of("Indeed")));
-        checkApplicant(new Candidate("Alexandra", Optional.of(6), Optional.of("Indeed")));
-        checkApplicant(new Candidate("fail case", Optional.of(34), Optional.empty()));
-        checkApplicant(new Candidate("Sandra", Optional.of(14), Optional.of("LinkedIn")));
-        checkApplicant(new Candidate("Marky", Optional.of(-4), Optional.of("Indeed")));
-        checkApplicant(new Candidate("other fail case", Optional.of(50), Optional.of("indeed")));
+        Subscriber s1 = Subscriber.createSubscriber("Raul", "Rodriguez", Optional.of("capital one"), Optional.empty());
+        System.out.println(checkRenewalStatus(s1));
     }
 
     // Optional <T> - full picture
@@ -412,5 +408,35 @@ public class day4 {
     //      but the actual req is this:
     //          decide and be ready to justify, whether a missing payment method should be a guard let style rejection or .orElseGet() styel fallback to a default payment method
     // Finally, implement whichever you choose, correctly, with real reasoning behind the choice rather than picking arbitrarily
-    // git test 
+    public static class Subscriber {
+        String firstName; String lastName; Optional<String> paymentMethod; Optional<Integer> loyaltyPoints;
+        private Subscriber(String firstName, String lastName, Optional<String> paymentMethod, Optional<Integer> loyaltyPoints) {
+            this.firstName = firstName; this.lastName = lastName;
+            this.paymentMethod = paymentMethod; this.loyaltyPoints = loyaltyPoints;
+        }
+        public static Subscriber createSubscriber(String firstName, String lastName, Optional<String> paymentMethod, Optional<Integer> loyaltyPoints) {
+            if (firstName == null || lastName == null) { return null; }
+            return new Subscriber(firstName, lastName, paymentMethod, loyaltyPoints);
+        }
+        public String getPaymentMethod() {
+            return this.paymentMethod.isEmpty() ? "Not Available" : this.paymentMethod.get();
+        }
+        public int getLoyaltyPoints() {
+            return this.loyaltyPoints.isEmpty() ? 0 : this.loyaltyPoints.get();
+        }
+    }
+    public static boolean checkRenewalStatus(Subscriber subscriber) {
+        // so after encountering numerous pay walls throughout my years on this great planet, Ive come to realize that whenever it comes to subscriptions
+        // there always has to be a payment on file; if it was an otp; that payment method was optional to save
+        // therefore, renewal check shall enforce the presence of a payment method
+        // since I made the function above which is around the same functionality as orElseGet we just use this if statement below
+        if (subscriber.getPaymentMethod().equals("Not Available")) { return false; } else {
+            // since the paymentMethod is guaranteed to exist we can set it to a val
+            String paymentMethodOf = subscriber.getPaymentMethod();
+            // next is checking the value of the loyalty points; since I want somethign to be printed out Ill use ifPresentOrElse
+            subscriber.loyaltyPoints.ifPresentOrElse(unwrapped -> System.out.println(String.format("%s currently has %d loyalty points", subscriber.firstName, unwrapped)), () -> System.out.println(String.format("%s has had no loyalty point balance set", subscriber.firstName)));
+            // this is the end of this exercise, i couldve used subscriber.paymentMethod.isPresent() for the boolean check in the if statement above but this .orElseGet variant suffices
+            return true;
+        }
+    }
 }
