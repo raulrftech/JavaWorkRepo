@@ -8,7 +8,7 @@ import java.util.Map;
 public class day4 {
     
     public static void main(String[] args) {
-        createUser();
+        InventoryItem item1 = InventoryItem.createItem();
     }
 
     // Optional <T> - full picture
@@ -493,5 +493,27 @@ public class day4 {
             }
         }
     }
-    // test commit
+    // Exercise 2 - .nextInt/Double with the Newline Gotach, Full OOp, Optional Required
+    // Build a class representing a small inventory item - a name and quantity both Optional
+    // Using a static scanner field using System.in, prompt for the quantity first via nextInt() then the name via .nextLine()
+    // Prove you understand the gotcha by consuming the leftover newline after the nextInt() call, before calling nextLine()
+    // deliberately in this order to force you to ahndle the leftover newLine gothca correctly with the throwaway consuming call in between
+    // Wrap both reads in Optional based on validity (non negative qunatity and non blank name)
+    // Apply the guard let pattern to reject construction if either fails and only build the real obj on the success path
+    public static class InventoryItem {
+        static Scanner scanner = new Scanner(System.in);
+        Optional<String> name; Optional<Integer> quantity;
+        private InventoryItem(Optional<String> name, Optional<Integer> quantity) { this.name = name; this.quantity = quantity; }
+        public static InventoryItem createItem() {
+            System.out.println("Enter quantity for item"); Optional<Integer> quant = Optional.of(scanner.nextInt()).filter(s -> s >= 0);
+            // consumer
+            scanner.nextLine(); System.out.println("Enter a name for the item");
+            Optional<String> name = Optional.of(scanner.nextLine()).filter(s -> !s.trim().isEmpty());
+            // guard let pattern
+            if (name.isEmpty() || quant.isEmpty()) { System.out.println("Both fields need to have a value supplied. Try again"); return null; } else {
+                // since we make sure that either field is not empty and valid we dont have to perform orElseGet etc
+                System.out.println(String.format("New Item: %s with quantity of %d", name.get(), quant.get())); return new InventoryItem(name, quant);
+            }
+        }
+    }
 }
