@@ -547,7 +547,7 @@ public class day4 {
             }
         }
     }
-<<<<<<<<< Temporary merge branch 1
+
     // Exercise 4 - Scanner(String source), Simulated Batch Input, Full OOP, Optional Required
     // Build a class representing a quiz question result - a question ID (Optional<Integer>) and whether it was answered correctly (Optional<Boolean>)
     // Instead of reading from System.in, construct a Scanner wrapping a String you build yourself, simulating a line of "batch input" like " 5 true "
@@ -574,7 +574,7 @@ public class day4 {
             System.out.println(String.format("Successfully made quiz result with ID of %s and status of %b", qID.get(), qStatus.get()));
             return new QuizResult(qID, qStatus);
         }
-=========
+    }
     // Exercise 4 - Scanner(File), Reading Real Data From Disk, Full OOP, Optional Required
     // Full mechanics first since this introduces real file I/O and the first encounter with a checked exception
     // try { Scanner fileScanner = new Scanner(new File("students.txt"))}
@@ -642,6 +642,5 @@ public class day4 {
             return false;
         }
 
->>>>>>>>> Temporary merge branch 2
     }
 }
