@@ -8,7 +8,12 @@ import java.util.Map;
 public class day4 {
     
     public static void main(String[] args) {
-        Ingredient ing1 = Ingredient.createIngredient();
+        Scanner sc1 = createScanner(Optional.of("hey 22"));
+        Scanner sc2 = createScanner(Optional.of("hey"));
+        Scanner sc3 = createScanner(Optional.of("hey"));
+        QuizResult qr1 = QuizResult.createResult(sc1);
+        QuizResult qr2 = QuizResult.createResult(sc2);
+        QuizResult qr3 = QuizResult.createResult(sc3);
     }
 
     // Optional <T> - full picture
@@ -540,6 +545,33 @@ public class day4 {
                 System.out.println(String.format("Made new ingredient %s using %s as a measurement", name, measurement));
                 return new Ingredient(Optional.of(name), Optional.of(measurement));
             }
+        }
+    }
+    // Exercise 4 - Scanner(String source), Simulated Batch Input, Full OOP, Optional Required
+    // Build a class representing a quiz question result - a question ID (Optional<Integer>) and whether it was answered correctly (Optional<Boolean>)
+    // Instead of reading from System.in, construct a Scanner wrapping a String you build yourself, simulating a line of "batch input" like " 5 true "
+    // Use .hasNext() checks before each read (matching the lesson from Exc 3)
+    //      parsing the ID as an int and the correctness as a booleanl, wrapping both in Optional only once confrimed present
+    // Apply the guard let patter, constructing the object only on success
+    // Test with three separate Scanner instances built from three different String: one with both valid vals, one with one valid, one with no valid vals
+    // so since I need a scanner with a valid string im going to create a method that takes an optional string then parse into the "parent" method
+    public static Scanner createScanner(Optional<String> with) {
+        return new Scanner(with.orElseGet(() -> "null 0"));
+    }
+    public static class QuizResult {
+        Optional<String> questionID; Optional<Boolean> answerStatus;
+        private QuizResult(Optional<String> questionID, Optional<Boolean> answerStatus) { this.questionID = questionID; this.answerStatus = answerStatus; }
+        public static QuizResult createResult(Scanner sc) {
+            // so heres the thing, I need to make sure that the values are present
+            // we can do so with scanner.hasNext
+            // .next() on a value provided such as "heythisisonestring" will provide that value
+            if (!sc.hasNext()) { System.out.println("The scanner provided has no value"); return null; }
+            // set value of the questionID
+            Optional<String> qID = Optional.of(sc.next());
+            if (!sc.hasNext()) { System.out.println("Scanner needs to have a second word it should be a number though but none were found"); return null; }
+            Optional<Boolean> qStatus = Optional.of(true);
+            System.out.println(String.format("Successfully made quiz result with ID of %s and status of %b", qID.get(), qStatus.get()));
+            return new QuizResult(qID, qStatus);
         }
     }
 }
