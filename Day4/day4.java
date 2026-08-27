@@ -2,18 +2,27 @@ package Day4;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.Scanner;
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.io.FileNotFoundException;
 
 public class day4 {
     
     public static void main(String[] args) {
+<<<<<<< HEAD
         Scanner sc1 = createScanner(Optional.of("hey 22"));
         Scanner sc2 = createScanner(Optional.of("hey"));
         Scanner sc3 = createScanner(Optional.of("hey"));
         QuizResult qr1 = QuizResult.createResult(sc1);
         QuizResult qr2 = QuizResult.createResult(sc2);
         QuizResult qr3 = QuizResult.createResult(sc3);
+=======
+        checkRecord("Day4/studentgrades.txt");
+        StudentRecord.returnSummaries();
+
+>>>>>>> main
     }
 
     // Optional <T> - full picture
@@ -547,6 +556,7 @@ public class day4 {
             }
         }
     }
+<<<<<<< HEAD
     // Exercise 4 - Scanner(String source), Simulated Batch Input, Full OOP, Optional Required
     // Build a class representing a quiz question result - a question ID (Optional<Integer>) and whether it was answered correctly (Optional<Boolean>)
     // Instead of reading from System.in, construct a Scanner wrapping a String you build yourself, simulating a line of "batch input" like " 5 true "
@@ -573,5 +583,74 @@ public class day4 {
             System.out.println(String.format("Successfully made quiz result with ID of %s and status of %b", qID.get(), qStatus.get()));
             return new QuizResult(qID, qStatus);
         }
+=======
+    // Exercise 4 - Scanner(File), Reading Real Data From Disk, Full OOP, Optional Required
+    // Full mechanics first since this introduces real file I/O and the first encounter with a checked exception
+    // try { Scanner fileScanner = new Scanner(new File("students.txt"))}
+    // Why they try catch is mandatory here and not optional is because the FileNotFoundException is a checked exception
+    //      Javas compiler forces you to either catch it or explicitly declare  your method trows FNFE, refusing to compile otherwise
+    //      File and network operations are the primary place checked exceptions show up in real Java code
+    //          since the file might not exist is a category of failure the language wants you to explicitly acknowledge youve handled, not something forgotten
+    // Build a small txt file yourself (via terminal or editor - a few lines, each representing one students name and grade, space separated)
+    // Build a class representing a student record - name (Optional<String>, grade Optional<Integer>)
+    // Using scanner(File) wrapped in a try/catch, read the file line by line with .hasNextLine() or nextLine()
+    // Then use a second inner scanner String on each individual line to parse the name and grade tokens out of it
+    //      this chains two different Scanner sources together - the file scanner driving the outer loop, string scanner parsing each lines content
+    // Apply guard let validation and construct one StudentRecord per valid line
+    // so student Record is the vallid output so it takes name and grade
+    public static class StudentRecord {
+        static TreeMap<String, Integer> studentGradesTM = new TreeMap<>(); // this sorts names alphabetically
+
+        public static void returnSummaries() {
+            for(Map.Entry<String, Integer> pair: studentGradesTM.entrySet()) {
+                System.out.println(String.format("%s got a %d in the class", pair.getKey(), pair.getValue()));
+            }
+        }
+        Optional<String> name; Optional<Integer> grade;
+        private StudentRecord(Optional<String> name, Optional<Integer> grade) {
+            this.name = name; this.grade = grade;
+        }
+        public static StudentRecord creaStudentRecord(Optional<String> name, Optional<Integer> grade) {
+            // snce this is given to create a valid student record we can just return the new student record
+            studentGradesTM.put(name.get(), grade.get());
+            return new StudentRecord(name, grade);
+        }
+        // override equals and haschode
+        @Override
+        public boolean equals(Object other) {
+            if (this == other) { return true;}
+            if (!(other instanceof StudentRecord)) { return false; }
+            StudentRecord otherStudentRecord = (StudentRecord) other;
+            return this.name.equals(otherStudentRecord.name);
+        }
+        @Override
+        public int hashCode() { return Objects.hash(name); }
+    }
+    // since i want this to be contained I will implement the container within the student record class and we can return a summary with its repsective method
+    // since that is done we can start the mathod with a parameter of the file that itll be parsing over
+    // then the scanner instantiated within the method will be with that file
+    public static boolean checkRecord(String fileName) {
+        File file = new File(fileName);
+        try {
+            Scanner fileScanner = new Scanner(file);
+            // this is the guard let pattern, checks if the file is empty or not
+            if (!fileScanner.hasNext()) { System.out.println("It looks like this file is empty"); return false; }
+            while (fileScanner.hasNext()) {
+                // this iterates meanwhile the file contains another line
+                String name = fileScanner.next();
+                Integer grade = fileScanner.nextInt();
+                 // consumer, we would have to separate the lines by whitespace if the particular length of the line wasnt known
+                if (name.isEmpty() == false && grade > 0 && grade <= 100) {
+                    StudentRecord.creaStudentRecord(Optional.of(name), Optional.of(grade));
+                } else { continue; }
+                
+            }
+            return true;
+        } catch (FileNotFoundException e) {
+            System.out.println(String.format("There was an error trying to read the file %nError: %s", e.getMessage()));
+            return false;
+        }
+
+>>>>>>> main
     }
 }
