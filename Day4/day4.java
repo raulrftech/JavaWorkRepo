@@ -693,4 +693,5 @@ public class day4 {
             return true;
         } catch (FileNotFoundException e) { System.out.println(String.format("There was an error trying to read the file%nError: %s", e.getMessage())); return false; }
     }
+    // test commit
 }
