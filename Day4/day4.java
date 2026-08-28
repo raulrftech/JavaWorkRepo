@@ -11,8 +11,8 @@ import java.io.FileNotFoundException;
 public class day4 {
     
     public static void main(String[] args) {
-        checkRecordScanner("Day4/studentgrades.txt");
-        StudentRecordMap.returnSummaries();
+        checkStudentDesc("Day4/studentgrades.txt");
+        StudentDesc.returnSummary();
 
     }
 
@@ -651,14 +651,8 @@ public class day4 {
     //      (.hasNext() check on the inner scanner after reading the grade, before attempting to read honors status)
     // Add .hasNextInt() before the grade read this time, guarding against malformed data proper;y
     // Wrap all read vals in Optional, apply guard-let validation, construct the object only on success, and confirm both line shapes (two tokens and three)
-    public static int tokenCounter(String of) {
-        Scanner lineScanner = new Scanner(of);
-        int tokenCount = 0;
-        while (lineScanner.hasNext()) { lineScanner.next(); tokenCount++; }
-        return tokenCount;
-    }
     public static class StudentDesc implements Comparable<StudentDesc> {
-        static TreeMap<StudentDesc, Boolean> createdStudents = new TreeMap<>();
+        static TreeMap<StudentDesc, Optional<Boolean>> createdStudents = new TreeMap<>();
         public static void returnSummary() {
             createdStudents.forEach((student, status) -> System.out.println(String.format("%s got a %d in the class, has a %s status", student.name, student.grade, student.status.orElseGet(() -> false) ? "valid" : "invalid")));
         }
@@ -667,9 +661,9 @@ public class day4 {
             this.name = name; this.grade = grade; this.status = status;
         }
         public static StudentDesc createStudentDesc(String name, int grade, Optional<Boolean> status) {
-            return new StudentDesc(name, grade, status);
+            StudentDesc newStudent = new StudentDesc(name, grade, status);
+            createdStudents.put(newStudent, newStudent.status); return newStudent;
         }
-        
         @Override
         public int compareTo(StudentDesc other) {
             return this.name.compareTo(other.name);
@@ -683,6 +677,8 @@ public class day4 {
             while (fileScanner.hasNext()) {
                 String line = fileScanner.nextLine();
                 Scanner lineScanner = new Scanner(line);
+
+                String name = lineScanner.next();
                 if (!lineScanner.hasNextInt()) { continue; }
                 int grade = lineScanner.nextInt();
                 Optional<Boolean> honors;
@@ -690,16 +686,10 @@ public class day4 {
                     // theres a third token left in this line
                     honors = Optional.of(Boolean.parseBoolean(lineScanner.next()));
                 } else { honors = Optional.empty(); }
-                // TODO: Build instance
+                lineScanner.close();
+                StudentDesc.createStudentDesc(name, grade, honors);
             }
-
-            // the file scanner is used to get the file and iterate through it
-            // we do a guard style validation to make sure its not empty before reading it
-            // while it has lines we assign the particular line with nextLine() to a var
-            // a secondary scanner is assigned to that line
-            // if that line only has one token we assign the grade to a var using nextInt()
-            // check if theres a third value with hasNext() and assign if that returns true
-
+            fileScanner.close();
             return true;
         } catch (FileNotFoundException e) { System.out.println(String.format("There was an error trying to read the file%nError: %s", e.getMessage())); return false; }
     }

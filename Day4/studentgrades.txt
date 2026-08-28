@@ -1,9 +1,9 @@
-Raul 90
+Raul 90 true
 Alexandra 80
-Mark 70
-Sandra 55
+Mark 70 false
+Sandra 55 true
 Cindy 92
-Nicholas 95
+Nicholas 95 false
 Linus 81
 Abigail 99
-Barbara 91
+Barbara 91 true
