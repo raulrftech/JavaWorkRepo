@@ -1,6 +1,7 @@
 package Day4;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.Scanner;
 import java.io.File;
 import java.util.HashMap;
@@ -11,9 +12,7 @@ import java.io.FileNotFoundException;
 public class day4 {
     
     public static void main(String[] args) {
-        checkStudentDesc("Day4/studentgrades.txt");
-        StudentDesc.returnSummary();
-
+        scannerExpenseTracker();
     }
 
     // Optional <T> - full picture
@@ -693,4 +692,84 @@ public class day4 {
             return true;
         } catch (FileNotFoundException e) { System.out.println(String.format("There was an error trying to read the file%nError: %s", e.getMessage())); return false; }
     }
+    // Exercise 7/15 - Combining Everything, Multiple Input Sources Feeding Into One System
+    // One program using two different Scanner source types together, not in isolation
+    // Build a small even-registration system
+    // Attendee names come from a file (Scanner(File filleName) with or without an inner line-scanner depending on what the files shape actually needs)
+    //      one name per line, some lines deliberately blank or whitespace-only to force real validation
+    // Once all valid attendees are loaded, prompt the user live via System.in to type a name and check whether that person is registered
+    // Make sure to use nextLine(), guard let pattern and a lookup against whatever structure you loaded the file into (your choice, Set, TM, etc)
+    // Wrap everything appropriately in Optional and make sure the live lookup correctly distinguishes three outcomes: name found/registerd, name types but not found, no result whatsoever
+    public static void checkAttendees(String withFile) {
+        File fileOf = new File(withFile);
+        TreeSet<String> namesRegistered = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        Scanner promptUser = new Scanner(System.in);
+
+        // since I need whole names we use nextLine() but what if that line is blank
+        // I can use .next() for this case so we do need a per-line scanner
+        // one to get the whole line, one to "check" the line with .next()
+        try {
+            Scanner fileScanner = new Scanner(fileOf);
+            // check if file is empty
+            if (!fileScanner.hasNext()) { System.out.println("It appears the file provided is emtpy."); return; }
+            while (fileScanner.hasNext()) {
+                // get current line
+                String line = fileScanner.nextLine();
+                Scanner currentLineScanner = new Scanner(line);
+                // check if its empty and continue if so
+                if (!currentLineScanner.hasNext()) { continue; }
+                // add to set since its a valid line
+                namesRegistered.add(line.toLowerCase());
+                // names shouldnt be Optional but user input should be
+                currentLineScanner.close();
+            }
+            fileScanner.close();
+
+            // prompt user for a name to check the TS
+            System.out.println("Enter a name to check if they have attended");
+            Optional<String> nameOf = Optional.of(promptUser.nextLine().toLowerCase()).filter(s -> !s.trim().isEmpty());
+            nameOf.ifPresentOrElse(unwrapped -> {
+                if (namesRegistered.contains(unwrapped)) {
+                    System.out.println(String.format("%s has attended the meeting", unwrapped));
+                } else {
+                    System.out.println(String.format("%s has not attended the meeting", unwrapped));
+                }
+                
+            }, () -> System.out.println("No name in the list matches the name provided"));
+            promptUser.close();
+        } catch (FileNotFoundException e) { System.out.println(String.format("", e.getLocalizedMessage())); }
+    }
+    // Exercise 8/15 -- Scanner Driving a Loop Until a Sentinel Value, Full OOP, Optional Required
+    // New mechanic worth explaining first: a common real pattern is reading repeated input until the user signals theyre done rather than a fixed number of reads
+    // This uses a sentinel value - a specific input like typing done or quit that breaks the loop, checked before attempting to process that input as real data
+    // Build a small expense tracker, Repeatedly prompt the user to enter an expense amount via nextLine(), parsing it as a Double wrapped in optional
+    //      using try/catch around the parse itself, since malformed input like typing letters would throw NumberFormatException
+    // Keep accumulating valid expenses into a running total, stored on a class you desing until the user types done to stop
+    // Print final summary once the loop ends
+    // One thing to think through before building, should the sentinel check done happen before or after attempting to parse the input as a number and what would go wrong if the order of this is incorrect
+    // since were using the sentinel to break the execution then that means if that happens first, nothing else happens after that, if after, then further logic can occur
+    public static void scannerExpenseTracker() {
+        Scanner promptUser = new Scanner(System.in); double[] amount = new double[] { 0.00 };
+        // instead of using while (true), a boolean var would be check, similar to that of an @State var in swift
+        boolean keepPrompting = true; // turns out that it doesnt work this way and that makes sense since setting a value to another value will just alter that but not cause the rest to halt
+
+        while (keepPrompting) {
+            System.out.println("Enter an amount to track. Enter done whenever finished.");
+            String userInput = promptUser.nextLine();
+            if (userInput.equalsIgnoreCase("done")) { promptUser.close(); break; }
+            try {
+                Optional<Double> retrievedAmount = Optional.of(Double.parseDouble(userInput)); // remember parseDouble can throw if invalid
+                amount[0] += retrievedAmount.get(); 
+            } catch (Exception e) { System.out.println(e.getLocalizedMessage());}
+        }
+    }
+    // Exercise 9/15 -- Scanner Reading a Menu CHoice, Full OOP, Optional Required, Genuine Loop Controlled Interaction
+    // Build a small text based menu system for a class you desing - something like a simple bacnk account simulator (deposit, withdraw, check balance, ecit) your choice of exact operations
+    // Use a sentinel-driven loop (matching what you just built, whilte + break on a specific exit command) to repeatedly prompt for a menu choice via nextLine()
+    // Based on the choice, branch into different behaviors - at least one branch that itself prompts for additional input (like an amount for deposit withdraw)
+    // Wrap the accounts balance itself in Optional<Double> and think through - is that actually the right design choice for a balance that should probably always exist once an account is created
+    //      Or would Optional be better reserved for something else in this specific system, like an optional account nickname
+    // Decide deliberately and be ready to justify it, same standard as the subscription renewal exercises payment method decision
+    // I actually like this exercise because it is somewhat coding logic then a UI or well a command line prompt scenario, somewhat like swift logic first then visuals following
+    
 }
