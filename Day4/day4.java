@@ -11,8 +11,8 @@ import java.io.FileNotFoundException;
 public class day4 {
     
     public static void main(String[] args) {
-        checkRecord("Day4/studentgrades.txt");
-        StudentRecord.returnSummaries();
+        checkRecordScanner("Day4/studentgrades.txt");
+        StudentRecordMap.returnSummaries();
 
     }
 
@@ -589,7 +589,7 @@ public class day4 {
     //      this chains two different Scanner sources together - the file scanner driving the outer loop, string scanner parsing each lines content
     // Apply guard let validation and construct one StudentRecord per valid line
     // so student Record is the vallid output so it takes name and grade
-    public static class StudentRecord {
+    public static class StudentRecordMap{
         static TreeMap<String, Integer> studentGradesTM = new TreeMap<>(); // this sorts names alphabetically
 
         public static void returnSummaries() {
@@ -598,20 +598,20 @@ public class day4 {
             }
         }
         Optional<String> name; Optional<Integer> grade;
-        private StudentRecord(Optional<String> name, Optional<Integer> grade) {
+        private StudentRecordMap(Optional<String> name, Optional<Integer> grade) {
             this.name = name; this.grade = grade;
         }
-        public static StudentRecord creaStudentRecord(Optional<String> name, Optional<Integer> grade) {
+        public static StudentRecordMap creaStudentRecord(Optional<String> name, Optional<Integer> grade) {
             // snce this is given to create a valid student record we can just return the new student record
             studentGradesTM.put(name.get(), grade.get());
-            return new StudentRecord(name, grade);
+            return new StudentRecordMap(name, grade);
         }
         // override equals and haschode
         @Override
         public boolean equals(Object other) {
             if (this == other) { return true;}
-            if (!(other instanceof StudentRecord)) { return false; }
-            StudentRecord otherStudentRecord = (StudentRecord) other;
+            if (!(other instanceof StudentRecordMap)) { return false; }
+            StudentRecordMap otherStudentRecord = (StudentRecordMap) other;
             return this.name.equals(otherStudentRecord.name);
         }
         @Override
@@ -620,7 +620,7 @@ public class day4 {
     // since i want this to be contained I will implement the container within the student record class and we can return a summary with its repsective method
     // since that is done we can start the mathod with a parameter of the file that itll be parsing over
     // then the scanner instantiated within the method will be with that file
-    public static boolean checkRecord(String fileName) {
+    public static boolean checkRecordScanner(String fileName) {
         File file = new File(fileName);
         try {
             Scanner fileScanner = new Scanner(file);
@@ -632,7 +632,7 @@ public class day4 {
                 Integer grade = fileScanner.nextInt();
                  // consumer, we would have to separate the lines by whitespace if the particular length of the line wasnt known
                 if (name.isEmpty() == false && grade > 0 && grade <= 100) {
-                    StudentRecord.creaStudentRecord(Optional.of(name), Optional.of(grade));
+                    StudentRecordMap.creaStudentRecord(Optional.of(name), Optional.of(grade));
                 } else { continue; }
                 
             }
@@ -641,6 +641,66 @@ public class day4 {
             System.out.println(String.format("There was an error trying to read the file %nError: %s", e.getMessage()));
             return false;
         }
+    }
+    // Exercise 6/15 - Scanner(File) with a Genuine Two-Scanner Split, Correcting the Gap from Exc 5
+    // Same domain as before - a class representing a record read from a file
+    // This time, the split betweeen outer and inner scanner has to be real and necessary, not just present
+    //      Build a file where lines have genuinely different shapes - some lines with two tokens, some with three
+    // The outer Scanner(File) reads whole lines
+    // A fresh inner Scanner(String), built per line, handles that lines actual token count and content, correctly reading the optional third token only when present
+    //      (.hasNext() check on the inner scanner after reading the grade, before attempting to read honors status)
+    // Add .hasNextInt() before the grade read this time, guarding against malformed data proper;y
+    // Wrap all read vals in Optional, apply guard-let validation, construct the object only on success, and confirm both line shapes (two tokens and three)
+    public static int tokenCounter(String of) {
+        Scanner lineScanner = new Scanner(of);
+        int tokenCount = 0;
+        while (lineScanner.hasNext()) { lineScanner.next(); tokenCount++; }
+        return tokenCount;
+    }
+    public static class StudentDesc implements Comparable<StudentDesc> {
+        static TreeMap<StudentDesc, Boolean> createdStudents = new TreeMap<>();
+        public static void returnSummary() {
+            createdStudents.forEach((student, status) -> System.out.println(String.format("%s got a %d in the class, has a %s status", student.name, student.grade, student.status.orElseGet(() -> false) ? "valid" : "invalid")));
+        }
+        String name; int grade; Optional<Boolean> status;
+        private StudentDesc(String name, int grade, Optional<Boolean> status) {
+            this.name = name; this.grade = grade; this.status = status;
+        }
+        public static StudentDesc createStudentDesc(String name, int grade, Optional<Boolean> status) {
+            return new StudentDesc(name, grade, status);
+        }
+        
+        @Override
+        public int compareTo(StudentDesc other) {
+            return this.name.compareTo(other.name);
+        }
+    }
+    public static boolean checkStudentDesc(String fromFile) {
+        File fileOf = new File(fromFile);
+        try {
+            Scanner fileScanner = new Scanner(fileOf);
+            if (!fileScanner.hasNext()) { System.out.println("It appears the file passed in is empty"); return false; }
+            while (fileScanner.hasNext()) {
+                String line = fileScanner.nextLine();
+                Scanner lineScanner = new Scanner(line);
+                if (!lineScanner.hasNextInt()) { continue; }
+                int grade = lineScanner.nextInt();
+                Optional<Boolean> honors;
+                if (lineScanner.hasNext()) {
+                    // theres a third token left in this line
+                    honors = Optional.of(Boolean.parseBoolean(lineScanner.next()));
+                } else { honors = Optional.empty(); }
+                // TODO: Build instance
+            }
 
+            // the file scanner is used to get the file and iterate through it
+            // we do a guard style validation to make sure its not empty before reading it
+            // while it has lines we assign the particular line with nextLine() to a var
+            // a secondary scanner is assigned to that line
+            // if that line only has one token we assign the grade to a var using nextInt()
+            // check if theres a third value with hasNext() and assign if that returns true
+
+            return true;
+        } catch (FileNotFoundException e) { System.out.println(String.format("There was an error trying to read the file%nError: %s", e.getMessage())); return false; }
     }
 }
