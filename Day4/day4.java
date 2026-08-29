@@ -1,20 +1,15 @@
 package Day4;
-import java.util.Optional;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.Scanner;
-import java.io.File;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.io.FileNotFoundException;
+import java.util.Optional; import java.util.TreeMap; import java.util.TreeSet;
+import java.util.Scanner; import java.io.File; import java.util.HashMap;
+import java.util.LinkedHashMap; import java.util.Map; import java.util.Objects;
+import java.io.FileNotFoundException; import java.util.Random;
+
 
 public class day4 {
     
     public static void main(String[] args) {
-        UserDriven_BankAccount pers1 = UserDriven_BankAccount.createBankAccount("Raul", "Rodriguez");
-        pers1.setAccountNickname("MyCheckings"); pers1.runLoop();
+        BankAccount_Enhanced acc1 = BankAccount_Enhanced.createBankAccount("Raul", "Rodriguez");
+        System.out.println(acc1.createAccountNumber()); System.out.println(acc1.createRoutingNumber());
     }
 
     // Optional <T> - full picture
@@ -845,4 +840,86 @@ public class day4 {
             }
         }
     }
+    // Exercise 10/15 -- Scanner with a Transaction Log That Actually Survives Duplicates
+    // This is the natural pickup of exactly what you just flagged
+    // Build on the same bank account concept but fix the structural issue directly this time
+    //      Instead of keying an LHM by transaction amount, use a List<String> (or a small record-like class you desing) to log every single transaction as its own independent entry
+    //          regardless of whether the amount repeats
+    // Same sentinel-driven menu loop, same chained Scanner reads within a single pass, but now two identical deposits/withdrawals should both show up distinctly in the account summary
+    //      proven directly by testing that exact scenario again and confirming both entries survive this time
+    public static class BankAccount_Enhanced implements AccountNumbers {
+        // so im going to add more functionality to this one
+        // I want the user to be able to change their nickname through the loop
+        // also get their account or routing numbers but it would require a password
+        // going to implement setting and confirming
+        // reset password needs to ask for their current password then ask for a new one
+        // if they forgot their password, itll send a 2FA so 2FA would be a boolean value
+        // the way ill model this is create an instance of a class that will be created at account setup along with this one
+        //      2Fa would have the instance of this class along with a func make 2FA code, then store in a Set
+        //  the way theyll be able to get this code is by calling a method that outputs the code, asks for a password first
+        //      if passed, outputs code, then deletes code
+        //     Code will be an 8char string of digits/letters
+        String firstName; String lastName; 
+        String password; Double balance;
+        String accountNumber; String routingNumber;
+
+        private BankAccount_Enhanced(String firstName, String lastName) {
+            this.firstName = firstName; this.lastName = lastName;
+            this.password = null; this.balance = null;
+        }
+        public static BankAccount_Enhanced createBankAccount(String firstName, String lastName) {
+            if (firstName == null || lastName == null) { System.out.println("First or last name provided cannot be empty"); return null; }
+            BankAccount_Enhanced newAcc = new BankAccount_Enhanced(firstName, lastName);
+            newAcc.accountNumber = newAcc.createAccountNumber();
+            newAcc.routingNumber = newAcc.createRoutingNumber();
+            return newAcc;
+        }
+    }
+    interface AccountNumbers {
+        default String createAccountNumber() {
+            Random random = new Random();
+            StringBuilder acn = new StringBuilder(10);
+
+            for (int i = 0; i < 10; i++) { acn.append(random.nextInt(9));}
+            if (Integer.parseInt(acn.substring(0, 1)) == 0) { createAccountNumber(); }
+            return Long.parseLong(acn.toString()) % 10 == 0 ? acn.toString() : createAccountNumber();
+        }
+        default String createRoutingNumber() {
+            Random random = new Random();
+            StringBuilder rn = new StringBuilder(9);
+
+            for (int i = 0; i < 9; i++) { rn.append(random.nextInt(9));}
+            if (Integer.parseInt(rn.substring(0, 1)) == 0) { createRoutingNumber(); }
+            return Integer.parseInt(rn.toString()) % 8 == 0 ? rn.toString() : createRoutingNumber();
+        }
+    }
+    public static class TwoFactorAuthentication {
+        BankAccount_Enhanced assignedTo; String current2FA; 
+        public TwoFactorAuthentication(BankAccount_Enhanced assignedTo) { this.assignedTo = assignedTo; this.current2FA = null; }
+
+        private String generate2FACode() {
+            Random rand = new Random();
+            StringBuilder code = new StringBuilder(8);
+
+            int runningTotal = 0;
+            // Code format will be: U L N L U N U N
+            char firstUpper = (char) (rand.nextInt(26) + 65); code.append(firstUpper); runningTotal += (int) firstUpper;
+            char firstLower = (char) (rand.nextInt(26) + 97); code.append(firstLower); runningTotal += (int) firstLower;
+            char firstNumber = (char) (rand.nextInt(10) + 48); code.append(firstNumber); runningTotal += (int) firstNumber;
+            char secondLower = (char) (rand.nextInt(26) + 97); code.append(secondLower); runningTotal += (int) secondLower;
+            char secondUpper = (char) (rand.nextInt(26) + 65); code.append(secondUpper); runningTotal += (int) secondUpper;
+            char secondNumber = (char) (rand.nextInt(10) + 48); code.append(secondNumber); runningTotal += (int) secondNumber;
+            char thirdUpper = (char) (rand.nextInt(26) + 65); code.append(thirdUpper); runningTotal += (int) thirdUpper;
+            char lastChar = (char) (rand.nextInt(10) + 48); code.append(lastChar); runningTotal += (int) lastChar;
+
+            return (runningTotal == 560) ? code.toString() : generate2FACode();
+        }
+        public String get2FACode() {
+            String code = this.generate2FACode();
+            this.current2FA = code;
+            return code;
+        }
+        public void delete2FA() { this.current2FA = null; }
+    }
+    
 }
