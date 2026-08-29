@@ -692,7 +692,6 @@ public class day4 {
             return true;
         } catch (FileNotFoundException e) { System.out.println(String.format("There was an error trying to read the file%nError: %s", e.getMessage())); return false; }
     }
-<<<<<<< HEAD
     // Exercise 7/15 - Combining Everything, Multiple Input Sources Feeding Into One System
     // One program using two different Scanner source types together, not in isolation
     // Build a small even-registration system
@@ -772,8 +771,5 @@ public class day4 {
     //      Or would Optional be better reserved for something else in this specific system, like an optional account nickname
     // Decide deliberately and be ready to justify it, same standard as the subscription renewal exercises payment method decision
     // I actually like this exercise because it is somewhat coding logic then a UI or well a command line prompt scenario, somewhat like swift logic first then visuals following
-    
-=======
-    // test commit
->>>>>>> 7641cd2ad6777ffd3805b29e3d0580178b69f785
+    // djkdjjdfk
 }
