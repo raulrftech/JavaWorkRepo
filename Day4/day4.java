@@ -5,6 +5,7 @@ import java.util.TreeSet;
 import java.util.Scanner;
 import java.io.File;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.io.FileNotFoundException;
@@ -12,7 +13,8 @@ import java.io.FileNotFoundException;
 public class day4 {
     
     public static void main(String[] args) {
-        scannerExpenseTracker();
+        UserDriven_BankAccount pers1 = UserDriven_BankAccount.createBankAccount("Raul", "Rodriguez");
+        pers1.setAccountNickname("MyCheckings"); pers1.runLoop();
     }
 
     // Optional <T> - full picture
@@ -751,9 +753,9 @@ public class day4 {
     public static void scannerExpenseTracker() {
         Scanner promptUser = new Scanner(System.in); double[] amount = new double[] { 0.00 };
         // instead of using while (true), a boolean var would be check, similar to that of an @State var in swift
-        boolean keepPrompting = true; // turns out that it doesnt work this way and that makes sense since setting a value to another value will just alter that but not cause the rest to halt
 
-        while (keepPrompting) {
+
+        while (true) {
             System.out.println("Enter an amount to track. Enter done whenever finished.");
             String userInput = promptUser.nextLine();
             if (userInput.equalsIgnoreCase("done")) { promptUser.close(); break; }
@@ -771,5 +773,76 @@ public class day4 {
     //      Or would Optional be better reserved for something else in this specific system, like an optional account nickname
     // Decide deliberately and be ready to justify it, same standard as the subscription renewal exercises payment method decision
     // I actually like this exercise because it is somewhat coding logic then a UI or well a command line prompt scenario, somewhat like swift logic first then visuals following
-    // djkdjjdfk
+    // This reqs a Bank class and the sentinel driven loop within the method can be static within the class or even per instance so guard to make sure caller is the person passed it
+    public static class UserDriven_BankAccount {
+        String firstName; String lastName;
+        Optional<String> accountNickname;
+        double balance = 0.00;
+        LinkedHashMap<Double, Double> withdrawals = new LinkedHashMap<>(16, 0.75f, false);
+        LinkedHashMap<Double, Double> deposits = new LinkedHashMap<>(16, 0.75f, false);
+        private UserDriven_BankAccount(String firstName, String lastName) {
+            this.firstName = firstName; this.lastName = lastName;
+            this.accountNickname = Optional.empty();
+        }
+        public static UserDriven_BankAccount createBankAccount(String firstName, String lastName) {
+            if (firstName == null || lastName == null) { System.out.println("Make sure that the first or last name are not empty"); return null; }
+            return new UserDriven_BankAccount(firstName, lastName);
+        }
+        public void setAccountNickname(String to) {
+            this.accountNickname = Optional.of(to);
+        }
+        public void getBalance() {
+            System.out.println(String.format("%s currently has $%.2f in their account", this.firstName, this.balance));
+        }
+        public boolean deposit(double amount) {
+            if (amount < 0) { System.out.println("Depositing amount has to be a positve amount"); return false; }
+            this.balance += amount;
+            deposits.merge(amount, this.balance, (oB, nB) -> nB); return true;
+        }
+        public boolean withdraw(double amount) {
+            if (amount > this.balance) { System.out.println("Cannot withdraw more than your balance"); return false; }
+            this.balance -= amount;
+            withdrawals.merge(amount, this.balance, (oB, nB) -> nB); return true;
+        }
+        public void getAccountSummary() {
+            System.out.println(String.format("Account Summary for %s", this.firstName));
+            accountNickname.ifPresent(unwrapped -> System.out.println(String.format("%s has nicknamed their account to %s", this.firstName, unwrapped)));
+            System.out.println("Deposit History");
+            deposits.forEach((amountDeposited, newBalance) -> System.out.println(String.format("Deposit Amount: $%.2f, New Balance: $%.2f", amountDeposited, newBalance)));
+            System.out.println("Withdrawal History");
+            withdrawals.forEach((amountWithdrew, newBalance) -> System.out.println(String.format("Withdrawal Amount: $%.2f, New Balance: $%.2f", amountWithdrew, newBalance)));
+        }
+        public void runLoop() {
+            Scanner promptUser = new Scanner(System.in);
+            System.out.println("Enter Withdrawal for withdrawal, Deposit for Deposit, ACH for Account History, Exit when finished");
+
+            while (true) {
+                String userInput = promptUser.nextLine().toLowerCase();
+                if (userInput.equalsIgnoreCase("withdrawal")) {
+                    System.out.println(String.format("Enter an amount to withdraw. You currently have $%.2f", this.balance));
+                    try {
+                        Optional<Double> withdrawAmount = Optional.of(Double.parseDouble(promptUser.nextLine()));
+                        if (this.withdraw(withdrawAmount.get())) {
+                            System.out.println(String.format("Succesfully withdrew $%.2f, new balance is $%.2f", withdrawAmount.get(), this.balance));
+                        }
+                        System.out.println("Enter Withdrawal for withdrawal, Deposit for Deposit, ACH for Account History, Exit when finished");
+                    } catch (NumberFormatException e) { System.out.println(e.getLocalizedMessage()); }
+                } else if (userInput.equalsIgnoreCase("deposit")) {
+                    System.out.println("Enter an amount to deposit");
+                    try {
+                        Optional<Double> depositAmount = Optional.of(Double.parseDouble(promptUser.nextLine()));
+                        if (this.deposit(depositAmount.get())) {
+                            System.out.println(String.format("Succesfully deposited $%.2f, new balance is $%.2f", depositAmount.get(), this.balance));
+                        }
+                        System.out.println("Enter Withdrawal for withdrawal, Deposit for Deposit, ACH for Account History, Exit when finished");
+                    } catch (NumberFormatException e) { System.out.println(e.getLocalizedMessage()); }
+                } else if (userInput.equalsIgnoreCase("ach")) {
+                    this.getAccountSummary();
+                    System.out.println("Enter Withdrawal for withdrawal, Deposit for Deposit, ACH for Account History, Exit when finished");
+                } else if (userInput.equalsIgnoreCase("exit")) { break; } else {
+                    System.out.println("Enter Withdrawal for withdrawal, Deposit for Deposit, ACH for Account History, Exit when finished");
+                }
+            }
+        }
+    }
 }
