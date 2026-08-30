@@ -921,7 +921,7 @@ public class day4 {
             // handle boolean value for 2FA
             boolean authentication_2FA = userDecision.map(value -> value.equalsIgnoreCase("yes")).orElse(false);
             BankAccount_Enhanced newAcc = new BankAccount_Enhanced(resolvedFirstName, resolvedLastName, authentication_2FA);
-            newAcc.user2FA = new TwoFactorAuthentication(newAcc);
+            if (authentication_2FA) { newAcc.user2FA = new TwoFactorAuthentication(newAcc); }
             // since password creation at instantiation is mandatory we can prompt for a password then if they have 2FA send it to 2FA if not then keep it stored
             System.out.println(authentication_2FA ? "Please type in a 8 character password to set up 2FA" : "Please type in a password. You'll be asked to confirm afterwards.");
             // Since a password is necessary i wont use Optional<String> here
