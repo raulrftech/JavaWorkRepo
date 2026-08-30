@@ -860,16 +860,22 @@ public class day4 {
         //      if passed, outputs code, then deletes code
         //     Code will be an 8char string of digits/letters
         String firstName; String lastName; 
-        String password; Double balance;
-        String accountNumber; String routingNumber;
+        Double balance; String accountNumber; String routingNumber;
+        // heres the thing, I need the prop of 2FA and also a password
+        // the 2FA is initialized, with either true or false, whenever needed thatll be whenever it comes up
+        // or if true then we can ask for password if not created and then hold this password as a stored prop within the 2FA instance
+        boolean authentication_2FA; String password;
 
-        private BankAccount_Enhanced(String firstName, String lastName) {
+        private BankAccount_Enhanced(String firstName, String lastName, boolean authentication_2FA) {
             this.firstName = firstName; this.lastName = lastName;
             this.password = null; this.balance = null;
+            this.authentication_2FA = authentication_2FA; this.password = null; 
         }
-        public static BankAccount_Enhanced createBankAccount(String firstName, String lastName) {
+        public static BankAccount_Enhanced createBankAccount(String firstName, String lastName, boolean authentication_2FA) {
             if (firstName == null || lastName == null) { System.out.println("First or last name provided cannot be empty"); return null; }
-            BankAccount_Enhanced newAcc = new BankAccount_Enhanced(firstName, lastName);
+
+            // TODO: handle setting up 2FA along with the password creation <- needs Scanner to configure
+            BankAccount_Enhanced newAcc = new BankAccount_Enhanced(firstName, lastName, authentication_2FA);
             newAcc.accountNumber = newAcc.createAccountNumber();
             newAcc.routingNumber = newAcc.createRoutingNumber();
             return newAcc;
