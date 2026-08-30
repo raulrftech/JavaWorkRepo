@@ -864,27 +864,28 @@ public class day4 {
         }
     }
     public static class BankAccount_Enhanced implements AccountNumbers, PasswordVerifiable {
-        // so im going to add more functionality to this one
-        // I want the user to be able to change their nickname through the loop
-        // also get their account or routing numbers but it would require a password
-        // going to implement setting and confirming
-        // reset password needs to ask for their current password then ask for a new one
-        // if they forgot their password, itll send a 2FA so 2FA would be a boolean value
-        // the way ill model this is create an instance of a class that will be created at account setup along with this one
-        //      2Fa would have the instance of this class along with a func make 2FA code, then store in a Set
-        //  the way theyll be able to get this code is by calling a method that outputs the code, asks for a password first
-        //      if passed, outputs code, then deletes code
-        //     Code will be an 8char string of digits/letters
+        // Complete 
+            // Basic Info - name, 2FA choice
+            // Password SetUp
+            // Nickname SetUp
+        // Pending
+            // Change nickname
+            // Rest Password
+                // if current password is remembered no use to send 2FA
+            // AN/RN get
+            // Instantiation option to deposit money
+            // Money Movement - Withdrawal/Deposit
         String firstName; String lastName; 
         Double balance; String accountNumber; String routingNumber;
         // or if true then we can ask for password if not created and then hold this password as a stored prop within the 2FA instance
         boolean authentication_2FA; String password; TwoFactorAuthentication user2FA;
+        String accountNickname;
 
         private BankAccount_Enhanced(String firstName, String lastName, boolean authentication_2FA) {
             this.firstName = firstName; this.lastName = lastName;
             this.password = null; this.balance = null;
             this.authentication_2FA = authentication_2FA; this.password = null;
-            this.user2FA = null;
+            this.user2FA = null; this.accountNickname = null;
         }
         public static BankAccount_Enhanced createBankAccount() {
             // reconfiguration for Scanner to recieve input to create instance
@@ -930,17 +931,21 @@ public class day4 {
                 System.out.println("Your password needs to be exactly 8 characters long, have 3 numbers, 2 lowercase letters, and 3 uppercase letters.");
                 passwordCreated = instanceCreation.nextLine().trim(); 
             } while (!newAcc.createPassword(passwordCreated));
-            System.out.println("Please confirm your password");
             String confirmedPassword;
-            do {confirmedPassword = instanceCreation.nextLine(); } while (!newAcc.confirmPassword(passwordCreated, confirmedPassword));
+            do { System.out.println("Please confirm your password"); confirmedPassword = instanceCreation.nextLine().trim(); } while (!newAcc.confirmPassword(passwordCreated, confirmedPassword));
             // then set confirmed pasword to prop and to 2FA account if applicable
             newAcc.password = confirmedPassword;
             if (authentication_2FA) { newAcc.user2FA.set2FA(confirmedPassword); }
 
+            // set nickname
+            String nickname;
+            do { System.out.println("Please type in an account nickname at least 3 letters long"); nickname = instanceCreation.nextLine(); } while (nickname.trim().length() < 3);
+            newAcc.accountNickname = nickname.trim();
+
             instanceCreation.close();
             newAcc.accountNumber = newAcc.createAccountNumber();
             newAcc.routingNumber = newAcc.createRoutingNumber();
-            System.out.println(String.format("New Bank Account%nFirst Name: %s%nLast Name: %s%n2FA: %s", resolvedFirstName, resolvedLastName, authentication_2FA ? "Set up and linked accounts" : "Not Set Up"));
+            System.out.println(String.format("New Bank Account%nFirst Name: %s%nLast Name: %s%n2FA: %s%nAccount Nickname: %s", resolvedFirstName, resolvedLastName, authentication_2FA ? "Set up and linked accounts" : "Not Set Up", newAcc.accountNickname));
             return newAcc;
         }
     }
