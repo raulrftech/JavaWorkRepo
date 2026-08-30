@@ -8,8 +8,7 @@ import java.io.FileNotFoundException; import java.util.Random;
 public class day4 {
     
     public static void main(String[] args) {
-        BankAccount_Enhanced acc1 = BankAccount_Enhanced.createBankAccount("Raul", "Rodriguez");
-        System.out.println(acc1.createAccountNumber()); System.out.println(acc1.createRoutingNumber());
+        BankAccount_Enhanced.createBankAccount();
     }
 
     // Optional <T> - full picture
@@ -871,13 +870,47 @@ public class day4 {
             this.password = null; this.balance = null;
             this.authentication_2FA = authentication_2FA; this.password = null; 
         }
-        public static BankAccount_Enhanced createBankAccount(String firstName, String lastName, boolean authentication_2FA) {
-            if (firstName == null || lastName == null) { System.out.println("First or last name provided cannot be empty"); return null; }
+        public static BankAccount_Enhanced createBankAccount() {
+            // reconfiguration for Scanner to recieve input to create instance
+            Scanner instanceCreation = new Scanner(System.in);
+            System.out.println("Type in your first name");
+            Optional<String> firstName = Optional.of(instanceCreation.nextLine()).filter(s -> !s.trim().isEmpty());
+            System.out.println("Type in your last name");
+            Optional<String> lastName = Optional.of(instanceCreation.nextLine()).filter(s -> !s.trim().isEmpty());
+            System.out.println("Would you like to set up two-factor authentication. Enter yes or no");
+            Optional<String> userDecision = Optional.of(instanceCreation.nextLine()).filter(s -> !s.trim().isEmpty());
 
+            String lastChance_FirstName = "";
+            String lastChance_lastName = "";
+            // handle first and lastName
+            if (firstName.isEmpty()) {
+                System.out.println("I did not get your first name, please enter it.");
+                lastChance_FirstName = instanceCreation.nextLine();
+            }
+            if (lastName.isEmpty()) {
+                System.out.println("I did not get your last name, please enter it.");
+                lastChance_lastName = instanceCreation.nextLine();
+            }
+            final String resolvedFirstName = firstName.orElse(lastChance_FirstName);
+            final String resolvedLastName = lastName.orElse(lastChance_lastName);
+            // if theyre still null then return null and provide reason why
+            if (firstName.isEmpty() || lastName.isEmpty()) {
+                if (lastChance_FirstName.isEmpty()|| lastChance_lastName.isEmpty()) { 
+                    System.out.println("Since you have failed to either provide your last or first name, I cannot continue with account creation");
+                    instanceCreation.close();
+                    return null;
+                }
+            }
+            
+            // handle boolean value for 2FA
+            boolean authentication_2FA = userDecision.map(value -> value.equalsIgnoreCase("yes")).orElse(false);
+            
+            instanceCreation.close();
             // TODO: handle setting up 2FA along with the password creation <- needs Scanner to configure
-            BankAccount_Enhanced newAcc = new BankAccount_Enhanced(firstName, lastName, authentication_2FA);
+            BankAccount_Enhanced newAcc = new BankAccount_Enhanced(resolvedFirstName, resolvedLastName, authentication_2FA);
             newAcc.accountNumber = newAcc.createAccountNumber();
             newAcc.routingNumber = newAcc.createRoutingNumber();
+            System.out.println(String.format("New Bank Account%nFirst Name: %s%nLast Name: %s%n2FA: %s", resolvedFirstName, resolvedLastName, authentication_2FA ? "Set Up" : "Not Set Up"));
             return newAcc;
         }
     }
