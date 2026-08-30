@@ -846,7 +846,24 @@ public class day4 {
     //          regardless of whether the amount repeats
     // Same sentinel-driven menu loop, same chained Scanner reads within a single pass, but now two identical deposits/withdrawals should both show up distinctly in the account summary
     //      proven directly by testing that exact scenario again and confirming both entries survive this time
-    public static class BankAccount_Enhanced implements AccountNumbers {
+    interface PasswordVerifiable {
+        default boolean createPassword(String attempt) {
+            if (attempt.length() != 8) { System.out.println("Your password needs to be exactly 8 characters long. Please try again"); return false; }
+            int numberCount = 0; int llCount = 0; int ulCount = 0;
+            for (int i = 0; i < attempt.length(); i ++) {
+                char c = attempt.charAt(i);
+                if (Character.isDigit(c)) { numberCount++; }
+                if (Character.isUpperCase(c)) { ulCount++; }
+                if (Character.isLowerCase(c)) { llCount++; }
+            }
+            return (numberCount == 3 && llCount == 2 && ulCount == 3);
+        }
+        default boolean confirmPassword(String made, String confirmation) {
+            System.out.println("Please confirm your password below");
+            return made.equals(confirmation);
+        }
+    }
+    public static class BankAccount_Enhanced implements AccountNumbers, PasswordVerifiable {
         // so im going to add more functionality to this one
         // I want the user to be able to change their nickname through the loop
         // also get their account or routing numbers but it would require a password
@@ -860,15 +877,14 @@ public class day4 {
         //     Code will be an 8char string of digits/letters
         String firstName; String lastName; 
         Double balance; String accountNumber; String routingNumber;
-        // heres the thing, I need the prop of 2FA and also a password
-        // the 2FA is initialized, with either true or false, whenever needed thatll be whenever it comes up
         // or if true then we can ask for password if not created and then hold this password as a stored prop within the 2FA instance
-        boolean authentication_2FA; String password;
+        boolean authentication_2FA; String password; TwoFactorAuthentication user2FA;
 
         private BankAccount_Enhanced(String firstName, String lastName, boolean authentication_2FA) {
             this.firstName = firstName; this.lastName = lastName;
             this.password = null; this.balance = null;
-            this.authentication_2FA = authentication_2FA; this.password = null; 
+            this.authentication_2FA = authentication_2FA; this.password = null;
+            this.user2FA = null;
         }
         public static BankAccount_Enhanced createBankAccount() {
             // reconfiguration for Scanner to recieve input to create instance
@@ -904,13 +920,27 @@ public class day4 {
             
             // handle boolean value for 2FA
             boolean authentication_2FA = userDecision.map(value -> value.equalsIgnoreCase("yes")).orElse(false);
-            
-            instanceCreation.close();
-            // TODO: handle setting up 2FA along with the password creation <- needs Scanner to configure
             BankAccount_Enhanced newAcc = new BankAccount_Enhanced(resolvedFirstName, resolvedLastName, authentication_2FA);
+            if (authentication_2FA) { newAcc.user2FA = new TwoFactorAuthentication(newAcc); }
+            // since password creation at instantiation is mandatory we can prompt for a password then if they have 2FA send it to 2FA if not then keep it stored
+            System.out.println(authentication_2FA ? "Please type in a 8 character password to set up 2FA" : "Please type in a password. You'll be asked to confirm afterwards.");
+            // Since a password is necessary i wont use Optional<String> here
+            String passwordCreated;
+            do {
+                System.out.println("Your password needs to be exactly 8 characters long, have 3 numbers, 2 lowercase letters, and 3 uppercase letters.");
+                passwordCreated = instanceCreation.nextLine().trim(); 
+            } while (!newAcc.createPassword(passwordCreated));
+            System.out.println("Please confirm your password");
+            String confirmedPassword;
+            do {confirmedPassword = instanceCreation.nextLine(); } while (!newAcc.confirmPassword(passwordCreated, confirmedPassword));
+            // then set confirmed pasword to prop and to 2FA account if applicable
+            newAcc.password = confirmedPassword;
+            if (authentication_2FA) { newAcc.user2FA.set2FA(confirmedPassword); }
+
+            instanceCreation.close();
             newAcc.accountNumber = newAcc.createAccountNumber();
             newAcc.routingNumber = newAcc.createRoutingNumber();
-            System.out.println(String.format("New Bank Account%nFirst Name: %s%nLast Name: %s%n2FA: %s", resolvedFirstName, resolvedLastName, authentication_2FA ? "Set Up" : "Not Set Up"));
+            System.out.println(String.format("New Bank Account%nFirst Name: %s%nLast Name: %s%n2FA: %s", resolvedFirstName, resolvedLastName, authentication_2FA ? "Set up and linked accounts" : "Not Set Up"));
             return newAcc;
         }
     }
@@ -933,8 +963,8 @@ public class day4 {
         }
     }
     public static class TwoFactorAuthentication {
-        BankAccount_Enhanced assignedTo; String current2FA; 
-        public TwoFactorAuthentication(BankAccount_Enhanced assignedTo) { this.assignedTo = assignedTo; this.current2FA = null; }
+        BankAccount_Enhanced assignedTo; String current2FA;  String password_bankAccount;
+        public TwoFactorAuthentication(BankAccount_Enhanced assignedTo) { this.assignedTo = assignedTo; this.current2FA = null; this.password_bankAccount = null; }
 
         private String generate2FACode() {
             Random rand = new Random();
@@ -959,6 +989,7 @@ public class day4 {
             return code;
         }
         public void delete2FA() { this.current2FA = null; }
+        public void set2FA(String confirmedPassword) { this.password_bankAccount = confirmedPassword; }
     }
     
 }
