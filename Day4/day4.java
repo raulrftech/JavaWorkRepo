@@ -8,7 +8,8 @@ import java.io.FileNotFoundException; import java.util.Random;
 public class day4 {
     
     public static void main(String[] args) {
-        BankAccount_Enhanced.createBankAccount();
+        BankAccount_Enhanced newAccount = BankAccount_Enhanced.createBankAccount();
+        newAccount.changeNickname();
     }
 
     // Optional <T> - full picture
@@ -868,12 +869,13 @@ public class day4 {
             // Basic Info - name, 2FA choice
             // Password SetUp
             // Nickname SetUp
+            // Instantiation option to deposit money
         // Pending
+            // Main Menu
             // Change nickname
             // Rest Password
                 // if current password is remembered no use to send 2FA
             // AN/RN get
-            // Instantiation option to deposit money
             // Money Movement - Withdrawal/Deposit
         String firstName; String lastName; 
         Double balance; String accountNumber; String routingNumber;
@@ -942,12 +944,43 @@ public class day4 {
             do { System.out.println("Please type in an account nickname at least 3 letters long"); nickname = instanceCreation.nextLine(); } while (nickname.trim().length() < 3);
             newAcc.accountNickname = nickname.trim();
 
+            // prompt to set starting balance
+            double startingBalance = 0.00;
+            System.out.println("Would you like to set a starting balance? Yes or No");
+            if (instanceCreation.nextLine().equalsIgnoreCase("yes")) {
+                try {
+                    System.out.println("Enter an amount below. Make sure it's more than 0.");
+                    Double balance_promptResult = instanceCreation.nextDouble();
+                    startingBalance = balance_promptResult;
+                } catch (Exception e) { System.out.println("Seems like you did not type a valid amount. Starting balance will be set to 0. You can deposit later"); }
+            }
+            newAcc.balance = startingBalance;
+
             instanceCreation.close();
             newAcc.accountNumber = newAcc.createAccountNumber();
             newAcc.routingNumber = newAcc.createRoutingNumber();
-            System.out.println(String.format("New Bank Account%nFirst Name: %s%nLast Name: %s%n2FA: %s%nAccount Nickname: %s", resolvedFirstName, resolvedLastName, authentication_2FA ? "Set up and linked accounts" : "Not Set Up", newAcc.accountNickname));
+            System.out.println(String.format("New Bank Account%nFirst Name: %s%nLast Name: %s%n2FA: %s%nAccount Nickname: %s%nStarting Balance: $%.2f", resolvedFirstName, resolvedLastName, authentication_2FA ? "Set up and linked accounts" : "Not Set Up", newAcc.accountNickname, newAcc.balance));
             return newAcc;
         }
+
+        // main menu
+        public void accountMainMenu() {
+
+        }
+        // change nickname 
+        // reqs password
+            // if forgotten, option to reset with 2FA code
+        public void changeNickname() {
+            Scanner nicknameScanner = new Scanner(System.in);
+            System.out.println("Since you are trying to change your nickname, please enter your password.\nYou have only 3 tries, if at any point (before 3 tries are used) please type 'forgot'. In which case, if you do not have 2FA set up, it'll be set up for you and you will need the code that'll be sent to you.");
+
+            // sentinel value which is an increment on tries
+            int tries = 3; String passwordMatch;
+            do { 
+                passwordMatch = nicknameScanner.nextLine(); tries -= 1;
+            } while (tries != 0 || !passwordMatch.equals(this.password));
+
+        } 
     }
     interface AccountNumbers {
         default String createAccountNumber() {
