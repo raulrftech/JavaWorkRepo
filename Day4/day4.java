@@ -8,7 +8,8 @@ import java.io.FileNotFoundException; import java.util.Random;
 public class day4 {
     
     public static void main(String[] args) {
-        BankAccount_Enhanced newAccount = BankAccount_Enhanced.createBankAccount();
+        Scanner newAccScanner = new Scanner(System.in);
+        BankAccount_Enhanced newAccount = BankAccount_Enhanced.createBankAccount(newAccScanner);
         newAccount.changeNickname();
     }
 
@@ -870,45 +871,45 @@ public class day4 {
             // Password SetUp
             // Nickname SetUp
             // Instantiation option to deposit money
+            // Change Nickname
         // Pending
             // Main Menu
-            // Change nickname
             // Rest Password
                 // if current password is remembered no use to send 2FA
             // AN/RN get
             // Money Movement - Withdrawal/Deposit
-        String firstName; String lastName; 
+            // Account Summary
+        String firstName; String lastName; Scanner instanceScanner;
         Double balance; String accountNumber; String routingNumber;
         // or if true then we can ask for password if not created and then hold this password as a stored prop within the 2FA instance
         boolean authentication_2FA; String password; TwoFactorAuthentication user2FA;
         String accountNickname;
 
-        private BankAccount_Enhanced(String firstName, String lastName, boolean authentication_2FA) {
+        private BankAccount_Enhanced(String firstName, String lastName, boolean authentication_2FA, Scanner instanceScanner) {
             this.firstName = firstName; this.lastName = lastName;
             this.password = null; this.balance = null;
             this.authentication_2FA = authentication_2FA; this.password = null;
-            this.user2FA = null; this.accountNickname = null;
+            this.user2FA = null; this.accountNickname = null; this.instanceScanner = instanceScanner;
         }
-        public static BankAccount_Enhanced createBankAccount() {
+        public static BankAccount_Enhanced createBankAccount(Scanner instanceScanner) {
             // reconfiguration for Scanner to recieve input to create instance
-            Scanner instanceCreation = new Scanner(System.in);
             System.out.println("Type in your first name");
-            Optional<String> firstName = Optional.of(instanceCreation.nextLine()).filter(s -> !s.trim().isEmpty());
+            Optional<String> firstName = Optional.of(instanceScanner.nextLine()).filter(s -> !s.trim().isEmpty());
             System.out.println("Type in your last name");
-            Optional<String> lastName = Optional.of(instanceCreation.nextLine()).filter(s -> !s.trim().isEmpty());
+            Optional<String> lastName = Optional.of(instanceScanner.nextLine()).filter(s -> !s.trim().isEmpty());
             System.out.println("Would you like to set up two-factor authentication. Enter yes or no");
-            Optional<String> userDecision = Optional.of(instanceCreation.nextLine()).filter(s -> !s.trim().isEmpty());
+            Optional<String> userDecision = Optional.of(instanceScanner.nextLine()).filter(s -> !s.trim().isEmpty());
 
             String lastChance_FirstName = "";
             String lastChance_lastName = "";
             // handle first and lastName
             if (firstName.isEmpty()) {
                 System.out.println("I did not get your first name, please enter it.");
-                lastChance_FirstName = instanceCreation.nextLine();
+                lastChance_FirstName = instanceScanner.nextLine();
             }
             if (lastName.isEmpty()) {
                 System.out.println("I did not get your last name, please enter it.");
-                lastChance_lastName = instanceCreation.nextLine();
+                lastChance_lastName = instanceScanner.nextLine();
             }
             final String resolvedFirstName = firstName.orElse(lastChance_FirstName);
             final String resolvedLastName = lastName.orElse(lastChance_lastName);
@@ -916,14 +917,13 @@ public class day4 {
             if (firstName.isEmpty() || lastName.isEmpty()) {
                 if (lastChance_FirstName.isEmpty()|| lastChance_lastName.isEmpty()) { 
                     System.out.println("Since you have failed to either provide your last or first name, I cannot continue with account creation");
-                    instanceCreation.close();
                     return null;
                 }
             }
             
             // handle boolean value for 2FA
             boolean authentication_2FA = userDecision.map(value -> value.equalsIgnoreCase("yes")).orElse(false);
-            BankAccount_Enhanced newAcc = new BankAccount_Enhanced(resolvedFirstName, resolvedLastName, authentication_2FA);
+            BankAccount_Enhanced newAcc = new BankAccount_Enhanced(resolvedFirstName, resolvedLastName, authentication_2FA, instanceScanner);
             if (authentication_2FA) { newAcc.user2FA = new TwoFactorAuthentication(newAcc); }
             // since password creation at instantiation is mandatory we can prompt for a password then if they have 2FA send it to 2FA if not then keep it stored
             System.out.println(authentication_2FA ? "Please type in a 8 character password to set up 2FA" : "Please type in a password. You'll be asked to confirm afterwards.");
@@ -931,32 +931,31 @@ public class day4 {
             String passwordCreated;
             do {
                 System.out.println("Your password needs to be exactly 8 characters long, have 3 numbers, 2 lowercase letters, and 3 uppercase letters.");
-                passwordCreated = instanceCreation.nextLine().trim(); 
+                passwordCreated = instanceScanner.nextLine().trim(); 
             } while (!newAcc.createPassword(passwordCreated));
             String confirmedPassword;
-            do { System.out.println("Please confirm your password"); confirmedPassword = instanceCreation.nextLine().trim(); } while (!newAcc.confirmPassword(passwordCreated, confirmedPassword));
+            do { System.out.println("Please confirm your password"); confirmedPassword = instanceScanner.nextLine().trim(); } while (!newAcc.confirmPassword(passwordCreated, confirmedPassword));
             // then set confirmed pasword to prop and to 2FA account if applicable
             newAcc.password = confirmedPassword;
             if (authentication_2FA) { newAcc.user2FA.set2FA(confirmedPassword); }
 
             // set nickname
             String nickname;
-            do { System.out.println("Please type in an account nickname at least 3 letters long"); nickname = instanceCreation.nextLine(); } while (nickname.trim().length() < 3);
+            do { System.out.println("Please type in an account nickname at least 3 letters long"); nickname = instanceScanner.nextLine(); } while (nickname.trim().length() < 3);
             newAcc.accountNickname = nickname.trim();
 
             // prompt to set starting balance
             double startingBalance = 0.00;
             System.out.println("Would you like to set a starting balance? Yes or No");
-            if (instanceCreation.nextLine().equalsIgnoreCase("yes")) {
+            if (instanceScanner.nextLine().equalsIgnoreCase("yes")) {
                 try {
                     System.out.println("Enter an amount below. Make sure it's more than 0.");
-                    Double balance_promptResult = instanceCreation.nextDouble();
+                    Double balance_promptResult = instanceScanner.nextDouble();
                     startingBalance = balance_promptResult;
                 } catch (Exception e) { System.out.println("Seems like you did not type a valid amount. Starting balance will be set to 0. You can deposit later"); }
             }
             newAcc.balance = startingBalance;
 
-            instanceCreation.close();
             newAcc.accountNumber = newAcc.createAccountNumber();
             newAcc.routingNumber = newAcc.createRoutingNumber();
             System.out.println(String.format("New Bank Account%nFirst Name: %s%nLast Name: %s%n2FA: %s%nAccount Nickname: %s%nStarting Balance: $%.2f", resolvedFirstName, resolvedLastName, authentication_2FA ? "Set up and linked accounts" : "Not Set Up", newAcc.accountNickname, newAcc.balance));
@@ -967,19 +966,35 @@ public class day4 {
         public void accountMainMenu() {
 
         }
+        // deposit
+        public void deposit() {
+
+        }
+        public void withdraw() {
+            
+        }
         // change nickname 
-        // reqs password
-            // if forgotten, option to reset with 2FA code
+            // reqs password
+                // if forgotten, option to reset with 2FA code
         public void changeNickname() {
-            Scanner nicknameScanner = new Scanner(System.in);
             System.out.println("Since you are trying to change your nickname, please enter your password.\nYou have only 3 tries, if at any point (before 3 tries are used) please type 'forgot'. In which case, if you do not have 2FA set up, it'll be set up for you and you will need the code that'll be sent to you.");
 
             // sentinel value which is an increment on tries
-            int tries = 3; String passwordMatch;
+            int tries = 3; String passwordMatch; boolean isAuthenticated = false;
             do { 
-                passwordMatch = nicknameScanner.nextLine(); tries -= 1;
-            } while (tries != 0 || !passwordMatch.equals(this.password));
+                passwordMatch = this.instanceScanner.nextLine();
+                if (passwordMatch.equals(this.password)) { isAuthenticated = true; break; } else { tries -= 1; }
+            } while (tries > 0);
+            if (!isAuthenticated) { System.out.println("You have inputted a wrong password 3 times. You will not be able to proceed. This will be marked on your account for possible unauthorized use");
+                // TODO: implement counter for wrong/incorrect access
+                return;
+            }
 
+            // proceed for nickname change
+            System.out.println("Password verified. Enter new nickname below. You only have one chance to do this");
+            String newNickname = this.instanceScanner.nextLine().trim();
+            this.accountNickname = !newNickname.isEmpty() ? newNickname : this.accountNickname;
+            System.out.println(String.format("Changed nickname succesfully to '%s'", this.accountNickname));
         } 
     }
     interface AccountNumbers {
