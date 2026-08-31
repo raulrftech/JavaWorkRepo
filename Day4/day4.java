@@ -883,33 +883,34 @@ public class day4 {
         Double balance; String accountNumber; String routingNumber;
         // or if true then we can ask for password if not created and then hold this password as a stored prop within the 2FA instance
         boolean authentication_2FA; String password; TwoFactorAuthentication user2FA;
-        String accountNickname;
+        String accountNickname; boolean isLocked; int fraudPossibilities;
 
         private BankAccount_Enhanced(String firstName, String lastName, boolean authentication_2FA, Scanner instanceScanner) {
             this.firstName = firstName; this.lastName = lastName;
             this.password = null; this.balance = null;
             this.authentication_2FA = authentication_2FA; this.password = null;
             this.user2FA = null; this.accountNickname = null; this.instanceScanner = instanceScanner;
+            this.isLocked = false; this.fraudPossibilities = 0;
         }
         public static BankAccount_Enhanced createBankAccount(Scanner instanceScanner) {
             // reconfiguration for Scanner to recieve input to create instance
             System.out.println("Type in your first name");
             Optional<String> firstName = Optional.of(instanceScanner.nextLine()).filter(s -> !s.trim().isEmpty());
             System.out.println("Type in your last name");
-            Optional<String> lastName = Optional.of(instanceScanner.nextLine()).filter(s -> !s.trim().isEmpty());
+            Optional<String> lastName = Optional.of(instanceScanner.nextLine().trim()).filter(s -> !s.trim().isEmpty());
             System.out.println("Would you like to set up two-factor authentication. Enter yes or no");
-            Optional<String> userDecision = Optional.of(instanceScanner.nextLine()).filter(s -> !s.trim().isEmpty());
+            Optional<String> userDecision = Optional.of(instanceScanner.nextLine().trim()).filter(s -> !s.trim().isEmpty());
 
             String lastChance_FirstName = "";
             String lastChance_lastName = "";
             // handle first and lastName
             if (firstName.isEmpty()) {
                 System.out.println("I did not get your first name, please enter it.");
-                lastChance_FirstName = instanceScanner.nextLine();
+                lastChance_FirstName = instanceScanner.nextLine().trim();
             }
             if (lastName.isEmpty()) {
                 System.out.println("I did not get your last name, please enter it.");
-                lastChance_lastName = instanceScanner.nextLine();
+                lastChance_lastName = instanceScanner.nextLine().trim();
             }
             final String resolvedFirstName = firstName.orElse(lastChance_FirstName);
             final String resolvedLastName = lastName.orElse(lastChance_lastName);
@@ -941,13 +942,13 @@ public class day4 {
 
             // set nickname
             String nickname;
-            do { System.out.println("Please type in an account nickname at least 3 letters long"); nickname = instanceScanner.nextLine(); } while (nickname.trim().length() < 3);
+            do { System.out.println("Please type in an account nickname at least 3 letters long"); nickname = instanceScanner.nextLine().trim(); } while (nickname.trim().length() < 3);
             newAcc.accountNickname = nickname.trim();
 
             // prompt to set starting balance
             double startingBalance = 0.00;
             System.out.println("Would you like to set a starting balance? Yes or No");
-            if (instanceScanner.nextLine().equalsIgnoreCase("yes")) {
+            if (instanceScanner.nextLine().trim().equalsIgnoreCase("yes")) {
                 try {
                     System.out.println("Enter an amount below. Make sure it's more than 0.");
                     Double balance_promptResult = instanceScanner.nextDouble();
@@ -977,25 +978,82 @@ public class day4 {
             // reqs password
                 // if forgotten, option to reset with 2FA code
         public void changeNickname() {
-            System.out.println("Since you are trying to change your nickname, please enter your password.\nYou have only 3 tries, if at any point (before 3 tries are used) please type 'forgot'. In which case, if you do not have 2FA set up, it'll be set up for you and you will need the code that'll be sent to you.");
+            if (this.isLocked) {
+                System.out.println("Your account is currently locked, please Unlock Your Account via the main menu"); return;
+            } else {
+                System.out.println("Since you are trying to change your nickname, please enter your password.\nYou have only 3 tries, if at any point (before 3 tries are used) please type 'forgot'. In which case, if you do not have 2FA set up, it'll be set up for you and you will need the code that'll be sent to you.");
+                // sentinel value which is an increment on tries
+                int tries = 3; String passwordMatch; boolean isAuthenticated = false;
 
-            // sentinel value which is an increment on tries
-            int tries = 3; String passwordMatch; boolean isAuthenticated = false;
-            do { 
-                passwordMatch = this.instanceScanner.nextLine();
-                if (passwordMatch.equals(this.password)) { isAuthenticated = true; break; } else { tries -= 1; }
-            } while (tries > 0);
-            if (!isAuthenticated) { System.out.println("You have inputted a wrong password 3 times. You will not be able to proceed. This will be marked on your account for possible unauthorized use");
-                // TODO: implement counter for wrong/incorrect access
-                return;
+                do { 
+                    passwordMatch = this.instanceScanner.nextLine().trim();
+                    if (passwordMatch.equals(this.password)) { isAuthenticated = true; break; } else { tries -= 1; }
+                } while (tries >= 0);
+
+                if (!isAuthenticated) { System.out.println("You have inputted a wrong password 3 times. You will not be able to proceed. This will be marked on your account for possible unauthorized use");
+                    this.fraudPossibilities += 1;
+                    // in order for the password to be reset it needs to have the chance to sent the 2FA if wanted, if not, then lock account
+                    // so we can reset password which returns boolean on success path then prompt again
+                    System.out.println("Would you like to reset your password? A 2FA code will be sent, otherwise, your account will be locked. Enter yes or no.");
+                    if (this.instanceScanner.nextLine().trim().equalsIgnoreCase("yes")) {
+                        if (!changePassword()) { System.out.println("Since the attempt to reset your password has failed, your account will be locked. Please utilize Unlock Your Account via the main menu"); return; } else {
+                            // proceed for nickname change
+                            System.out.println("Password verified. Enter new nickname below. You only have one chance to do this");
+                            String newNickname = this.instanceScanner.nextLine().trim();
+                            this.accountNickname = !newNickname.isEmpty() ? newNickname : this.accountNickname;
+                            System.out.println(String.format("Changed nickname succesfully to '%s'", this.accountNickname));
+                        }
+                    } else { System.out.println("Your account is now locked, please utilize the main menu option to unlock account"); this.isLocked = true; return; }
+                    return;
+                }
+                // proceed for nickname change
+                System.out.println("Password verified. Enter new nickname below. You only have one chance to do this");
+                String newNickname = this.instanceScanner.nextLine().trim();
+                this.accountNickname = !newNickname.isEmpty() ? newNickname : this.accountNickname;
+                System.out.println(String.format("Changed nickname succesfully to '%s'", this.accountNickname));
             }
+        }
+        public boolean changePassword() {
+            if (this.isLocked) { System.out.println("Your account is locked. Please utilize the main menu option to unlock account"); return false; }
+            System.out.println(String.format("%s%n%s", "Changing a password requires a 2FA code.",  this.authentication_2FA ? "You will be sent a 2FA code, enter it exactly as it appears" : "You do not have 2FA set up, would you like to set it up. If yes type yes, otherwise you'll need to go back to the main menu"));
+            // check if the user has 2FA set up otherwise it would be null and this would break
+            if (this.authentication_2FA == false ) {
+                //if (this.instanceScanner.hasNextLine()) { this.instanceScanner.nextLine().trim();} // clear buffer
+                if (this.instanceScanner.nextLine().trim().equalsIgnoreCase("yes")) {
+                    this.authentication_2FA = true; this.user2FA = new TwoFactorAuthentication(this);
 
-            // proceed for nickname change
-            System.out.println("Password verified. Enter new nickname below. You only have one chance to do this");
-            String newNickname = this.instanceScanner.nextLine().trim();
-            this.accountNickname = !newNickname.isEmpty() ? newNickname : this.accountNickname;
-            System.out.println(String.format("Changed nickname succesfully to '%s'", this.accountNickname));
-        } 
+                    String receivedCode = this.user2FA.get2FACode();
+                    System.out.println(String.format("Your code is: %s%nYou have only one chance to enter it", receivedCode));
+                    if (this.instanceScanner.nextLine().trim().equals(receivedCode)) {
+                        String passwordCreated;
+                        do {
+                            System.out.println("Your password needs to be exactly 8 characters long, have 3 numbers, 2 lowercase letters, and 3 uppercase letters.");
+                            passwordCreated = instanceScanner.nextLine().trim(); 
+                        } while (!this.createPassword(passwordCreated));
+                        String confirmedPassword;
+                        do { System.out.println("Please confirm your password"); confirmedPassword = instanceScanner.nextLine().trim(); } while (!this.confirmPassword(passwordCreated, confirmedPassword));
+                        // then set confirmed pasword to prop and to 2FA account if applicable
+                        this.password = confirmedPassword;
+                        if (authentication_2FA) { this.user2FA.set2FA(confirmedPassword); } return true;
+                    } else { System.out.println("You did not enter the code correctly, please go back to the main menu to get another attempt"); return false; }
+                } else { System.out.println("You did not type in yes, please go back to the main menu if you choose to reset your password"); return false; }
+            } else {
+                String receivedCode = this.user2FA.get2FACode();
+                System.out.println(String.format("Your code is: %s%nYou have only one chance to enter it", receivedCode));
+                if (this.instanceScanner.nextLine().trim().equals(receivedCode)) {
+                    String passwordCreated;
+                    do {
+                        System.out.println("Your password needs to be exactly 8 characters long, have 3 numbers, 2 lowercase letters, and 3 uppercase letters.");
+                        passwordCreated = instanceScanner.nextLine().trim(); 
+                    } while (!this.createPassword(passwordCreated));
+                    String confirmedPassword;
+                    do { System.out.println("Please confirm your password"); confirmedPassword = instanceScanner.nextLine().trim(); } while (!this.confirmPassword(passwordCreated, confirmedPassword));
+                    // then set confirmed pasword to prop and to 2FA account if applicable
+                    this.password = confirmedPassword;
+                    if (authentication_2FA) { this.user2FA.set2FA(confirmedPassword); } return true;
+                } else { System.out.println("You did not enter the code correctly, please go back to the main menu to get another attempt"); return false; }
+            }
+        }
     }
     interface AccountNumbers {
         default String createAccountNumber() {
@@ -1044,5 +1102,4 @@ public class day4 {
         public void delete2FA() { this.current2FA = null; }
         public void set2FA(String confirmedPassword) { this.password_bankAccount = confirmedPassword; }
     }
-    
 }
