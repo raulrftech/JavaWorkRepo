@@ -10,7 +10,7 @@ public class day4 {
     public static void main(String[] args) {
         Scanner newAccScanner = new Scanner(System.in);
         BankAccount_Enhanced newAccount = BankAccount_Enhanced.createBankAccount(newAccScanner);
-        newAccount.deposit(); newAccount.withdraw();
+        newAccount.getAccountInfo();
     }
 
     // Optional <T> - full picture
@@ -882,6 +882,8 @@ public class day4 {
             // Withdrawal - Require 2FA
             // Account Summary
             // Configure changeNickname/Password to go back to main menu after in/successful setting
+            // Correctly link users password to their 2FA code whenever instantiated
+            // Refactor for user authentication, both password and 2FA(set up if necessary) -> boolean
         String firstName; String lastName; Scanner instanceScanner;
         Double balance; String accountNumber; String routingNumber;
         // or if true then we can ask for password if not created and then hold this password as a stored prop within the 2FA instance
@@ -954,8 +956,14 @@ public class day4 {
             if (instanceScanner.nextLine().trim().equalsIgnoreCase("yes")) {
                 try {
                     System.out.println("Enter an amount below. Make sure it's more than 0.");
-                    Double balance_promptResult = instanceScanner.nextDouble();
-                    startingBalance = balance_promptResult;
+                    Double balance_promptResult;
+                    try {
+                        balance_promptResult = Double.parseDouble(instanceScanner.nextLine().trim());
+                        startingBalance = balance_promptResult;
+                    } catch (Exception e) {
+                        System.out.println("Oopsies...The input you passed was not a number. Creation of account has failed. Please start over");
+                    }
+                    
                 } catch (Exception e) { System.out.println("Seems like you did not type a valid amount. Starting balance will be set to 0. You can deposit later"); }
             }
             newAcc.balance = startingBalance;
@@ -969,6 +977,38 @@ public class day4 {
         // main menu
         public void accountMainMenu() {
 
+        }
+        // get account or routing number or both
+        public void getAccountInfo() {
+            // Verification happens first, needs both password and 2FA
+            System.out.println("Please enter your password in order to get your account information");
+            if (this.instanceScanner.nextLine().trim().equals(this.password)) { 
+                System.out.println("Succesfully verified. Enter the 2FA code provided below. You will be prompted to set 2FA up if you have not already");
+                if (this.authentication_2FA) {
+                    String receivedCode = this.user2FA.get2FACode();
+                    System.out.println(String.format("Code: %s", receivedCode));
+                    if (this.instanceScanner.nextLine().trim().equals(receivedCode)) { System.out.println("2FA verified");} else {
+                        System.out.println("Incorrect 2FA code entered. Please utilize the option in main menu in order to get your information");
+                    }
+                } else {
+                    System.out.println("You are getting a 2FA account set up for you. In order to verify, a 2FA code will be sent to you. You have one chance to enter it.");
+                    this.authentication_2FA = true; this.user2FA = new TwoFactorAuthentication(this); this.user2FA.password_bankAccount = this.password;
+                    String receivedCode = this.user2FA.get2FACode();
+                    System.out.println(String.format("Enter: %s", receivedCode));
+                    if (this.instanceScanner.nextLine().equals(receivedCode)) { System.out.println("2FA verified and set up successfully");} else {
+                        System.out.println("2FA code entered incorrectly. 2FA account set up and linked to your account"); return;
+                    }
+                }
+            } else { System.out.println("Wrong password entered, please choose this option again in the main menu in order to get your information"); return; }
+            System.out.println("Enter AN for Account Number, RN for Routing Number, or Both for Both");
+            String passedInput = this.instanceScanner.nextLine().trim();
+            if (passedInput.equalsIgnoreCase("an")) {
+                System.out.println(String.format("Your account number is %s", this.accountNumber));
+            } else if (passedInput.equalsIgnoreCase("rn")) {
+                System.out.println(String.format("Your routing number is %s", this.routingNumber));
+            } else if (passedInput.equalsIgnoreCase("both")) {
+                System.out.println(String.format("Account Number: %s%nRouting Number: %s", this.accountNumber, this.routingNumber));
+            } else { System.out.println("Invalid input receieved. Utilize the main menu option to run this again"); return; }
         }
         // unlock account
         public void unlockAccount() {
