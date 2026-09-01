@@ -875,10 +875,11 @@ public class day4 {
             // Reset Password
             // Money Movement - Withdrawal/Deposit
             // Account Lock/Unlock
+            // AN/RN Getter
+            // Verification Helper
         // Pending
             // Main Menu
             // Fraud Possibilities - needs to be thought about
-            // AN/RN get
             // Withdrawal - Require 2FA
             // Account Summary
             // Configure changeNickname/Password to go back to main menu after in/successful setting
@@ -977,6 +978,38 @@ public class day4 {
         // main menu
         public void accountMainMenu() {
 
+        }
+        // refactor method in order to verify user
+        public boolean verifyUser() {
+            // first check if user has 2FA
+            if (this.authentication_2FA) {
+                // verify password then prompt for 2FA
+                // once chance
+                System.out.println("Please enter your password");
+                if (this.instanceScanner.nextLine().trim().equals(this.password)) {
+                    // prompt for 2fa
+                    String receivedCode = this.user2FA.get2FACode();
+                    System.out.println(String.format("Please enter the 2FA code provided, exactly as it appears. You only have one chance", receivedCode));
+                    if(this.instanceScanner.nextLine().trim().equals(receivedCode)) {
+                        return true;
+                    } else { System.out.println("Invalid code entered. You're not verified"); return false; }
+                } else {
+                    System.out.println("Invalid password entered. You're not verified"); return false;
+                }
+            } else {
+                // set up 2fa
+                System.out.println("Since you do not have 2FA set up at this time, you'll be guided through the process\nYou'll be provided a code, enter it exactly as it appears");
+                this.authentication_2FA = true; this.user2FA = new TwoFactorAuthentication(this); this.user2FA.password_bankAccount = this.password;
+                String receivedCode = this.user2FA.get2FACode();
+                System.out.println(String.format("Your code is %s", receivedCode));
+                if (this.instanceScanner.nextLine().trim().equals(receivedCode)) {
+                    System.out.println("Verified successfully"); return true;
+                } else {
+                    System.out.println("Invalid code entered, thus you're not verified. Please try again via the main menu"); return false;
+                }
+            }
+
+            return true;
         }
         // get account or routing number or both
         public void getAccountInfo() {
