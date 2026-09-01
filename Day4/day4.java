@@ -10,7 +10,7 @@ public class day4 {
     public static void main(String[] args) {
         Scanner newAccScanner = new Scanner(System.in);
         BankAccount_Enhanced newAccount = BankAccount_Enhanced.createBankAccount(newAccScanner);
-        newAccount.changeNickname();
+        newAccount.deposit(); newAccount.withdraw();
     }
 
     // Optional <T> - full picture
@@ -872,13 +872,16 @@ public class day4 {
             // Nickname SetUp
             // Instantiation option to deposit money
             // Change Nickname
+            // Reset Password
+            // Money Movement - Withdrawal/Deposit
+            // Account Lock/Unlock
         // Pending
             // Main Menu
-            // Rest Password
-                // if current password is remembered no use to send 2FA
+            // Fraud Possibilities - needs to be thought about
             // AN/RN get
-            // Money Movement - Withdrawal/Deposit
+            // Withdrawal - Require 2FA
             // Account Summary
+            // Configure changeNickname/Password to go back to main menu after in/successful setting
         String firstName; String lastName; Scanner instanceScanner;
         Double balance; String accountNumber; String routingNumber;
         // or if true then we can ask for password if not created and then hold this password as a stored prop within the 2FA instance
@@ -967,12 +970,82 @@ public class day4 {
         public void accountMainMenu() {
 
         }
+        // unlock account
+        public void unlockAccount() {
+            // since this is like a real-world case where a user needs to verify password/2FA code to get it unlocked
+            // first see, what causes a user to get their account locked whihc is passing in an incorrect password
+            // first check if they have 2FA but since this is a main menu option
+            // well can be, just like in swift we can implement conditional logic in order for it to show whenever needed
+            if (this.authentication_2FA) {
+                // this utilizes 2FA code then password, im sure it is safe to assume that they know their password
+                // why would someone try to get a password more than 3 times rather than just resetting it
+                System.out.println("In order to unlock you account, a 2FA code will be sent to you. Enter it exactly as it appears");
+                String receivedCode = this.user2FA.get2FACode();
+                System.out.println(String.format("Code to Enter: %s", receivedCode));
+                if (this.instanceScanner.nextLine().trim().equals(receivedCode)) {
+                    System.out.println("Thank you for verifying");
+                    this.user2FA.delete2FA();
+                    String passedPassword; int tries = 4; boolean isAuthenticated = false;
+                    do {
+                        passedPassword = this.instanceScanner.nextLine().trim();
+                        if (passedPassword.equals(this.password)) { isAuthenticated = true; break; } else { tries -=1;}
+                    } while (tries >= 0);
+                    if (!isAuthenticated) { System.out.println("Since you failed four times, you'll need to reset your password. You may be asked for another 2FA code"); 
+                        System.out.println("If you fail this time, your account will remain locked and will be flagged");
+                        if (!changePassword()) { this.fraudPossibilities += 2; } else { System.out.println("Thank you for confirming. Your account is now unlocked"); this.isLocked = false;}
+                    }
+                }
+            } else {
+                // set up 2FA, get code, confirm code, reset password
+                // changePassword sets up 2FA so i can just run that
+                if (changePassword()) {
+                    System.out.println("Your account is now unlocked");
+                }
+            }
+        }
         // deposit
         public void deposit() {
-
+            if (this.isLocked) { System.out.println("Your account is currently locked, a deposit is impossible at this time.\nPlease utilize Unlock Your Account via the main menu."); return; }
+            // Password Prompt
+            System.out.println("Please enter your password prior depositing an amount. If you fail 3 times, your account will be locked");
+            String passwordMatch; int tries = 3; boolean isAuthenticated = false;
+            do {
+                passwordMatch = this.instanceScanner.nextLine().trim(); if (passwordMatch.equals(this.password)) { isAuthenticated = true; break;} else { tries -= 1; }
+            } while (tries != 0);
+            // Deposit Handling
+            if (isAuthenticated) {
+                double depositAmount; boolean isValid = false;
+                while (!isValid) {
+                    System.out.println("Please enter an amount to deposit. Make sure it is above zero");
+                    depositAmount = this.instanceScanner.nextDouble();
+                    isValid = depositAmount > 0; if (isValid) { 
+                        this.balance += depositAmount;
+                        System.out.println(String.format("Successfully deposited $%.2f, new balance stands at $%.2f", depositAmount, this.balance));
+                    }
+                }
+            } else { System.out.println("You have failed your password 3 times, your account will now be locked. Please utilize Unlock Your Account via the main menu"); this.fraudPossibilities += 1; this.isLocked = true;}
+            
         }
         public void withdraw() {
-            
+            if (this.isLocked) { System.out.println("Your account is currently locked, a withdrawal is impossible at this time.\nPlease utilize Unlock Your Account via the main menu"); return; }
+            // Password Prompt
+            System.out.println("Please enter your password prior wtihdrawing an amount. If you fail 3 times, your account will be locked");
+            String passwordMatch; int tries = 3; boolean isAuthenticated = false;
+            do {
+                passwordMatch = this.instanceScanner.nextLine().trim(); if (passwordMatch.equals(this.password)) { isAuthenticated = true; break;} else { tries -= 1; }
+            } while (tries != 0);
+            // Deposit Handling
+            if (isAuthenticated) {
+                double withdrawalAmount; boolean isValid = false;
+                while (!isValid) {
+                    System.out.println("Please enter an amount to withdraw. Make sure it is above zero.");
+                    withdrawalAmount = this.instanceScanner.nextDouble();
+                    isValid = withdrawalAmount > 0; if (isValid) { 
+                        this.balance -= withdrawalAmount;
+                        System.out.println(String.format("Successfully deposited $%.2f, new balance stands at $%.2f", withdrawalAmount, this.balance));
+                    }
+                }
+            } else { System.out.println("You have failed your password 3 times, your account will now be locked. Please utilize Unlock Your Account via the main menu"); this.fraudPossibilities += 1; this.isLocked = true;}
         }
         // change nickname 
             // reqs password
@@ -996,7 +1069,12 @@ public class day4 {
                     // so we can reset password which returns boolean on success path then prompt again
                     System.out.println("Would you like to reset your password? A 2FA code will be sent, otherwise, your account will be locked. Enter yes or no.");
                     if (this.instanceScanner.nextLine().trim().equalsIgnoreCase("yes")) {
-                        if (!changePassword()) { System.out.println("Since the attempt to reset your password has failed, your account will be locked. Please utilize Unlock Your Account via the main menu"); return; } else {
+                        if (!changePassword()) { 
+                            System.out.println("Since the attempt to reset your password has failed, your account will be locked. Please utilize Unlock Your Account via the main menu");
+                            this.isLocked = true;
+                            return; } else {
+                            // decrement fraudPossibilities
+                            this.fraudPossibilities -= 1; // since user has verified and reset their password which needed 2FA
                             // proceed for nickname change
                             System.out.println("Password verified. Enter new nickname below. You only have one chance to do this");
                             String newNickname = this.instanceScanner.nextLine().trim();
@@ -1034,7 +1112,7 @@ public class day4 {
                         do { System.out.println("Please confirm your password"); confirmedPassword = instanceScanner.nextLine().trim(); } while (!this.confirmPassword(passwordCreated, confirmedPassword));
                         // then set confirmed pasword to prop and to 2FA account if applicable
                         this.password = confirmedPassword;
-                        if (authentication_2FA) { this.user2FA.set2FA(confirmedPassword); } return true;
+                        if (authentication_2FA) { this.user2FA.set2FA(confirmedPassword); } this.user2FA.delete2FA(); return true;
                     } else { System.out.println("You did not enter the code correctly, please go back to the main menu to get another attempt"); return false; }
                 } else { System.out.println("You did not type in yes, please go back to the main menu if you choose to reset your password"); return false; }
             } else {
