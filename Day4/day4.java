@@ -888,6 +888,7 @@ public class day4 {
         String firstName; String lastName; Scanner instanceScanner;
         Double balance; String accountNumber; String routingNumber;
         // or if true then we can ask for password if not created and then hold this password as a stored prop within the 2FA instance
+        // test commit
         boolean authentication_2FA; String password; TwoFactorAuthentication user2FA;
         String accountNickname; boolean isLocked; int fraudPossibilities;
 
