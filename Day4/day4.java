@@ -1,8 +1,6 @@
 package Day4;
 import java.util.Optional; import java.util.TreeMap; import java.util.TreeSet;
-import java.util.Scanner; import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Scanner; import java.io.File; import java.util.HashMap;
 import java.util.LinkedHashMap; import java.util.Map; import java.util.Objects;
 import java.io.FileNotFoundException; import java.util.Random;
 
@@ -12,7 +10,7 @@ public class day4 {
     public static void main(String[] args) {
         Scanner newAccScanner = new Scanner(System.in);
         BankAccount_Enhanced newAccount = BankAccount_Enhanced.createBankAccount(newAccScanner);
-        newAccount.accountMainMenu();
+        newAccount.deposit(); newAccount.withdraw();
     }
 
     // Optional <T> - full picture
@@ -879,35 +877,20 @@ public class day4 {
             // Account Lock/Unlock
             // AN/RN Getter
             // Verification Helper
-            // Reconfigurated code to implement verifyUser() method
-            //      Withdrawal and other methods
-            // Configured pathways back to main menu in necessary methods
-            // Linked users pw to 2FA and deleted code afterwards
-            // Main Menu and Account Summary
-            // Withdrawal/Deposit Necessities
-                // Occurrences with respective amount
-                // Handle amounts such as withdrawl shouldnt be more than balance
-                // Sentinel value - different use case for this
-            // Fraud Possibilites
-                // current code is sufficient for loop to run
-                // checking this would lead to more validation logic
-                //      such as sending another 2FA if at || surpassing a certain amount
-                // Thus its not going to be implemented
+            // Withdrawal now reqs 2FA, implemented above helper
         // Pending
-            // Everything is complete
+            // Main Menu
+            // Fraud Possibilities - needs to be thought about
+            // Withdrawal - Require 2FA
+            // Account Summary
+            // Configure changeNickname/Password to go back to main menu after in/successful setting
+            // Correctly link users password to their 2FA code whenever instantiated
+            // Refactor for user authentication, both password and 2FA(set up if necessary) -> boolean
         String firstName; String lastName; Scanner instanceScanner;
         Double balance; String accountNumber; String routingNumber;
         // or if true then we can ask for password if not created and then hold this password as a stored prop within the 2FA instance
-        // test commit
         boolean authentication_2FA; String password; TwoFactorAuthentication user2FA;
         String accountNickname; boolean isLocked; int fraudPossibilities;
-
-        // In order to get occurrences for various values or dupes
-        // to get something like Deposited 5, Deposited 5
-        // this can just use two arrayList, one for deposit the other for withdrawal
-        // then I can just format them whenever returning the summary
-        ArrayList<Double> depositOccurrences = new ArrayList<>();
-        ArrayList<Double> withdrawalOccurrences = new ArrayList<>();
 
         private BankAccount_Enhanced(String firstName, String lastName, boolean authentication_2FA, Scanner instanceScanner) {
             this.firstName = firstName; this.lastName = lastName;
@@ -956,7 +939,7 @@ public class day4 {
             String passwordCreated;
             do {
                 System.out.println("Your password needs to be exactly 8 characters long, have 3 numbers, 2 lowercase letters, and 3 uppercase letters.");
-                passwordCreated = instanceScanner.nextLine().trim();
+                passwordCreated = instanceScanner.nextLine().trim(); 
             } while (!newAcc.createPassword(passwordCreated));
             String confirmedPassword;
             do { System.out.println("Please confirm your password"); confirmedPassword = instanceScanner.nextLine().trim(); } while (!newAcc.confirmPassword(passwordCreated, confirmedPassword));
@@ -978,7 +961,7 @@ public class day4 {
                     Double balance_promptResult;
                     try {
                         balance_promptResult = Double.parseDouble(instanceScanner.nextLine().trim());
-                        startingBalance = balance_promptResult; newAcc.depositOccurrences.add(startingBalance);
+                        startingBalance = balance_promptResult;
                     } catch (Exception e) {
                         System.out.println("Oopsies...The input you passed was not a number. Creation of account has failed. Please start over");
                     }
@@ -995,36 +978,10 @@ public class day4 {
 
         // main menu
         public void accountMainMenu() {
-        System.out.println(String.format("Welcome to your account!\nEnter Deposit for Deposit\nWithdrawal for Withdrawal\nAccSummary for Account Summary\nAccNumbers for Acc/Routing Numbers\nPassword for Password Reset\nNickname for Change Nickname\nExit to Exit\n%s", this.isLocked ? "Unlock" : ""));
-        while (true) {
-            String userInput = this.instanceScanner.nextLine().trim().toLowerCase();
-            if (userInput.equals("exit")) { break;} else if (userInput.equals("deposit")) { 
-                this.deposit();
-            } else if (userInput.equals("withdrawal")) { 
-                this.withdraw();
-            } else if (userInput.equals("accnumbers")) {
-                this.getAccountInfo();
-            } else if (userInput.equals("password")) {
-                this.changePassword();
-            } else if (userInput.equals("nickname")) {
-                this.changeNickname();
-            } else if (this.isLocked && userInput.equals("unlock")) {
-                this.unlockAccount();
-            } else if (userInput.equals("accsummary")) {
-                this.accountSummary();
-            } else { System.out.println("Wrong input provided. Please try again"); }
-        } 
+
         }
         // refactor method in order to verify user
         public boolean verifyUser() {
-            // reconfigurating methods to utilize verifyUser()
-            // VerifyUser() functionality:
-            //      if they already have 2FA
-            //          Enter Password, sends 2fa if right which then returns false if failed entry continues if correct, returns if incorrect
-            //      if they do  not have 2FA
-            //          Asks for password, if right then continues, returns false if not
-            //          Sets up 2FA (sends code, asks for code), if right then verified otherwise not
-
             // first check if user has 2FA
             if (this.authentication_2FA) {
                 // verify password then prompt for 2FA
@@ -1033,151 +990,189 @@ public class day4 {
                 if (this.instanceScanner.nextLine().trim().equals(this.password)) {
                     // prompt for 2fa
                     String receivedCode = this.user2FA.get2FACode();
-                    System.out.println(String.format("Please enter the 2FA code provided, exactly as it appears. You only have one chance%nCode is %s", receivedCode));
+                    System.out.println(String.format("Please enter the 2FA code provided, exactly as it appears. You only have one chance", receivedCode));
                     if(this.instanceScanner.nextLine().trim().equals(receivedCode)) {
-                        this.user2FA.delete2FA();
                         return true;
-                    } else { System.out.println("Invalid code entered. You're not verified"); this.user2FA.delete2FA(); return false; }
+                    } else { System.out.println("Invalid code entered. You're not verified"); return false; }
                 } else {
                     System.out.println("Invalid password entered. You're not verified"); return false;
                 }
             } else {
-                // ask for password before setting 2FA up
-                System.out.println("Please enter your password");
-                if (this.instanceScanner.nextLine().trim().equals(this.password)) {
-                    // set up 2fa
-                    System.out.println("Since you do not have 2FA set up at this time, you'll be guided through the process\nYou'll be provided a code, enter it exactly as it appears");
-                    this.authentication_2FA = true; this.user2FA = new TwoFactorAuthentication(this); this.user2FA.set2FA(password);
-                    String receivedCode = this.user2FA.get2FACode();
-                    System.out.println(String.format("Your code is %s", receivedCode));
-                    if (this.instanceScanner.nextLine().trim().equals(receivedCode)) { System.out.println("Verified successfully"); return true; } else {
-                        System.out.println("Invalid code entered, thus you're not verified. Please try again via the main menu"); this.user2FA.delete2FA(); return false;
-                    }
+                // set up 2fa
+                System.out.println("Since you do not have 2FA set up at this time, you'll be guided through the process\nYou'll be provided a code, enter it exactly as it appears");
+                this.authentication_2FA = true; this.user2FA = new TwoFactorAuthentication(this); this.user2FA.password_bankAccount = this.password;
+                String receivedCode = this.user2FA.get2FACode();
+                System.out.println(String.format("Your code is %s", receivedCode));
+                if (this.instanceScanner.nextLine().trim().equals(receivedCode)) {
+                    System.out.println("Verified successfully"); return true;
                 } else {
-                    System.out.println("Incorrect password entered. You are not verified."); return false;
+                    System.out.println("Invalid code entered, thus you're not verified. Please try again via the main menu"); return false;
                 }
             }
-        }
-        // account summary
-        public void accountSummary() {
-            // returns fraudPossibilites/ whether locked/ and withdrawal/deposit occurrences
-            System.out.println(String.format("Your account is currently %s%nYou currently have %d counts of possible fraud", this.isLocked ? "locked, utilize Unlock Your Account to get this fixed." : "In good standing", this.fraudPossibilities));
-            depositOccurrences.forEach((value) -> System.out.println(String.format("Deposited $%.2f", value)));
-            withdrawalOccurrences.forEach((value) -> System.out.println(String.format("Withdrew $%.2f", value)));
-            System.out.println(String.format("Your current balance is $%.2f", this.balance));
-            accountMainMenu();
         }
         // get account or routing number or both
         public void getAccountInfo() {
             // Verification happens first, needs both password and 2FA
             System.out.println("Please enter your password in order to get your account information");
-            if (verifyUser()) {
-                System.out.println("Enter AN for Account Number, RN for Routing Number, or Both for Both");
-                String passedInput = this.instanceScanner.nextLine().trim();
-                if (passedInput.equalsIgnoreCase("an")) {
-                    System.out.println(String.format("Your account number is %s", this.accountNumber)); accountMainMenu();
-                } else if (passedInput.equalsIgnoreCase("rn")) {
-                    System.out.println(String.format("Your routing number is %s", this.routingNumber)); accountMainMenu();
-                } else if (passedInput.equalsIgnoreCase("both")) {
-                    System.out.println(String.format("Account Number: %s%nRouting Number: %s", this.accountNumber, this.routingNumber));
-                    accountMainMenu();
-                } else { System.out.println("Invalid input receieved. Utilize the main menu option to run this again"); accountMainMenu(); }
-            } else { System.out.println("Wrong password entered, please choose this option again in the main menu in order to get your information"); accountMainMenu(); }
+            if (this.instanceScanner.nextLine().trim().equals(this.password)) { 
+                System.out.println("Succesfully verified. Enter the 2FA code provided below. You will be prompted to set 2FA up if you have not already");
+                if (this.authentication_2FA) {
+                    String receivedCode = this.user2FA.get2FACode();
+                    System.out.println(String.format("Code: %s", receivedCode));
+                    if (this.instanceScanner.nextLine().trim().equals(receivedCode)) { System.out.println("2FA verified");} else {
+                        System.out.println("Incorrect 2FA code entered. Please utilize the option in main menu in order to get your information");
+                    }
+                } else {
+                    System.out.println("You are getting a 2FA account set up for you. In order to verify, a 2FA code will be sent to you. You have one chance to enter it.");
+                    this.authentication_2FA = true; this.user2FA = new TwoFactorAuthentication(this); this.user2FA.password_bankAccount = this.password;
+                    String receivedCode = this.user2FA.get2FACode();
+                    System.out.println(String.format("Enter: %s", receivedCode));
+                    if (this.instanceScanner.nextLine().equals(receivedCode)) { System.out.println("2FA verified and set up successfully");} else {
+                        System.out.println("2FA code entered incorrectly. 2FA account set up and linked to your account"); return;
+                    }
+                }
+            } else { System.out.println("Wrong password entered, please choose this option again in the main menu in order to get your information"); return; }
+            System.out.println("Enter AN for Account Number, RN for Routing Number, or Both for Both");
+            String passedInput = this.instanceScanner.nextLine().trim();
+            if (passedInput.equalsIgnoreCase("an")) {
+                System.out.println(String.format("Your account number is %s", this.accountNumber));
+            } else if (passedInput.equalsIgnoreCase("rn")) {
+                System.out.println(String.format("Your routing number is %s", this.routingNumber));
+            } else if (passedInput.equalsIgnoreCase("both")) {
+                System.out.println(String.format("Account Number: %s%nRouting Number: %s", this.accountNumber, this.routingNumber));
+            } else { System.out.println("Invalid input receieved. Utilize the main menu option to run this again"); return; }
         }
         // unlock account
         public void unlockAccount() {
-            // this method might be a bit redundant on verifying the user and setting up 2FA if they dont have it but the reason im changing the password is because so that new pw can truely belong to the user
-            if (verifyUser()) {
-                this.isLocked = false; if (changePassword()) { System.out.println("Your account is now unlocked"); this.isLocked = false; this.fraudPossibilities = 0; accountMainMenu(); }
+            // since this is like a real-world case where a user needs to verify password/2FA code to get it unlocked
+            // first see, what causes a user to get their account locked whihc is passing in an incorrect password
+            // first check if they have 2FA but since this is a main menu option
+            // well can be, just like in swift we can implement conditional logic in order for it to show whenever needed
+            if (this.authentication_2FA) {
+                // this utilizes 2FA code then password, im sure it is safe to assume that they know their password
+                // why would someone try to get a password more than 3 times rather than just resetting it
+                System.out.println("In order to unlock you account, a 2FA code will be sent to you. Enter it exactly as it appears");
+                String receivedCode = this.user2FA.get2FACode();
+                System.out.println(String.format("Code to Enter: %s", receivedCode));
+                if (this.instanceScanner.nextLine().trim().equals(receivedCode)) {
+                    System.out.println("Thank you for verifying");
+                    this.user2FA.delete2FA();
+                    String passedPassword; int tries = 4; boolean isAuthenticated = false;
+                    do {
+                        passedPassword = this.instanceScanner.nextLine().trim();
+                        if (passedPassword.equals(this.password)) { isAuthenticated = true; break; } else { tries -=1;}
+                    } while (tries >= 0);
+                    if (!isAuthenticated) { System.out.println("Since you failed four times, you'll need to reset your password. You may be asked for another 2FA code"); 
+                        System.out.println("If you fail this time, your account will remain locked and will be flagged");
+                        if (!changePassword()) { this.fraudPossibilities += 2; } else { System.out.println("Thank you for confirming. Your account is now unlocked"); this.isLocked = false;}
+                    }
+                }
             } else {
-                System.out.println("We were unable to verify you, your account may be deleted or remain locked. Try again later.");
-                accountMainMenu();
+                // set up 2FA, get code, confirm code, reset password
+                // changePassword sets up 2FA so i can just run that
+                if (changePassword()) {
+                    System.out.println("Your account is now unlocked");
+                } else { System.out.println("There was an error resetting your password. Your account will remain locked."); this.isLocked = true; }
             }
         }
         // deposit
         public void deposit() {
             if (this.isLocked) { System.out.println("Your account is currently locked, a deposit is impossible at this time.\nPlease utilize Unlock Your Account via the main menu."); return; }
-            // Verify User
-            if (verifyUser()) {
+            // Password Prompt
+            System.out.println("Please enter your password prior depositing an amount. If you fail 3 times, your account will be locked");
+            String passwordMatch; int tries = 3; boolean isAuthenticated = false;
+            do {
+                passwordMatch = this.instanceScanner.nextLine().trim(); if (passwordMatch.equals(this.password)) { isAuthenticated = true; break;} else { tries -= 1; }
+            } while (tries != 0);
+            // Deposit Handling
+            if (isAuthenticated) {
                 double depositAmount; boolean isValid = false;
                 while (!isValid) {
                     System.out.println("Please enter an amount to deposit. Make sure it is above zero");
                     try {
-                        depositAmount = Double.parseDouble(instanceScanner.nextLine().trim());
+                        depositAmount = Double.parseDouble(this.instanceScanner.nextLine().trim());
                         isValid = depositAmount > 0; if (isValid) { 
-                            this.balance += depositAmount; this.depositOccurrences.add(depositAmount);
+                            this.balance += depositAmount;
                             System.out.println(String.format("Successfully deposited $%.2f, new balance stands at $%.2f", depositAmount, this.balance));
                         }
-                    } catch (Exception e) { }
+                    } catch (Exception e) { System.out.println(e.getMessage()); }
+                    
                 }
-                accountMainMenu();
-            } else { 
-                System.out.println("You have failed your password 3 times, your account will now be locked. Please utilize Unlock Your Account via the main menu");
-                this.fraudPossibilities += 1; this.isLocked = true; accountMainMenu();
-            }
+            } else { System.out.println("You have failed your password 3 times, your account will now be locked. Please utilize Unlock Your Account via the main menu"); this.fraudPossibilities += 1; this.isLocked = true;}
+            
         }
         public void withdraw() {
             if (this.isLocked) { System.out.println("Your account is currently locked, a withdrawal is impossible at this time.\nPlease utilize Unlock Your Account via the main menu"); return; }
-            // Verify User
-            if (verifyUser()) {
+            // verify user - verifies password and 2FA
+            if (this.verifyUser()) {
                 double withdrawalAmount; boolean isValid = false;
                 while (!isValid) {
                     System.out.println("Please enter an amount to withdraw. Make sure it is above zero.");
                     try {
-                        withdrawalAmount = Double.parseDouble(instanceScanner.nextLine().trim());
-                        isValid = withdrawalAmount > 0 && withdrawalAmount < this.balance; if (isValid) { 
-                            this.balance -= withdrawalAmount; this.withdrawalOccurrences.add(withdrawalAmount);
-                            System.out.println(String.format("Successfully deposited $%.2f, new balance stands at $%.2f", withdrawalAmount, this.balance));
-                        }
-                    } catch (Exception e) {}
+                        withdrawalAmount = Double.parseDouble(this.instanceScanner.nextLine().trim());
+                        isValid = withdrawalAmount > 0; if (isValid) { 
+                        this.balance -= withdrawalAmount;
+                        System.out.println(String.format("Successfully deposited $%.2f, new balance stands at $%.2f", withdrawalAmount, this.balance));
+                    } } catch (Exception e) { System.out.println(String.format("You've entered an unacceptable value", e.getMessage())); }
                 }
-                accountMainMenu();
-            } else { 
-                System.out.println("You have failed your password 3 times, your account will now be locked. Please utilize Unlock Your Account via the main menu");
-                this.fraudPossibilities += 1; this.isLocked = true; accountMainMenu();
+            } else {
+                System.out.println("You have failed your password 3 times, your account will now be locked. Please utilize Unlock Your Account via the main menu"); this.fraudPossibilities += 1; this.isLocked = true;
             }
         }
         // change nickname 
             // reqs password
                 // if forgotten, option to reset with 2FA code
         public void changeNickname() {
-            if (!this.isLocked) { System.out.println("Your account is currently locked, please Unlock Your Account via the main menu"); accountMainMenu(); }
+            if (this.isLocked) {
+                System.out.println("Your account is currently locked, please Unlock Your Account via the main menu"); return;
+            } else {
+                System.out.println("Since you are trying to change your nickname, please enter your password.\nYou have only 3 tries, if at any point (before 3 tries are used) please type 'forgot'. In which case, if you do not have 2FA set up, it'll be set up for you and you will need the code that'll be sent to you.");
+                // sentinel value which is an increment on tries
+                int tries = 3; String passwordMatch; boolean isAuthenticated = false;
 
-            if (verifyUser()) {
+                do { 
+                    passwordMatch = this.instanceScanner.nextLine().trim();
+                    if (passwordMatch.equals(this.password)) { isAuthenticated = true; break; } else { tries -= 1; }
+                } while (tries >= 0);
+
+                if (!isAuthenticated) { System.out.println("You have inputted a wrong password 3 times. You will not be able to proceed. This will be marked on your account for possible unauthorized use");
+                    this.fraudPossibilities += 1;
+                    // in order for the password to be reset it needs to have the chance to sent the 2FA if wanted, if not, then lock account
+                    // so we can reset password which returns boolean on success path then prompt again
+                    System.out.println("Would you like to reset your password? A 2FA code will be sent, otherwise, your account will be locked. Enter yes or no.");
+                    if (this.instanceScanner.nextLine().trim().equalsIgnoreCase("yes")) {
+                        if (!changePassword()) { 
+                            System.out.println("Since the attempt to reset your password has failed, your account will be locked. Please utilize Unlock Your Account via the main menu");
+                            this.isLocked = true;
+                            return; } else {
+                            // decrement fraudPossibilities
+                            this.fraudPossibilities -= 1; // since user has verified and reset their password which needed 2FA
+                            // proceed for nickname change
+                            System.out.println("Password verified. Enter new nickname below. You only have one chance to do this");
+                            String newNickname = this.instanceScanner.nextLine().trim();
+                            this.accountNickname = !newNickname.isEmpty() ? newNickname : this.accountNickname;
+                            System.out.println(String.format("Changed nickname succesfully to '%s'", this.accountNickname));
+                        }
+                    } else { System.out.println("Your account is now locked, please utilize the main menu option to unlock account"); this.isLocked = true; return; }
+                    return;
+                }
+                // proceed for nickname change
                 System.out.println("Password verified. Enter new nickname below. You only have one chance to do this");
                 String newNickname = this.instanceScanner.nextLine().trim();
                 this.accountNickname = !newNickname.isEmpty() ? newNickname : this.accountNickname;
                 System.out.println(String.format("Changed nickname succesfully to '%s'", this.accountNickname));
-                accountMainMenu();
-            } else {
-                System.out.println("You have inputted a wrong password. You will not be able to proceed. This will be marked on your account for possible unauthorized use");
-                this.fraudPossibilities += 1;
-                System.out.println("Would you like to reset your password? A 2FA code will be sent, otherwise, your account will be locked. Enter yes or no.");
-                if (this.instanceScanner.nextLine().trim().equalsIgnoreCase("yes")) {
-                    if (!changePassword()) { 
-                        System.out.println("Since the attempt to reset your password has failed, your account will be locked. Please utilize Unlock Your Account via the main menu");
-                        this.isLocked = true; accountMainMenu();
-                    } else {
-                        // decrement fraudPossibilities
-                        this.fraudPossibilities -= 1; // since user has verified and reset their password which needed 2FA
-                        // proceed for nickname change
-                        System.out.println("Password verified. Enter new nickname below. You only have one chance to do this");
-                        String newNickname = this.instanceScanner.nextLine().trim();
-                        this.accountNickname = !newNickname.isEmpty() ? newNickname : this.accountNickname;
-                        System.out.println(String.format("Changed nickname succesfully to '%s'", this.accountNickname));
-                        accountMainMenu();
-                    }
-                } else { System.out.println("Your account is now locked, please utilize the main menu option to unlock account"); this.isLocked = true; accountMainMenu();}
+                // Return back to main menu
+                this.accountMainMenu();
             }
         }
         public boolean changePassword() {
-            if (this.isLocked) { System.out.println("Your account is locked. Please utilize the main menu option to unlock account"); accountMainMenu(); return false; }
+            if (this.isLocked) { System.out.println("Your account is locked. Please utilize the main menu option to unlock account"); return false; }
             System.out.println(String.format("%s%n%s", "Changing a password requires a 2FA code.",  this.authentication_2FA ? "You will be sent a 2FA code, enter it exactly as it appears" : "You do not have 2FA set up, would you like to set it up. If yes type yes, otherwise you'll need to go back to the main menu"));
             // check if the user has 2FA set up otherwise it would be null and this would break
             if (this.authentication_2FA == false ) {
                 //if (this.instanceScanner.hasNextLine()) { this.instanceScanner.nextLine().trim();} // clear buffer
                 if (this.instanceScanner.nextLine().trim().equalsIgnoreCase("yes")) {
-                    this.authentication_2FA = true; this.user2FA = new TwoFactorAuthentication(this); this.user2FA.set2FA(password);
+                    this.authentication_2FA = true; this.user2FA = new TwoFactorAuthentication(this);
 
                     String receivedCode = this.user2FA.get2FACode();
                     System.out.println(String.format("Your code is: %s%nYou have only one chance to enter it", receivedCode));
@@ -1191,9 +1186,9 @@ public class day4 {
                         do { System.out.println("Please confirm your password"); confirmedPassword = instanceScanner.nextLine().trim(); } while (!this.confirmPassword(passwordCreated, confirmedPassword));
                         // then set confirmed pasword to prop and to 2FA account if applicable
                         this.password = confirmedPassword;
-                        if (authentication_2FA) { this.user2FA.set2FA(confirmedPassword); this.user2FA.delete2FA(); }  accountMainMenu(); return true;
-                    } else { System.out.println("You did not enter the code correctly, please go back to the main menu to get another attempt"); accountMainMenu(); return false; }
-                } else { System.out.println("You did not type in yes, please go back to the main menu if you choose to reset your password"); accountMainMenu(); return false; }
+                        if (authentication_2FA) { this.user2FA.set2FA(confirmedPassword); } this.user2FA.delete2FA(); return true;
+                    } else { System.out.println("You did not enter the code correctly, please go back to the main menu to get another attempt"); return false; }
+                } else { System.out.println("You did not type in yes, please go back to the main menu if you choose to reset your password"); return false; }
             } else {
                 String receivedCode = this.user2FA.get2FACode();
                 System.out.println(String.format("Your code is: %s%nYou have only one chance to enter it", receivedCode));
@@ -1207,8 +1202,8 @@ public class day4 {
                     do { System.out.println("Please confirm your password"); confirmedPassword = instanceScanner.nextLine().trim(); } while (!this.confirmPassword(passwordCreated, confirmedPassword));
                     // then set confirmed pasword to prop and to 2FA account if applicable
                     this.password = confirmedPassword;
-                    this.user2FA.set2FA(confirmedPassword); this.user2FA.delete2FA();  accountMainMenu(); return true;
-                } else { System.out.println("You did not enter the code correctly, please go back to the main menu to get another attempt"); accountMainMenu(); return false; }
+                    if (authentication_2FA) { this.user2FA.set2FA(confirmedPassword); } return true;
+                } else { System.out.println("You did not enter the code correctly, please go back to the main menu to get another attempt"); return false; }
             }
         }
     }
@@ -1259,5 +1254,4 @@ public class day4 {
         public void delete2FA() { this.current2FA = null; }
         public void set2FA(String confirmedPassword) { this.password_bankAccount = confirmedPassword; }
     }
-
 }
