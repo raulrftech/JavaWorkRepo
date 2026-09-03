@@ -1254,4 +1254,15 @@ public class day4 {
         public void delete2FA() { this.current2FA = null; }
         public void set2FA(String confirmedPassword) { this.password_bankAccount = confirmedPassword; }
     }
+    // Exercise 11/15 - Fresh Domain, Targeting %6's Actual Lesson: Consistent Policy Across Multiple Entry Points
+    // Build a small file-access permission system - multiple methods (viewFile, editFile, deleteFile) that all require the same underlying authorization check before proceeding
+    // The actual test: build one shared verification method, matching the spirit of your own verifyUser() abstraction
+    // Prove that a failed check produces the identical consequence (a lockout, a strike counter increment, whatever you design)
+    //      regardless of which of the three entry-point methods triggered it - the exact discipline #6 was missing, now built correctly from the start rather than retrofitted
+    // Two questions before building:
+    //      why does routing every entry point through one shared verification method make it structurally impossible for the kind of inconsistency #6 had to happen again
+    //      What is the actual tradeoff of that approach
+    //          is there ever a legitimate reason two different actions should have different consequences for the same kind of failure
+    //          Or is uniform consequences always the right call
+    
 }
