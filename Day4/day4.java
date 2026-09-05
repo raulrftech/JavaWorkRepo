@@ -1264,5 +1264,5 @@ public class day4 {
     //      What is the actual tradeoff of that approach
     //          is there ever a legitimate reason two different actions should have different consequences for the same kind of failure
     //          Or is uniform consequences always the right call
-    
+    // test commit
 }
