@@ -1261,8 +1261,75 @@ public class day4 {
     //      regardless of which of the three entry-point methods triggered it - the exact discipline #6 was missing, now built correctly from the start rather than retrofitted
     // Two questions before building:
     //      why does routing every entry point through one shared verification method make it structurally impossible for the kind of inconsistency #6 had to happen again
+    //          
     //      What is the actual tradeoff of that approach
     //          is there ever a legitimate reason two different actions should have different consequences for the same kind of failure
     //          Or is uniform consequences always the right call
-    // test commit
+    interface VerifiablePassword {
+        default boolean createPassword(String attempt) {
+            if (attempt.length() != 8) { System.out.println("Your password needs to be exactly 8 characters long. Please try again"); return false; }
+            int numberCount = 0; int llCount = 0; int ulCount = 0;
+            for (int i = 0; i < attempt.length(); i ++) {
+                char c = attempt.charAt(i);
+                if (Character.isDigit(c)) { numberCount++; }
+                if (Character.isUpperCase(c)) { ulCount++; }
+                if (Character.isLowerCase(c)) { llCount++; }
+            }
+            return (numberCount == 3 && llCount == 2 && ulCount == 3);
+        }
+        default boolean confirmPassword(String made, String confirmation) {
+            System.out.println("Please confirm your password below");
+            return made.equals(confirmation);
+        }
+    }
+    interface User_2FA {
+        default String generate2FACode() {
+            Random rand = new Random();
+            StringBuilder code = new StringBuilder(8);
+
+            int runningTotal = 0;
+            // Code format will be: U L N L U N U N
+            char firstUpper = (char) (rand.nextInt(26) + 65); code.append(firstUpper); runningTotal += (int) firstUpper;
+            char firstLower = (char) (rand.nextInt(26) + 97); code.append(firstLower); runningTotal += (int) firstLower;
+            char firstNumber = (char) (rand.nextInt(10) + 48); code.append(firstNumber); runningTotal += (int) firstNumber;
+            char secondLower = (char) (rand.nextInt(26) + 97); code.append(secondLower); runningTotal += (int) secondLower;
+            char secondUpper = (char) (rand.nextInt(26) + 65); code.append(secondUpper); runningTotal += (int) secondUpper;
+            char secondNumber = (char) (rand.nextInt(10) + 48); code.append(secondNumber); runningTotal += (int) secondNumber;
+            char thirdUpper = (char) (rand.nextInt(26) + 65); code.append(thirdUpper); runningTotal += (int) thirdUpper;
+            char lastChar = (char) (rand.nextInt(10) + 48); code.append(lastChar); runningTotal += (int) lastChar;
+
+            return (runningTotal == 560) ? code.toString() : generate2FACode();
+        }
+    }
+    public static abstract class IdentifiableUser implements VerifiablePassword, User_2FA {
+        String firstName; String lastName; String password;
+        public IdentifiableUser(String firstName, String lastName) {
+            this.firstName = firstName; this.lastName = lastName;
+            this.password = null;
+        }
+
+        // verify user method
+    }
+    public static class RegularUser extends IdentifiableUser {
+        private RegularUser(String firstName, String lastName) { super(firstName, lastName); }
+        public static RegularUser createRegUser() {
+
+            return null;
+        }
+    }
+    public static class ManagerUser extends IdentifiableUser {
+        private ManagerUser(String firstName, String lastName) { super(firstName, lastName); }
+        public static ManagerUser createManagerUser() {
+
+            return null;
+        }
+    }
+    public static class AdminUser extends IdentifiableUser {
+        private AdminUser(String firstName, String lastName) { super(firstName, lastName); }
+        public static AdminUser createAdmin() {
+
+            return null;
+        }
+    }
+    
 }
