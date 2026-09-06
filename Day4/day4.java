@@ -1302,22 +1302,53 @@ public class day4 {
         }
     }
     public static abstract class IdentifiableUser implements VerifiablePassword, User_2FA {
-        String firstName; String lastName; String password;
+        String firstName; String lastName; String password; Scanner scanner = new Scanner(System.in);
         public IdentifiableUser(String firstName, String lastName) {
             this.firstName = firstName; this.lastName = lastName;
             this.password = null;
         }
+        // REMEMBER:
+            // Each type that inherits from this class has a Scanner for as long as its alive
+        public boolean verifyUser_Access() {
+            // since this method has to verify any type of User ill do so by verifying user password and 2FA
+            System.out.println("Please verify your password below");
+            if (this.scanner.nextLine().equals(this.password)) {
+                String receivedCode = this.generate2FACode();
+                System.out.println(String.format("Please verify the 2FA code below", receivedCode));
+                if (this.scanner.nextLine().equals(receivedCode)) {
+                    System.out.println("Access granted"); return true;
+                } else { System.out.println("Could not verify the 2FA code. Please try again"); return false;}
+            } else { System.out.println("Password was not verified. Please try again"); return false; }
+        }
 
-        // verify user method
+        // Think about other methods pertaining, editing, viewing, owning, deleting
+        // Separation of Concerns
+            // Regular User
+                // View low-protection files (limited number)
+                // Own files (limited number)
+                // CANNOT edit files
+            // Manager User
+                // View low-high protected fles
+                // CANNOT own files
+                // Edit low/mid protected files
+            // Admin User
+                // All Capabilities
     }
     public static class RegularUser extends IdentifiableUser {
-        private RegularUser(String firstName, String lastName) { super(firstName, lastName); }
+        int filesViewed_amt; int filesOwned_amt;
+        // TreeMap for files, k: file, v: sizeOf
+        private RegularUser(String firstName, String lastName, int filesViewed_amt, int filesOwned_amt) {
+             super(firstName, lastName);
+             this.filesViewed_amt = filesViewed_amt;
+             this.filesOwned_amt = filesOwned_amt;
+            }
         public static RegularUser createRegUser() {
-
             return null;
         }
     }
     public static class ManagerUser extends IdentifiableUser {
+        // history of viewed files, sort based on importance(low-high)
+        // history of edited files, sort based on importance(low-high)
         private ManagerUser(String firstName, String lastName) { super(firstName, lastName); }
         public static ManagerUser createManagerUser() {
 
