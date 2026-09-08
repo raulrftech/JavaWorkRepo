@@ -8,9 +8,7 @@ import java.io.FileNotFoundException; import java.util.Random;
 public class day4 {
     
     public static void main(String[] args) {
-        Scanner newAccScanner = new Scanner(System.in);
-        BankAccount_Enhanced newAccount = BankAccount_Enhanced.createBankAccount(newAccScanner);
-        newAccount.deposit(); newAccount.withdraw();
+        RegularUser newUser = RegularUser.createRegUser(); System.out.println(newUser);
     }
 
     // Optional <T> - full picture
@@ -1334,16 +1332,46 @@ public class day4 {
             // Admin User
                 // All Capabilities
     }
+    public static String[] createIdentifiableUser() {
+        Scanner userCreation = new Scanner(System.in);
+
+        System.out.println("Please enter your first name");
+        String firstName_entered = userCreation.nextLine().trim();
+        while (firstName_entered.isEmpty()) {
+            System.out.println("First name cannot be empty. Try again");
+             firstName_entered = userCreation.nextLine().trim();
+        }
+        System.out.println(String.format("Thank you %s, please enter your last name", firstName_entered));
+        String lastName_entered = userCreation.nextLine().trim();
+        while (lastName_entered.isEmpty()) { 
+            System.out.println("Last name cannot be empty. Try again");
+            lastName_entered = userCreation.nextLine().trim();
+        }
+        System.out.println(String.format("Welcom %s %s", firstName_entered, lastName_entered));
+        userCreation.close();
+        return new String[] { firstName_entered, lastName_entered};
+    }
     public static class RegularUser extends IdentifiableUser {
         int filesViewed_amt; int filesOwned_amt;
         // TreeMap for files, k: file, v: sizeOf
-        private RegularUser(String firstName, String lastName, int filesViewed_amt, int filesOwned_amt) {
+        private RegularUser(String firstName, String lastName) {
              super(firstName, lastName);
-             this.filesViewed_amt = filesViewed_amt;
-             this.filesOwned_amt = filesOwned_amt;
+             this.filesViewed_amt = 0;
+             this.filesOwned_amt = 0;
             }
         public static RegularUser createRegUser() {
-            return null;
+            // scanner for first and last name
+            // since we cannot use an inherited non-static scanner in a static context we make a new one
+            // since the each user needs first and last name we can propagate this functionality to a static method
+            // had used the class approach but changed it
+            String[] names = createIdentifiableUser();
+            return new RegularUser(names[0], names[1]);
+        }
+
+        // return description for testing purposes
+        @Override 
+        public String toString() {
+            return String.format("TYPE: regular user%nFirst Name: %s%nLast Name: %s", this.firstName, this.lastName);
         }
     }
     public static class ManagerUser extends IdentifiableUser {
