@@ -1,6 +1,7 @@
 package Day4;
 import java.util.Optional; import java.util.TreeMap; import java.util.TreeSet;
 import java.util.Scanner; import java.io.File; import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap; import java.util.Map; import java.util.Objects;
 import java.io.FileNotFoundException; import java.util.Random;
 
@@ -8,8 +9,10 @@ import java.io.FileNotFoundException; import java.util.Random;
 public class day4 {
     
     public static void main(String[] args) {
-        Scanner regUserScanner = new Scanner(System.in);
-        RegularUser newUser = RegularUser.createRegUser(regUserScanner); System.out.println(newUser);
+
+        Scanner mainScanner = new Scanner(System.in);
+        FileDistro mainFileDistro = new FileDistro();
+        mainFileDistro.createUser(mainScanner);
     }
 
     // Optional <T> - full picture
@@ -1352,6 +1355,7 @@ public class day4 {
 
         public static String[] nameAndPassword(Scanner creationScanner) {
             String[] names = createIdentifiableUser(creationScanner);
+            // since this is new creation, I dont need to ask for verification of a 2FA
             String password = createPassword(creationScanner); if (password == null) { System.out.println("Cannot create instance due to password creation problems"); return null; } else {
                 return new String[] { names[0], names[1], password };
             }
@@ -1373,11 +1377,14 @@ public class day4 {
     
     public static class RegularUser extends IdentifiableUser {
         int filesViewed_amt; int filesOwned_amt;
-        // TreeMap for files, k: file, v: sizeOf
+        // TreeMap for owned files, k: file, v: sizeOf
+        // TreeMap for viewed files, k: file, v: amtTimesViewed
+        Scanner instanceScanner;
         private RegularUser(String firstName, String lastName) {
              super(firstName, lastName);
              this.filesViewed_amt = 0;
              this.filesOwned_amt = 0;
+             this.instanceScanner = null;
             }
         public static RegularUser createRegUser(Scanner regUserScanner) {
             // if passing a "global" scanner from main down to this method, it uses that and therefore the abs class doesnt need its scanner, it receives one
@@ -1385,9 +1392,22 @@ public class day4 {
             if (userInfo == null) { return null; } else {
                 RegularUser newUser = new RegularUser(userInfo[0], userInfo[1]);
                 newUser.password = userInfo[2];
+                newUser.instanceScanner = regUserScanner;
                 return newUser;
             }
         }
+        // if i set a prop to have scanner so that whenever i call/write a method I do not hae to pass the param in
+        // then itll work. <- and it does yeehee
+
+        // Regular User
+            // View low-protection files (limited number)
+            public void viewFile() {
+                // in order to get a file or view file we need to have a central system
+                // this central system contains all files, which can be stored in a Set since its per instance we do not need >1 props of a file instance in a HM etc
+                // this file will ask for a filename, check if the central system has it and if it does, verify that it does have reqd access
+            }
+            // Own files (limited number)
+            // CANNOT edit files
 
         // return description for testing purposes
         @Override 
@@ -1407,15 +1427,90 @@ public class day4 {
                 newUser.password = userInfo[2];
                 return newUser;
             }
-            
         }
+
+        // Manager User
+            // View low-high protected fles
+            // CANNOT own files
+            // Edit low/mid protected files
     }
     public static class AdminUser extends IdentifiableUser {
         private AdminUser(String firstName, String lastName) { super(firstName, lastName); }
-        public static AdminUser createAdmin() {
 
-            return null;
+        public static AdminUser createAdmin(Scanner adminScanner) {
+            String[] userInfo = nameAndPassword(adminScanner);
+            if (userInfo == null) { System.out.println("Cannot proceed with creation, encountered issues with password set up"); return null; } else {
+                AdminUser newUser = new AdminUser(userInfo[0], userInfo[1]);
+                newUser.password = userInfo[2];
+                return newUser;
+            }
+        }
+        
+        // Admins have all capabilities
+    }
+    public static class FileDistro {
+        // since this class is the main one that handles everything that goes on between files and users
+        // I can store users, statically create files so users can have access
+
+        // STATIC METHODS
+        // createUser
+            // since users are created locally through this method that guarantees that the user is linked to this and vice versa
+        public void createUser(Scanner mainScanner) {
+            // since the creation of users are utilizing a sign up approach then we need to have this prompt user to choose from the 3 various types
+            // needs to utilize sentinel value
+            // since the scanner thatll be used will be passed down to each instance created we only need one
+            System.out.println("Enter 1 to make a Regular User, 2 for a Manager User, 3 for an Admin User, and Exit to exit");
+            String choice;
+            do {
+                choice = mainScanner.nextLine().trim();
+                if (choice.equals("1")) {
+                    RegularUser regUser_Created = RegularUser.createRegUser(mainScanner);
+                    // TODO: null checks
+                } else if (choice.equals("2")) {
+                    ManagerUser manUser_Created = ManagerUser.createManagerUser(mainScanner);
+                } else if (choice.equals("3")) {
+                    AdminUser adminUser_Created = AdminUser.createAdmin(mainScanner);
+                    // TODO: Make sure to return back to the creation string which can be just printing out the above string for decision handling
+                } else {
+                    if (choice.equalsIgnoreCase("exit")) {
+                        System.out.println("Exited User Creation");
+                    } else { System.out.println("Invalid input. Please try again.");}
+                 }
+            } while (choice.equalsIgnoreCase("exit") == false);
+        }
+        // createFile
+    }
+    public static class UsableFile {
+        // since files are going to be created statically I can use this to my advantage to correctly use and filter based on protection level
+        String fileName; double size; int protectionLevel; String body;
+        private UsableFile(String fileName, double size, int protectionLevel, String body) {
+            this.fileName = fileName; this.size = size;
+            this.protectionLevel = protectionLevel; this.body = body;
+        }
+
+        // files can check the user that is accessing them by using a param for the caller since this refers to itself
+
+        public String readFile(IdentifiableUser readBy) {
+            // this func checks the instances ability to do something
+            // whereas FileDistro can verify before giving access to call this method
+
+            // or im thinking that a file can retain history by who viewed it and how many times that
+            // this shall only have that sort of functionality
+            // FileDistro owns files thus controlls access
+            if (readBy instanceof AdminUser) {
+
+                return "Read by Admin";
+            } else if (readBy instanceof ManagerUser) {
+                // View low-high protected fles
+                // CANNOT own files
+                // Edit low/mid protected files
+                return "Read by a Manager";
+            } else if (readBy instanceof RegularUser) {
+                // View low-protection files (limited number)
+                // Own files (limited number)
+                // CANNOT edit files
+                return "Read by a regular user";
+            } else { return "You are not part of the group that has access. Please get out"; }
         }
     }
-    
 }
