@@ -8,7 +8,8 @@ import java.io.FileNotFoundException; import java.util.Random;
 public class day4 {
     
     public static void main(String[] args) {
-        RegularUser newUser = RegularUser.createRegUser(); System.out.println(newUser);
+        Scanner regUserScanner = new Scanner(System.in);
+        RegularUser newUser = RegularUser.createRegUser(regUserScanner); System.out.println(newUser);
     }
 
     // Optional <T> - full picture
@@ -1263,9 +1264,9 @@ public class day4 {
     //      What is the actual tradeoff of that approach
     //          is there ever a legitimate reason two different actions should have different consequences for the same kind of failure
     //          Or is uniform consequences always the right call
-    interface VerifiablePassword {
-        default boolean createPassword(String attempt) {
-            if (attempt.length() != 8) { System.out.println("Your password needs to be exactly 8 characters long. Please try again"); return false; }
+    static interface VerifiablePassword {
+        static boolean createPassword(String attempt) {
+            if (attempt.length() != 8) { System.out.println("Your password needs to be exactly 8 characters long, containing 3 numbers, 3 uppercase letters, and 2 lowercase letters. Please try again"); return false; }
             int numberCount = 0; int llCount = 0; int ulCount = 0;
             for (int i = 0; i < attempt.length(); i ++) {
                 char c = attempt.charAt(i);
@@ -1275,8 +1276,7 @@ public class day4 {
             }
             return (numberCount == 3 && llCount == 2 && ulCount == 3);
         }
-        default boolean confirmPassword(String made, String confirmation) {
-            System.out.println("Please confirm your password below");
+        static boolean confirmPassword(String made, String confirmation) {
             return made.equals(confirmation);
         }
     }
@@ -1300,23 +1300,61 @@ public class day4 {
         }
     }
     public static abstract class IdentifiableUser implements VerifiablePassword, User_2FA {
-        String firstName; String lastName; String password; Scanner scanner = new Scanner(System.in);
+        String firstName; String lastName; String password;
         public IdentifiableUser(String firstName, String lastName) {
             this.firstName = firstName; this.lastName = lastName;
             this.password = null;
         }
         // REMEMBER:
             // Each type that inherits from this class has a Scanner for as long as its alive
-        public boolean verifyUser_Access() {
+        public boolean verifyUser_Access(Scanner verifyingScanner) {
             // since this method has to verify any type of User ill do so by verifying user password and 2FA
             System.out.println("Please verify your password below");
-            if (this.scanner.nextLine().equals(this.password)) {
+            if (verifyingScanner.nextLine().equals(this.password)) {
                 String receivedCode = this.generate2FACode();
                 System.out.println(String.format("Please verify the 2FA code below", receivedCode));
-                if (this.scanner.nextLine().equals(receivedCode)) {
+                if (verifyingScanner.nextLine().equals(receivedCode)) {
                     System.out.println("Access granted"); return true;
                 } else { System.out.println("Could not verify the 2FA code. Please try again"); return false;}
             } else { System.out.println("Password was not verified. Please try again"); return false; }
+        }
+
+        public static String[] createIdentifiableUser(Scanner creationScanner) {
+            System.out.println("Please enter your first name");
+            String firstName_entered = creationScanner.nextLine().trim();
+            while (firstName_entered.isEmpty()) {
+                System.out.println("First name cannot be empty. Try again");
+                firstName_entered = creationScanner.nextLine().trim();
+            }
+            System.out.println(String.format("Thank you %s, please enter your last name", firstName_entered));
+            String lastName_entered = creationScanner.nextLine().trim();
+            while (lastName_entered.isEmpty()) { 
+                System.out.println("Last name cannot be empty. Try again");
+                lastName_entered = creationScanner.nextLine().trim();
+            }
+            System.out.println(String.format("Welcom %s %s", firstName_entered, lastName_entered));
+            return new String[] { firstName_entered, lastName_entered};
+        }
+
+        public static String createPassword(Scanner passwordScanner) {
+            String validPassword;
+            System.out.println("Please create a password. 8 characters total, 3 uppercase, 2 lowercase and 3 numbers");
+            do {
+                validPassword = passwordScanner.nextLine().trim();
+            } while (!VerifiablePassword.createPassword(validPassword));
+
+            System.out.println("Please confirm your password. You only have one try");
+            if (!VerifiablePassword.confirmPassword(validPassword, passwordScanner.nextLine().trim())) {
+                System.out.println("Cannot proceed with creation due to problems encountered while confirming password.");
+                return null;
+            } else { return validPassword; }
+        }
+
+        public static String[] nameAndPassword(Scanner creationScanner) {
+            String[] names = createIdentifiableUser(creationScanner);
+            String password = createPassword(creationScanner); if (password == null) { System.out.println("Cannot create instance due to password creation problems"); return null; } else {
+                return new String[] { names[0], names[1], password };
+            }
         }
 
         // Think about other methods pertaining, editing, viewing, owning, deleting
@@ -1332,25 +1370,7 @@ public class day4 {
             // Admin User
                 // All Capabilities
     }
-    public static String[] createIdentifiableUser() {
-        Scanner userCreation = new Scanner(System.in);
-
-        System.out.println("Please enter your first name");
-        String firstName_entered = userCreation.nextLine().trim();
-        while (firstName_entered.isEmpty()) {
-            System.out.println("First name cannot be empty. Try again");
-             firstName_entered = userCreation.nextLine().trim();
-        }
-        System.out.println(String.format("Thank you %s, please enter your last name", firstName_entered));
-        String lastName_entered = userCreation.nextLine().trim();
-        while (lastName_entered.isEmpty()) { 
-            System.out.println("Last name cannot be empty. Try again");
-            lastName_entered = userCreation.nextLine().trim();
-        }
-        System.out.println(String.format("Welcom %s %s", firstName_entered, lastName_entered));
-        userCreation.close();
-        return new String[] { firstName_entered, lastName_entered};
-    }
+    
     public static class RegularUser extends IdentifiableUser {
         int filesViewed_amt; int filesOwned_amt;
         // TreeMap for files, k: file, v: sizeOf
@@ -1359,28 +1379,35 @@ public class day4 {
              this.filesViewed_amt = 0;
              this.filesOwned_amt = 0;
             }
-        public static RegularUser createRegUser() {
-            // scanner for first and last name
-            // since we cannot use an inherited non-static scanner in a static context we make a new one
-            // since the each user needs first and last name we can propagate this functionality to a static method
-            // had used the class approach but changed it
-            String[] names = createIdentifiableUser();
-            return new RegularUser(names[0], names[1]);
+        public static RegularUser createRegUser(Scanner regUserScanner) {
+            // if passing a "global" scanner from main down to this method, it uses that and therefore the abs class doesnt need its scanner, it receives one
+            String[] userInfo = nameAndPassword(regUserScanner);
+            if (userInfo == null) { return null; } else {
+                RegularUser newUser = new RegularUser(userInfo[0], userInfo[1]);
+                newUser.password = userInfo[2];
+                return newUser;
+            }
         }
 
         // return description for testing purposes
         @Override 
         public String toString() {
-            return String.format("TYPE: regular user%nFirst Name: %s%nLast Name: %s", this.firstName, this.lastName);
+            return String.format("TYPE: Regular User%nFirst Name: %s%nLast Name: %s%nPassword: ****%s", this.firstName, this.lastName, this.password.subSequence(4, 8));
         }
-    }
+    } 
     public static class ManagerUser extends IdentifiableUser {
         // history of viewed files, sort based on importance(low-high)
         // history of edited files, sort based on importance(low-high)
         private ManagerUser(String firstName, String lastName) { super(firstName, lastName); }
-        public static ManagerUser createManagerUser() {
 
-            return null;
+        public static ManagerUser createManagerUser(Scanner managerScanner) {
+            String[] userInfo = nameAndPassword(managerScanner);
+            if (userInfo == null) { System.out.println("Cannot proceed with creation, encountered issues with password set up"); return null; } else {
+                ManagerUser newUser = new ManagerUser(userInfo[0], userInfo[1]);
+                newUser.password = userInfo[2];
+                return newUser;
+            }
+            
         }
     }
     public static class AdminUser extends IdentifiableUser {
