@@ -1,7 +1,7 @@
 package Day4;
 import java.util.Optional; import java.util.TreeMap; import java.util.TreeSet;
 import java.util.Scanner; import java.io.File; import java.util.HashMap;
-import java.util.HashSet;
+import java.util.HashSet; import java.util.Arrays;
 import java.util.LinkedHashMap; import java.util.Map; import java.util.Objects;
 import java.io.FileNotFoundException; import java.util.Random;
 
@@ -9,10 +9,8 @@ import java.io.FileNotFoundException; import java.util.Random;
 public class day4 {
     
     public static void main(String[] args) {
-
-        Scanner mainScanner = new Scanner(System.in);
-        FileDistro mainFileDistro = new FileDistro();
-        mainFileDistro.createUser(mainScanner);
+        System.out.println(Arrays.toString(new int[] { 0, 1, 0, 2, 0, 2, 2}));
+        System.out.println(Arrays.toString(sortArr(new int[] { 0, 0, 1, 2, 0, 2, 2})));
     }
 
     // Optional <T> - full picture
@@ -1459,24 +1457,28 @@ public class day4 {
             // since the creation of users are utilizing a sign up approach then we need to have this prompt user to choose from the 3 various types
             // needs to utilize sentinel value
             // since the scanner thatll be used will be passed down to each instance created we only need one
-            System.out.println("Enter 1 to make a Regular User, 2 for a Manager User, 3 for an Admin User, and Exit to exit");
-            String choice;
-            do {
+            String choice = "";
+            while (choice.equalsIgnoreCase("exit") == false) {
+                System.out.println("Enter 1 to make a Regular User, 2 for a Manager User, 3 for an Admin User, and Exit to exit");
                 choice = mainScanner.nextLine().trim();
                 if (choice.equals("1")) {
                     RegularUser regUser_Created = RegularUser.createRegUser(mainScanner);
-                    // TODO: null checks
+                    // null checks
+                    if (regUser_Created != null) {
+                        // refactor this into a method that takes in the created instance
+                    } else { 
+                        
+                    }
                 } else if (choice.equals("2")) {
                     ManagerUser manUser_Created = ManagerUser.createManagerUser(mainScanner);
                 } else if (choice.equals("3")) {
                     AdminUser adminUser_Created = AdminUser.createAdmin(mainScanner);
-                    // TODO: Make sure to return back to the creation string which can be just printing out the above string for decision handling
                 } else {
                     if (choice.equalsIgnoreCase("exit")) {
                         System.out.println("Exited User Creation");
                     } else { System.out.println("Invalid input. Please try again.");}
                  }
-            } while (choice.equalsIgnoreCase("exit") == false);
+            }
         }
         // createFile
     }
@@ -1512,5 +1514,20 @@ public class day4 {
                 return "Read by a regular user";
             } else { return "You are not part of the group that has access. Please get out"; }
         }
+    }
+
+
+    public static int[] sortArr(int[] arr) {
+        for (int i = 0; i < arr.length - 1; i++) {
+
+            for (int j = 1; j < arr.length; j++) {
+                if (arr[j] < arr[i]) {
+                    int right = arr[j]; int left = arr[i];
+                    arr[i] = right;
+                    continue;
+                }
+            }
+        }
+        return arr;
     }
 }
