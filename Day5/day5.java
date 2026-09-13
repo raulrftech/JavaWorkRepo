@@ -1,8 +1,15 @@
 package Day5;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public class day5 {
     public static void main(String[] args) {
-
+        int[] variableUse = new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
+        System.out.println(findMaxFrom(variableUse));
+        System.out.println(Arrays.toString(returnOrig_Doubled(variableUse)));
+        System.out.println(checkIfPalindrome(variableUse));
     }
 
     // The core idea first:
@@ -25,7 +32,15 @@ public class day5 {
     //                      that hidden cost multiplies into the total.
     //                  Ask yourself - is this single line actually O(1) or does it have its own loop buried inside it
     //          Step 5:
-    //              Whatever the largest surviving term is, after dropping constants and lower-order terms, is the Big ) 
+    //              Whatever the largest surviving term is, after dropping constants and lower-order terms, is the Big )
+    //      The formal definition:
+    //          f(n) is O(g(n)) if there exist positive constants c and n0 such that f(n) <= c * g(n) for all n >= n0
+    //          In plain terms, once n is large enough, f(n) never exceeds some constant multiple of g(n)
+    //              This is why constants get dropped: f(n) = 3n+5 is O(n), because you can always find some constant c like c=4 once n >= 5 that keeps 3n+5<=4n tru forever after
+    //              The constant doesnt matter to the classification - only the shape of growth does
+    //      A genuinely useful, practical skill: the common complexity classes, ordered, so you can recognize where a new alg lands relative to known ones
+    //          From best to worst: O(1) constant -> O(logn) logarithmic(binary search)->O(n) linear->O(nlogn) linearithmic(efficient sorting)->O(n^2)quadratic (nested loops over the same data)-> O(2^n) exponential(naive recursive Fibonacci, brute-force subsets)-> O(n!) factorial (brute-force permuations)
+    //          Knowing this ladder cold means you can instantly sense "this feels like it should be O(nlogn) but the code smells like O(2^n)"
     // Omega - lower bound, the mirror image
     //      guarantees it never does less
     //      How to Determine Big-Omega:
@@ -38,8 +53,14 @@ public class day5 {
     //                      then Omega is whatever the fastest possible triggering scenario looks like - often O(1) if the very first element checked could satisfy exit condition
     // Big-Theta(theta)- a tight bound
     //      meaning the upper and lower bounds coincide; the algorithm's actual behavior, not just a ceiling or floor
+    //      f(n) is Theta(g(n)) if it is both O(g(n)) and Omega(g(n)) simultaneously - meaning g(n) sandwiches f(n) from above and below, up to constant factors
+    //      Concretely: f(n)=3n+5 is Theta(n) because you can find constant c1,c2 such that c1 * n <= 3n+5 <= c2 * n for large enough n
+    //      Theta is the honest, complete discription of an algorithms growth when its best and owrst case genuinely coincide
+    //          which is why a tight loop with no early exit is properly described as Theta(n^2) not just o(n^2)
+    //              saying only O(n^2) is technically true but incomplete, since O(n^2) alone doesnt rule out the algorithm secretly being capable of running in O(n) sometimes
+    //      Theta is the stronger, more informative claim whenever it genuinely applies
     // Worth a real correction to something used loosely all along
-    //      HashMap's.get() is O(!) is actually informally standing in for Theta(1) average case - 
+    //      HashMap's.get() is O(1) is actually informally standing in for Theta(1) average case - 
     //          best, worst, and average all land at the same order under normal conditions
     //      Linear search is the case where they genuinely diverge:
     //          best case is Omega(1), the itmes first, one check, worst case is O(n) the itmes last or absent, every element checked
@@ -64,7 +85,165 @@ public class day5 {
     //          Total cost after 9 insertions: 24 - average 2.67 per insertion, a small constant, not growing with n
     //          That is the actual proof behind "amortized O(1)": individual operations vary wildly, but the average, taken over many operations, stays bounded
     //          Java's real ArrayList gorws by 1.5x not 2x but the same math holds under any constnt growth factor greater than 1
+    //      This analysis answers "even though individual operations vary wildly in cost, what does the cost work out to per operation, averages over a long sequence"
+    //      The formal technique most commmonly used is the aggregate method
+    //          Run the sequence of n operations, sum their total cost, then divide by n to get the amortized cost per operation
+    //      After n insertions, the total cost of all resizing-copies ever done is 1+2+4+8...=2n(a geometric series, which sums to roughly double the final size, standard result worth knowing)
+    //      Add the n insertions themselves, total work is n + 2n = 3n then divide by n operations -> 3, a constant, meaning no matter how large n grows
+    //          the avg cost per insertions stays at a fixed number, never scaling up
+    //      That constant per operation result, even though individual operations occasionally spike to O(n) (the resize itself) is precisely what amortized O(1) formally means
     // Best/worst/average, why the distinction is practically load-bearing, not academic
-    //      Quciksort (coming in Phase 9) has an O(n^2) worst case with unlucky pivot choices but an average case of O(nlogn) - which is precisely why it's used constantly in practice despute that bad worst case;
+    //      Quciksort (coming in Phase 9) has an O(n^2) worst case with unlucky pivot choices but an average case of O(nlogn) - which is precisely why it's used constantly in practice despite that bad worst case;
     //          average behavior, not worst-case paranoia, drives most real tool choice
+    
+    // Exercise 1
+    // Four plain funcs, for each, state:
+    //      time complexity Big O and Big Omega seperately if best and worst case genuinely diverge
+    //      Auxiliary space complexity, whether it mutates in place or allocates new memory and whther it could be improved, to what complexity if so
+    // Func 1
+    //    In this example, Big O is n^2, theres a nested for loop that increments the counter for every index encountered, itll run like this
+    //          size of array -> sizeOf = 1 and so forth, i.e. 10+9+8+7...which would be 55
+    //    Since there is no early exit, Omega would be equal to Big O so n^2
+    //    I need more clarification for Theta but isnce it's a tight loop itll be the same as Omega and O, n^2
+    //    I need help with this aux space complexity like a better explanation since theres only an input array that takes up space and the count var
+    //    I believe that the minimum amount that this alg would do, in other words the best case for Omega would be you know what it would be the same because it implements two loops
+    //    But the alg has a whole can be written with one for loop for (i = arr.length; i >= 0; i--) then adding that to the counter
+    //    Regarding the auxiliary space dilemma:
+    //      The input array arr doesnt count toward auxiliary space at all since it existed before the method ever ran, its not something the alg itself created
+    //      The only thing this method allocates is count, a single int, one fixed size variable regardless of whether arr has 10 elements or 10 million
+    //      This is O(1) auxiliary space. Theres no scenario here where memory usages grows with n. So aux space is 1 the simplicity itself is the answer, since 1 var is created
+    public static int sumTriangular(int[] arr) {
+        int count = 0;
+        for (int i = 0; i < arr.length; i++) {
+            for (int j = i; j < arr.length; j++) { count++;}
+        } return count;
+    }
+    public static int sumTriangular_Improvised(int[] arr) {
+        int count = 0;
+        for (int i = arr.length; i >= 0; i--) {
+            count += i;
+        } return count;
+    }
+    // Func 2
+    //   Since there is a for loop containing an if statement calling .contains on the AL, that would be n^2
+    //   Since the return provides an early exit, and considering that the AL seen is created before the for loop is ran that guarantees that there is no way that
+    //      the first element in the parameter would be in this AL so that might be the 2nd integer in the parameter in this case it then it is Omega(n)
+    //   Since O and Omega dont coincide, i dont think there is a theta
+    //   Aux space is O(n) since the AL created grows as each nth index is encountered, if the early exit isnt hit
+    //   Since this method returns true once the first dupe is found it returns true but might not have had ran through the whole input list
+    //      so instead of returning true and not returning the AL, we can implement a hashmap so that the lookup is direct O(1)
+    // Correction on the Omega reasoning
+    //      Omega actually asks for what is the absolute best case input that produces the fastest possible run, and how fast is that
+    //          So consider input of [5,5] and trace it, seen starts empty, num =5, seen.contains(5) checks empty list so this is O(1) since theres nothing to scan
+    //          It returns flase so 5 gets added to seen then second iteration checks if 5 is in seen and now checks a list with exactly one element which is still O(1)
+    //              not growing with n at all in this specific scenario, and it immediately returns true, exiting
+    //          So the genuinely fast case isnt the dupe is early in a large list, its the list is tiny, specifically size 2
+    //              For a fixed tiny input like that, the total work is a small constant, independent of how large some other, different list of size n might have been
+    //                  This is the actual subtlety: Omega describes the algs absolute best-case behavior across all possible inputs of a given methdos structure not the best position within one specific large n
+    //          Since a 2 element input triggers the exit almost immediately, Omega here is Omega(1) not of n 
+    //          Since Omega and O dont match, youd instead list best and worst case Theta separately, 1 best and n^2
+    //      A HashSet<Integer> would be better since its more precise, just keys and not values
+    //          Switching to HashSet makes .contains() O(1) avg, dropping the whole method to O(n) time
+    // B
+    public static boolean hasDuplicateSlow(List<Integer> list) {
+        List<Integer> seen = new ArrayList<>();
+        for (Integer num : list) {
+            if (seen.contains(num)) {
+                return true;
+            }
+            seen.add(num);
+        }
+        return false;
+    }
+    // Func 3
+    //    It creates 3 vars, all are ints of either 0 or some value of size n - 1, it has a while loop so since we didnt cover that I think that would be an O(1) check for that condition
+    //          it increments steps, divides low + high by 2 for mid and conducts an O(1) check for the if condition, another checking if mid is less than target
+    //          Reassigns low if its less and returns steps which just an int 
+    //          Big O would be O(logn) for binary search, i need more explanation as of why each ase is a particular BigO
+    //   For Omega, there is an early return if the array inputted was empty which would be its fastest case so o(1) for that
+    //   Since there is no theta since O and Omega are not the same, worst case for this would be the equivalent to big o
+    //   For aux space, itll be O(1) since there is one int var being returned
+    //   Why bineary search is O(logn)
+    //      Every single iteration of the while loop cuts the remaining search space in half
+    //      Starting with n elements, after one iteration you have n/2 left, after two iterations n/4 etc
+    //      The question "how many times can you halve n before reaching 1 element" is precisely what the logarithm answers- log2(n) is defined as
+    //          the number of times you must divide n by 2 to reach 1
+    //      So the loop runs at most log2(n) times, and since BigO drops the base of the logarithm (changing bases only multiplies by a constant, which BigO also ignores), O(logn) stands
+    //      Any logarithm that repeatedly discards a constant fraction of its remaining problem size is O(logn)
+    //   The empty-array reasoning corrected
+    //      If the array was size 0 that would mean the condition checks 0 <= -1 which is false thus the loop never runs and just returns 0
+    //          This isn't an early return this is just not starting the loop which is an even more extreme case than what was described above
+    //      Thus this condition check is still Omega(1) best-case even on an empty array
+    public static int binarySearchCount(int[] sortedArr, int target) {
+        int low = 0, high = sortedArr.length - 1, steps = 0;
+        while (low <= high) {
+            steps++;
+            int mid = (low + high) / 2;
+            if (sortedArr[mid] == target) return steps;
+            else if (sortedArr[mid] < target) low = mid + 1;
+            else high = mid - 1;
+        }
+        return steps;
+    }
+    // Func 4
+    // This func creates no vars, aux space is O(1) for an int value
+    // BigO is O(n) due to the loop with an O(1) condition check
+    // Omega would be o(1) due to that early check which would be if the first index in the array is equal to the target
+    // No theta since they differ at best case Omega(1) but there would be for worst case Omega(n) if no indexes in the array is equal to target
+    // Things worth fixing
+    //      Omega is sepcifically the best-case bound, so worst case Omega isnt something
+    //      What is meant is that the worst case here is Theta(n) since restricting attention to only the worst case scenary, its best and worst are trivally the sam
+    //          its always exactly n comparisons when the target is absent, while the overall method has no single theta because best/worst differ
+    public static int findFirstOrLast(int[] arr, int target) {
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i] == target) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    // Exercise 2 - Writing to a Target Complexity, Not Just Reading It
+    // Three separate methods, each with a stated target complexity
+    //      Method 1 - O(n) time, O(1) auxiliary space
+    //          Given an int[], return the max value in the array
+    //          The O(1) space constraint is the actual constraint worth taking seriously, no new array/list, nothing that scales with n
+    public static int findMaxFrom(int[] array) {
+        int currentMax = array[0];
+        for (int indice: array) {
+            if (indice > currentMax) { currentMax = indice; }
+        }
+        return currentMax;
+        // confirmed that the loop is O(n) time with an O(1) check in the if condition, aux space is O(1) with an int var being returned
+    }
+    //      Method 2 - O(n) time, O(n) aux space
+    //          Given an int[], return a new array where each ele is the original value doubled
+    //          This one genuinely needs O(n) space, since output must hold n values
+    //          The execise here is recognizing that O(n) space isnt always avoidable, and forcing O(1) onto a problem that structurally requires new output would be wrong
+    public static int[] returnOrig_Doubled(int[] with) {
+        int[] returnArr = new int[with.length];
+        for (int i = 0; i < with.length; i++) {
+            returnArr[i] = with[i] * 2;
+        }
+        return returnArr;
+        // confirmed that loop is O(n) with two O(1) retrievals; a particular index from both arrays in order to get/set respectively
+        // Aux space is O(n) since it depends on the size of the input array
+    }
+    //      Method 3 - O(n) time
+    //          Given an int[], determine whether the array is a palindrome
+    //          Use 2 pointers, one starting at index 0, the other at last index, moving toward each other, comparing vlaues each step
+    //          Ask yourself, what are the starting pos of each pointer, whats compared at each step, whats loops exact stoping condition
+    public static boolean checkIfPalindrome(int[] from) {
+        int right = from.length - 1;
+        for (int left = 0; left < from.length; left ++) {
+            // if they are different then return
+            if (left == right) { return true; } else if (from[left] != from[right]) { return false; } else { right--; }
+        }
+        return true;
+        // this was genuinely cool, i had implemented right to be within the scope of the for loop but that is reset after each iteration to the length of the input - 1 
+        // so it remained the same, knew base case was if they met such as index of size 1, next case was if they differed, then decremented right
+        // this is 0(n) with the for loop, multiple O(1) checks and aux space is o(1) with the boolean value, omega would be the same as big o since the size of the input is depended on
+        // thus theta is the same
+        // the else if here would actually make Omega(1) best case since its an eearly return and Omega(n) worst case; going through whole array
+    }
 }
