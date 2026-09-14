@@ -9,8 +9,7 @@ import java.util.Map;
 public class day5 {
     public static void main(String[] args) {
         int[] variableUse = new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
-        System.out.println(Arrays.toString(twoSum_V1(variableUse, 12)));
-        System.out.println(Arrays.toString(twoSum_V2(variableUse, 12)));
+        System.out.println(isValid("[{()}]"));
     }
 
     // Big-O Speed
@@ -333,4 +332,9 @@ public class day5 {
     //          that property from scratch every time the window moves
     //      The efficiency win: instead of recomputing sum of the window freshly at every positon which ould be O(n) per pos, O(n^2) total
     //          you update the running value incrementally as window slides, subtract what leaves, add what enters, dropping the whole scan to O(n) total
+    // The key thing to internalize from whats traced so far:
+    //      i - k always points to the index thats leaving and i itself is the index entering
+    //          the windows actual left edge at any point is - k + 1 but you never need to compute this directly
+    //              since youre only ever tracking the sum, not the windows bounds themselved
+
 }
