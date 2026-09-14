@@ -2,16 +2,18 @@ package Day5;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class day5 {
     public static void main(String[] args) {
         int[] variableUse = new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
-        System.out.println(findMaxFrom(variableUse));
-        System.out.println(Arrays.toString(returnOrig_Doubled(variableUse)));
-        System.out.println(checkIfPalindrome(variableUse));
+        System.out.println(Arrays.toString(twoSum_V1(variableUse, 12)));
+        System.out.println(Arrays.toString(twoSum_V2(variableUse, 12)));
     }
 
+    // Big-O Speed
     // The core idea first:
     //      Big-O and its relatives describe how an algorithm's work gorws as input size n grows - not wall-clock seconds which depend on hardware but the rate at which the number of operations increases
     //          it describes behavior as n gets large, not the exact count for any one n
@@ -95,7 +97,39 @@ public class day5 {
     // Best/worst/average, why the distinction is practically load-bearing, not academic
     //      Quciksort (coming in Phase 9) has an O(n^2) worst case with unlucky pivot choices but an average case of O(nlogn) - which is precisely why it's used constantly in practice despite that bad worst case;
     //          average behavior, not worst-case paranoia, drives most real tool choice
-    
+
+    // Big-O Space
+    // Space complexity - the same three notations, applied to memory instead of operations
+    // Everything about O, Omega and Theta works identically in structure
+    //      Theyre still describing gorwth rate as a function of n, just counting bytes of additional memory instead of operations performed
+    //      O(g(n)) for space means: THis alg's memory usage never exceeds a constant multile of g(n), for large enough n
+    //          same formal, c, n0 definiton as avoce
+    // The creitical split, worth being axact about: total space vs aux space
+    //      Total space includes the input itself plus whatever the alg additionally creates
+    //      Aux space is the number that actually matters almost every time youre asked for space complexity
+    //          is only what the alg creates beyond the input
+    // What actually counts as auxiliary space, itemized precisely
+    //      Any new array, list, map or set the alg creates - sized relative to n if it can grow to hold up to n items
+    //      Any fixed numer of indiv vars always are O(1), regardless of how large n is, since count of variables doesnt change with input size, only their vals do
+    // Recursions call stack
+    //      Everytime a method calls itself, a new stack frame is pushed onto the call stack - a real chunk of memory holding that call's local variables and where to return once finished
+    //      If a recursive method call itself n times deep before hitting a base case, thats n stack frames sitting in memory simultaneously at the deepest point
+    //          Meaning recursion depth directly contributes O(n) aux space, even if the method never creates a single array or list
+    // Omega and Theta for Space, same logic as for time
+    //      Omega(g(n)) is minimum memory the alg is guaranteed to use across any input of its structure
+    // Examples of Classifications
+        // O(1) Space -
+        //      method using fixed, small number of vars regardless of input size.
+        // O(n) Space -
+        //      mthod whos memory usage grows proportionally with input size
+        // Omega(1) Space - 
+        //      minimum memory some alg's structure could every use, across any input
+        //      method that sometimes returns early with no allocation, and sometimes allocates depending on input would have Omega(1)
+        // Omega(n) Space -
+        //      minimum memory guaranteed no matter what, because the structure itself forces it
+        // Theta(n) Space -
+        //      reched whenever O(n) and Omega(n) coincide, meaning alg always uses space proportional to n, with no variance based on input content
+
     // Exercise 1
     // Four plain funcs, for each, state:
     //      time complexity Big O and Big Omega seperately if best and worst case genuinely diverge
@@ -246,4 +280,57 @@ public class day5 {
         // thus theta is the same
         // the else if here would actually make Omega(1) best case since its an eearly return and Omega(n) worst case; going through whole array
     }
+
+    // Exercise 3 -- Complexity Comparison, Same Problem, Two Different Approaches
+    // Given an int[], find two elements that sum to a specific target value
+    // Version 1 - the brute force nested loop approach: check every pair
+    //      State its actual time and space complexity, with full trace (llop counts, early exit or not)
+    //              This is a nested so BigO is n^2, there is an early return so omega would be 1 considering if first two are the necessary vals, theta theres no theta
+    //              Aux space is 1 since were returning a known size array of either 0 or 2
+    // Version 2 - single pass hashmap approach.
+    //      state its time and space complexity the same way
+    //      Aux space is the same as above, Big O is n due to the for loop and O(1) conditional checks within, omega is the same so theta(n)
+    // Then, determine which one is better and is that a fixed answer or does it depend on something about the input size, memory constraints, or whether the array is already sorted
+    //      since the nested for loop is more like a sliding window, it doesnt return the first possiblity, unless we started the j index at the end of the array
+    //      but i like the hashmap approach better since it stores, the value at a particular index in arr and the index of it but first checks if it has encountered the difference
+    // Tested with int[] variableUse = new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1} and target of 12
+    // Couple of notes worth keeping
+    //      this isnt a sliding window, its just an exhaustive pairwise check
+    //      HM is faster since O(n) is better than n^2 but costs O(n) space versus the brute forces O(1)
+    public static int[] twoSum_V1(int[] arr, int target) {
+        for (int i = 0; i < arr.length - 1; i++) {
+            for (int j = i + 1; j < arr.length; j++) {
+                if (arr[i] + arr[j] == target) { return new int[] {i, j}; }
+            }
+        }
+        return new int[] {};
+    }
+    public static int[] twoSum_V2(int[] arr, int target) {
+        HashMap<Integer, Integer> possibilities = new HashMap<>();
+        for(int num = 0; num < arr.length; num++) {
+            if (possibilities.containsKey(target - arr[num])) {
+                return new int[] {possibilities.get(target - arr[num]), num};
+            }
+            possibilities.putIfAbsent(arr[num], num);
+        }
+        return new int[] {};
+    }
+
+
+    // Phase 2 - Arrays and Strings, Rebuilt From the Ground Up
+    // Why contiguous memory is the root of everything about arrays
+    //   An array reserves one unbroken block of memory, sized at creation
+    //   Accessing index 1 is a single arithmetic step - baseAddress + (i * elementSize) which is why its O(1)
+    //      theres no searching just a direct calculation landing exactly on the right memory address. This is the fact every other array behavior traces back to
+    // Why insertion/deletion in the middle O(n)
+    //      Since the block is contiguous with no gaps, inserting at position i means every element from i onward must physically shift one slot over to make room
+    //          an O(n) cost in worst case (inserting near the front) even though the insertion itself is conceptually one new value
+    // Two Pointers - the general pattern, not just the palindrome trick
+    //      Two indices moving through a structure, either from oppsoite ends converging (palindrome check, sorted pair sum) or at different speeds from the same end
+    //      The unifying idea is that two positions tracked simultaneously, lettting you avoid a nested loop that would otherwise be needed to compare/relate two different pos in data
+    // Sliding Window - Genuinely new, mot yet covered adn directly the pattern underneat the club Lamp's problem
+    //      A window is contiguous range [left, right]that expands/slides across the array, maintaining some running property without recalculating
+    //          that property from scratch every time the window moves
+    //      The efficiency win: instead of recomputing sum of the window freshly at every positon which ould be O(n) per pos, O(n^2) total
+    //          you update the running value incrementally as window slides, subtract what leaves, add what enters, dropping the whole scan to O(n) total
 }
