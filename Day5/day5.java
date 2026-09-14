@@ -9,7 +9,6 @@ import java.util.Map;
 public class day5 {
     public static void main(String[] args) {
         int[] variableUse = new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
-        System.out.println(isValid("[{()}]"));
     }
 
     // Big-O Speed
@@ -336,5 +335,26 @@ public class day5 {
     //      i - k always points to the index thats leaving and i itself is the index entering
     //          the windows actual left edge at any point is - k + 1 but you never need to compute this directly
     //              since youre only ever tracking the sum, not the windows bounds themselved
+    // Exercise 1 - Fixed-Size Sliding Window, Built From Scratch
+    // Given an int[] of temperatures and a window size k
+    // Return avg of highest-sum window of size k
+    // Before starting:
+    //     trace/write plan;
+    //      what does the first loop need to compute to seed the window
+    //          first needs to compute first k indices, store in var.
+    //          O(n) with for loop, O(1) with getters, o(1) for int sum and int avg
+    //      what does the second loops update line need to look like for this specific prob
+    //          since were trying to get average we can keep the sum var, compute the avg,
+    //          update avg with Math.max(maxAvg, windowAvg)
+    //      Whats the time/space complexity targeted
+    //          since we have two for loops that arent nested and a couple vars plus some arithmetic
+    //              and returning only one var which would be the maxAvg the time complexity statys O(n)
+    //              Space complexity is o(1)
+                // time omega for this would be if the array given is empty or if the size of the array is equal to k so that would be o(n)
+                // this method would have theta(n) regardless since it still uses o(n) for best case on omega
+    public static int returnHighestAvg(int[] from, int k) {
+
+        return 0;
+    }
 
 }
