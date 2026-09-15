@@ -9,11 +9,14 @@ import java.util.Map;
 public class day5 {
     public static void main(String[] args) {
         int[] variableUse = new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
+        System.out.println(Arrays.toString(greatestWindow(variableUse, 4)));
+        System.out.println(greatestOccurences("mynameisemmanuel", 5));
+        System.out.println(greatestOccurences("aabbcccdddeeefffggg", 5));
     }
 
     // Big-O Speed
     // The core idea first:
-    //      Big-O and its relatives describe how an algorithm's work gorws as input size n grows - not wall-clock seconds which depend on hardware but the rate at which the number of operations increases
+    //      Big-O and its relatives describe how an algorithm's work gorws as input size n grows - not wall-clock seconds which depend on hardware but the rate at which the number of operations increases 
     //          it describes behavior as n gets large, not the exact count for any one n
     // Big-O(O) - upper bound
     //      Guarantees the algorithm never does mroe than a constant multiple of htis, once n is large enough
@@ -335,6 +338,8 @@ public class day5 {
     //      i - k always points to the index thats leaving and i itself is the index entering
     //          the windows actual left edge at any point is - k + 1 but you never need to compute this directly
     //              since youre only ever tracking the sum, not the windows bounds themselved
+
+    //  THE NEXT 4 EXERCISES ARE WITH FIXED-LEGNTH WINDOWS
     // Exercise 1 - Fixed-Size Sliding Window, Built From Scratch
     // Given an int[] of temperatures and a window size k
     // Return avg of highest-sum window of size k
@@ -352,9 +357,109 @@ public class day5 {
     //              Space complexity is o(1)
                 // time omega for this would be if the array given is empty or if the size of the array is equal to k so that would be o(n)
                 // this method would have theta(n) regardless since it still uses o(n) for best case on omega
-    public static int returnHighestAvg(int[] from, int k) {
-
-        return 0;
+    public static double windowAverage(int[] from, int k) {
+        // just taking a look at the structure of this, its kind of similar to Swifts for awaitWithtaskGroup
+        double windowSum = 0;
+        for (int i = 0; i < k; i++) {
+            windowSum += from[i];
+        }
+        double maxAverage = windowSum / k;
+        for (int i = k; i < from.length; i++) {
+            windowSum += from[i] - from[i - k]; // starts at k - index 0
+            maxAverage = Math.max(maxAverage, windowSum / k);
+            // this above line is kind of like the .merge on a HM
+            // like the first param would be resemble the old value, then the new value would be windowSum / k
+        }
+        return maxAverage;
     }
+    // Exercise 2 - Fixed Window, Counting Instead of Summing
+    // Given an int[] and a window size k, return the maximum count of even numbers found in any window of size k
+    // Same subtract-leaves/add-enters mechanism but tracking a count instead of a sum
+    //      the update needs to check whether the levaing element was even (decrement if so)
+    //      and whether the entering element is even (increment if so)
+    //      rather blindly adding/subtracting raw values
+    // Before writing:
+    //      trace/write plan:
+    //          what does the first loop need to compute to seed the window
+    //              the first loop grabs the first 3, reg for loop increment if even
+    //          what does the second loops update line need to look like
+    //              the leaving element here is arr[i - k], decrement if even
+    //              the entering element is itself i
+    //          whats the time/space complexity
+    //              same as previous, O(n) time, returning a regular int, if conditions are O(1)
+    //              no early returns thatll be implemented so Omega is n thus theta is also n
+    public static int windowEvens(int[] arr, int k) {
+        int maxNum_Evens = 0;
+        for (int i = 0; i < k; i++) {
+            if (arr[i] % 2 == 0) { maxNum_Evens += 1; }
+        }
+        int maxEvens = maxNum_Evens;
+        for (int i = k; i < arr.length; i++) {
+            if (arr[i - k] % 2 == 0) { maxNum_Evens -= 1; } // decrements if leaving int was even
+            if (arr[i] % 2 == 0) { maxNum_Evens += 1; } // opposite for new int
+            maxEvens = Math.max(maxEvens, maxNum_Evens);
+        }
+        return maxEvens;
+    }
+    // Exercise 3 - Fixed Window, Two Running Values at Once
+    // Given an int[] and window size k, return the window (as a [start, end] index pair)
+    //      with the largest range (max value - min value) within that specific window
+    //          But do this without recalculating min/max from scratch each slide
+    // Think through whether the simple subtract/add trick from sum-tracking actually works for min/max or whether it breaks down and why
+    // Same process as prior two; explain before
+    //     since i need min/max of each window to be passed down to 2nd layer with the other windows
+    //          we can set a var to be this array as it currently is
+    public static int[] greatestWindow(int[] arr, int k) {
+        int currentGreatest = arr[0]; int currentLesser = arr[0];
+        for (int i = 0; i < k; i++) {
+            if (arr[i] > currentGreatest) { currentGreatest = arr[i]; }
+            if (arr[i] < currentLesser) { currentLesser = arr[i]; }
+        }
+        for (int i = k; i < arr.length; i++) {
+            for (int j = i; j < i + k && j + k < arr.length; j++) {
+                if (arr[j] < currentLesser) { currentLesser = arr[i];} else if (arr[j] > currentGreatest) { currentGreatest = arr[j]; }
+            }
+        }
+        return new int[] { currentLesser, currentGreatest };
+    }
+    // Exercise 4 - Fixed Window, Distinct Character Count
+    // Given a String and window size k, return the count of distinct characters in the window with the most distinct characters across the whole striing
+    // This is genuinely different form the sum/count excs - youre not tracking one running number, youre trackinga. collection of whats current present
+    // Since distinct requires knowing which characters are in the winow, not just how many total characters passed through
+    // Use HM<Character, Integer> mapping each char currently in the window to how many times it appears.
+    //      On a character leaving, decrement its count and ciritically, if that count hits zero, remove the entry from the map entirely
+    //      The size of the map itself at any moment is the distinct charcater count for that window - no separate counting needed
+    public static int greatestOccurences(String s, int k) {
+        HashMap<Character, Integer> distincts = new HashMap<>();
+        HashMap<Character, Integer> bestWindow = new HashMap<>();
 
+        char[] strArr = s.toCharArray();
+        for(int i = 0; i < k; i++) { distincts.merge(strArr[i],1, (o, n) -> o + n); bestWindow = new HashMap<>(distincts);}
+        int maxDistincts = distincts.size();
+
+        for (int i = k; i < strArr.length; i++) {
+            distincts.merge(strArr[i-k], 1, (o, n) -> o - n);
+            if (distincts.get(strArr[i - k]) == 0) { distincts.remove(strArr[i-k]); }
+            distincts.merge(strArr[i], 1, (o, n) -> o +n );
+
+            if (distincts.size() > maxDistincts) { bestWindow = new HashMap<>(distincts);}
+            maxDistincts = Math.max(maxDistincts, distincts.size());
+        }
+        System.out.println(bestWindow);
+        return maxDistincts;
+    }
+    // Exercise 5 - Fixed Window in Two Dimensions
+    // Givena 2D int[][] grid and a window size k, find the maximum sum of any k^2 contiguous square sub-grid
+    // Think thorugh this before writing any code, since the naive extension of the 1D idea doesnt work cleanly here
+    //      A 1D window slides in one direction, updating by dropping one element and adding one
+    //      A 2D k^2 window sliding one step to the right doesnt just drop and add once cell;
+    //          it drops an entire column of k cells on the left edge and adds an entire column of k cells on the right edge
+    //      Thats still better than recomputing the whole sqaure from scratch but its a different layered version of the same idea, not a direct copy/paste of 1D update line
+    // The actual approach worth building toward:
+    //      first, for every row, compute a 1D sliding-window sum of width k across that row, giving you, for each row, the sum of every k-wide horiz strip starting at each column
+    //      One you have that(essentially, a new smaller 2D array of row strip), apply a second 1D sliding window vertically
+    //          summing k consecutive vals from that intermediate array to get actual k^2 sqaure sums
+    // Before writing code, trace this:
+    //      given a grid, what would the intermediate array (row-wise k-strip sums) actually look like in terms of demensions compared to original grid demsnions
+    //      Once you have intermediate array, why does sliding vertically trhough it correctly give you k^2 sqaure sums rather than something else
 }
