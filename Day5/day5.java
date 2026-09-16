@@ -9,9 +9,8 @@ import java.util.Map;
 public class day5 {
     public static void main(String[] args) {
         int[] variableUse = new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
-        System.out.println(Arrays.toString(greatestWindow(variableUse, 4)));
-        System.out.println(greatestOccurences("mynameisemmanuel", 5));
-        System.out.println(greatestOccurences("aabbcccdddeeefffggg", 5));
+        int[][] testGrid = { {1, 3, 2, 4}, {5, 6, 1, 2}, {3, 2, 4, 1}, {1, 5, 3, 2} };
+        System.out.println(Arrays.deepToString(max2DSum(testGrid, 2)));
     }
 
     // Big-O Speed
@@ -449,7 +448,7 @@ public class day5 {
         return maxDistincts;
     }
     // Exercise 5 - Fixed Window in Two Dimensions
-    // Givena 2D int[][] grid and a window size k, find the maximum sum of any k^2 contiguous square sub-grid
+    // Given a 2D int[][] grid and a window size k, find the maximum sum of any k^2 contiguous square sub-grid
     // Think thorugh this before writing any code, since the naive extension of the 1D idea doesnt work cleanly here
     //      A 1D window slides in one direction, updating by dropping one element and adding one
     //      A 2D k^2 window sliding one step to the right doesnt just drop and add once cell;
@@ -462,4 +461,72 @@ public class day5 {
     // Before writing code, trace this:
     //      given a grid, what would the intermediate array (row-wise k-strip sums) actually look like in terms of demensions compared to original grid demsnions
     //      Once you have intermediate array, why does sliding vertically trhough it correctly give you k^2 sqaure sums rather than something else
+    public static int[][] max2DSum(int[][] arrs, int k) {
+        int[][] intermediateArr = new int[arrs.length][arrs.length - k +1];
+        for (int row = 0; row < arrs.length; row++) {
+            int windowSum = 0;
+            for (int col = 0; col < k; col++) { windowSum += arrs[row][col]; }
+            intermediateArr[row][0] = windowSum;
+
+            for (int col = k; col < arrs[row].length; col++) {
+                windowSum += arrs[row][col] - arrs[row][col - k];
+                intermediateArr[row][col - k + 1] = windowSum;
+            }
+        }
+       
+        int[][] finalArr = new int[intermediateArr.length - k +1][intermediateArr[0].length];
+        for (int col = 0; col < intermediateArr[0].length; col++) {
+            // since the first row in the intermediateArr is the top of the grid it gives all columns
+            int windowSum = 0;
+            for (int row = 0; row < k; row++) {
+                windowSum += intermediateArr[row][col];
+                // this iterates through that first row and adds the col-index to windowSum
+            }
+            finalArr[0][col] = windowSum;
+
+            for (int row = k; row < intermediateArr.length; row++) {
+                windowSum += intermediateArr[row][col] - intermediateArr[row - k][col];
+                // this gets the particular index of row row and subtracts the leaving row's col-index
+                finalArr[row - k + 1][col] = windowSum;
+            }
+        }
+        return finalArr;
+    }
+
+
+    // Phase 2 - Variable-Size Sliding Window - Full Explanation Before Any Exercise
+    // A growing/shrinking window has no fixed size at all, instead, you maintain two pointers,
+    //      left and right and the windows size is whatever right-left+1 happens to be at any time, changing dynamically based on some condition youre tracking
+    // The general shape, nearly every variable window problem follows it
+    /*
+    int left = 0;
+    for (int right = 0; right < arr.length; right++){
+        1. add arr[right] into whatever youre tracking (sum, count, set)
+        2. While the current window violates some condition
+        while (violated condition) {
+            Remove arr[left] from tracking
+            left++
+        }
+        3. Now window is valid, do something with it (update a max/min, record of it)
+    }
+    */
+   // The key strcuctural difference from fixed windows:
+   //       right always advances, one step per outer loop iteration but left advances conditionally
+   //           sometimes not moving at all in given iteration, sometimes moving multiple times in a row via the inner while
+   //       The window expands when right moves without left needing to catch up and shrinks when the while loop fires and pulls left forward
+   //           sometimes several times in a row until the condition is satisfied again
+   // Concretely, the calssic version: find the length of the smallest contiguous subarray with a sum >= some target
+   //      Why this needs a variable window
+   //           you dont know in advance how wide the qualifying window needs to be 
+   //               it depends entirely on the actual values in the array
+   //           The window grows until the sum finally reaches the target and once it does, it shrinks (via while loop advancing left) to find the smallest window that still satisfies condition
+   // Before any exercise;
+   //       Trace through the template's logic in your own words;
+   //           Why does right need to advance unconditionally every iteration while left advances conditionally inside a while loop 
+   //               Because right traverses the array etc in order to check/explore the elements to see what satisfies the condition to be met
+   //               For example in a target sum array to find the smallest arr say t = 5 and have 1,2,2,3,4
+   //                   We know 1,2,2 is 5 but 2, 3 is also 5 and smaller so the window starts at 1,2 says its 3 then adds the other 2, hits 5 but size is 3
+   //                   It needs to find the shortest arr so it adds the 3 and sum is 8, while condition is fired since it exceeds the target and moves left inward
+   //                   Sum is 7 so shrinks left again and now the sum is 5 but in order for this example to workout we would need vars for sum, left, minLength, bestLeft, bestRight
+   //                       then int[] res = Arrays.copyOfrange(arr, bestLeft, bestRight + 1) since range is exclusive on ending val
 }
