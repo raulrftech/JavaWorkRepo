@@ -3,14 +3,14 @@ package Day5;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 public class day5 {
     public static void main(String[] args) {
         int[] variableUse = new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
-        int[][] testGrid = { {1, 3, 2, 4}, {5, 6, 1, 2}, {3, 2, 4, 1}, {1, 5, 3, 2} };
-        System.out.println(Arrays.deepToString(max2DSum(testGrid, 2)));
+        int[] testArr2 = {8, 2, 15, 3, 9, 1, 20, 4, 6, 11, 2, 18, 5, 7, 3, 13, 9, 1, 16, 4};
+        System.out.println(Arrays.toString(longestContSum(testArr2, 15)));
     }
 
     // Big-O Speed
@@ -529,4 +529,118 @@ public class day5 {
    //                   It needs to find the shortest arr so it adds the 3 and sum is 8, while condition is fired since it exceeds the target and moves left inward
    //                   Sum is 7 so shrinks left again and now the sum is 5 but in order for this example to workout we would need vars for sum, left, minLength, bestLeft, bestRight
    //                       then int[] res = Arrays.copyOfrange(arr, bestLeft, bestRight + 1) since range is exclusive on ending val
+   public static int[] findShortest(int[] arr, int target) {
+        int left = 0; int sum = 0;
+        int minLength = Integer.MAX_VALUE;
+        int bestLeft = -1; int bestRight = -1;
+        for (int right = 0; right < arr.length; right++) {
+            sum += arr[right];
+
+            // Shrink only when greater
+            while (sum > target) { sum -= arr[left]; left++; }
+
+            // Check for exact match after shrinking
+            if (sum == target) {
+                int currentLength = right - left +1;
+                if (currentLength < minLength) {
+                    minLength = currentLength;
+                    bestLeft = left; bestRight = right;
+                }
+            }
+        }
+        if (bestLeft != 1) {
+            return Arrays.copyOfRange(arr, bestLeft, bestRight +1);
+        } else { return new int[] {}; }
+   }
+   // Refresher Exercise - Snack Streak (from a photo of a prblem from Gen-CIC)
+   // Given a string s, find the length of the longest substring without repeating characters
+   // Return that legnth
+   // Use the general template: right grows the window by adding each new character
+   // Track characters currently in the window a (HashSet<Character> works cleanly, same tool from distinct-characters window exc)
+   // The while condition that shrinks left fires specifically when the character at right is already present in the window
+   //       shrink left (removing characters from the set as they leave) until the duplicate is gone
+   // Then add the new character and record the windows current size if its the best seen so far
+   // need longestArray encountered var. using Max(currentVal, newVal)
+   public static int findLongestSubstring(String s) {
+    int bestLength = 0;
+    HashSet<Character> encountered = new HashSet<>();
+
+    int left = 0;
+    for (int c = 0; c < s.length(); c++) {
+        while (encountered.contains(s.charAt(c))) { encountered.remove(s.charAt(left)); left++; }
+        encountered.add(s.charAt(c)); bestLength = Math.max(bestLength, c - left + 1);
+    }
+
+    return bestLength;
+   }
+   // Exercise 1 - Varaible window, Numeric Condition Instead of a Character Set
+   // Given an int[] of positive numbers and a target value k
+   //       find the length of the longest contiguous subarray whose product is strictly less than k
+   // This inverts several things at once relative to the sum based version:
+   //       youre maximizing instead of minimiing, tracking a running product instead of a sum (meaning the "remove what leaves" step is division, not subtraction)
+   //       a different operation with its own consideration, since dividing by zero or by values that dont evenly divide could matter depending on how its thought about
+   //           though since all values are positive integers here, division stays well
+   //       and the shrink condition fires when the product becomes too large, not when some target has already been met
+   // Before writing code, walk through by hand, with a small example (10, 5, 2, 6) k being 100, what left, right and running product do at each step
+   //       specifically noting the moment the product would exceed 100 and twhat the shrink step needs to do about it
+   public static String longestUnderSum(int[] arr, int k) {
+    int currentProduct = 1; int left = 0; int maxLength = 0;
+
+    for (int right = 0; right < arr.length; right++) {
+        currentProduct *= arr[right];
+        while (currentProduct >= k) { currentProduct /= arr[left]; left++; }
+        maxLength = Math.max(maxLength, right - left + 1);
+    }
+    return String.format("There are %d numbers that multiply to %d", maxLength, currentProduct);
+   }
+   // Exercise 2
+   // Given an int[] and target sum l, find the length of the longest contiguous subarray whose sume quals exactly k - not at least, less than but exactly equal to
+   //       THis is harder than both previous exercises because equality-based conditions dont map cleanly onto the simple "shirnk while too big" or "shrink while dupes present"
+   //       Sum can overshoot k and theres no guarantee shrinking will ever land exactly back on it using the basic window alone, especially if array contains negative numbers,
+   //           which breaks the assumption that growing the window always increases the sum monotonically
+   // Given this real complication, before writing any code, answer this:
+   //       Does the standard two pointer variable window template actually work correctly for this problem if the array can contain negative numbers?
+   //       Think through why/why not since answer determines whether this problem can be solved with sliding window at all, or whether it needs a fundamentally different approach
+    public static void findLongestCont(int[] nums, int target) {
+        HashMap<Integer, Integer> prefixIndex = new HashMap<>();
+        prefixIndex.put(0, -1);
+        int prefixSum = 0; int maxLength = 0;
+        for (int right = 0; right < nums.length; right++) {
+            prefixSum += nums[right];
+            if (prefixIndex.containsKey(prefixSum - target)) {
+                int length = right - prefixIndex.get(prefixSum - target);
+                maxLength = Math.max(maxLength, length);
+            }
+            prefixIndex.putIfAbsent(prefixSum, right);
+        }
+        System.out.println(prefixIndex);
+    }
+   // Exercise 3
+   // Given an int[] of positive integers and a target sum k, find the length of the longest contiguous subarray whose sum is less than or equal to k
+   // Before writing code, state the two tracking variables needed and describe what the while condtion checks and what happens inside it
+    public static int[] longestContSum(int[] nums, int target) {
+        int left = 0; int sum = 0;
+        int bestLeft = -1; int bestRight = -1;
+        int maxLength = 0;
+        for (int right = 0; right < nums.length; right++) {
+            sum += nums[right];
+
+            while (sum > target) { sum -= nums[left]; left++;}
+            if (sum <= target) {
+                if ((right - left + 1) > maxLength) {
+                    maxLength = (right - left + 1);
+                    bestLeft = left; bestRight = right;
+                    System.out.println(String.format("BL: %d, BR: %d", bestLeft, bestRight));
+                }
+            }
+        }
+        return Arrays.copyOfRange(nums, bestLeft, bestRight + 1);
+    }
+    // Exercise 3 - difficulty slightly incresing from Exc 2. Total Remains 12
+    // Given a String and an integer k, find longest substring that contains at most k distinct characters
+    //      The shrink condition checks the size of the map itself (how many distinct characters are present) not a duplicate check or a numeric sum/product threshold
+    // Before writing code, state the plan: 
+    //      What does the while loop condition check this time (in terms fo the maps size versus k)
+    //      What needs to happen isnde the while loops body when a character's count hits zero after decrementing
+    //          same removal logic as the early distinct-character execise, just not driving the shrink trigger itself rather than being computed and reported at the end
 }
