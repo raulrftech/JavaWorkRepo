@@ -11,6 +11,7 @@ public class day5 {
         int[] variableUse = new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
         int[] testArr2 = {8, 2, 15, 3, 9, 1, 20, 4, 6, 11, 2, 18, 5, 7, 3, 13, 9, 1, 16, 4};
         System.out.println(Arrays.toString(longestContSum(testArr2, 15)));
+        System.out.println(longestConformingSubString("eceba", 2));
     }
 
     // Big-O Speed
@@ -643,4 +644,29 @@ public class day5 {
     //      What does the while loop condition check this time (in terms fo the maps size versus k)
     //      What needs to happen isnde the while loops body when a character's count hits zero after decrementing
     //          same removal logic as the early distinct-character execise, just not driving the shrink trigger itself rather than being computed and reported at the end
+    public static int longestConformingSubString(String s, int k) {
+        int left = 0; HashMap<Character, Integer> conformingSubstring = new HashMap<>();
+        int maxLength = 0;
+        for (int c = 0; c < s.length(); c++) {
+            conformingSubstring.merge(s.charAt(c), 1, (o, n) -> o +n);
+
+            while (conformingSubstring.size() > k) {
+                conformingSubstring.merge(s.charAt(left), -1, (o, n) -> o + n);
+                if (conformingSubstring.get(s.charAt(left)) == 0) {
+                    conformingSubstring.remove(s.charAt(left));
+                }
+                left++;
+            }
+            maxLength = Math.max(maxLength, c - left + 1);
+        }
+        return maxLength;
+    }
+    // Exercise 4 - increasing difficulty
+    // Given an int[], find the length of the longest subarray containing at most 2 distinct values
+    //      same map size driven shrink mechanishm as prior but appied to numbers isntead of chars
+    //      and generalized from at most k down to a fixed constraint of exactly 2
+    // The actual increase in difficulty: this is the classic setup for a follow up contraint worth thinking through nor rather than after
+    //      what would need to change in your approach if the problem instead asked for at most 2 distinct values and each of those two values must appear an equal nuber of times
+    //          dont solve this just yet, just reason about whether your current map absed approach could be extended to check it or whether it would need something additional
+    // Build base version first, same three step structure, HM and shrink condition when map.size() > 2
 }
