@@ -10,8 +10,8 @@ public class day5 {
     public static void main(String[] args) {
         int[] variableUse = new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
         int[] testArr2 = {8, 2, 15, 3, 9, 1, 20, 4, 6, 11, 2, 18, 5, 7, 3, 13, 9, 1, 16, 4};
-        System.out.println(Arrays.toString(longestContSum(testArr2, 15)));
-        System.out.println(longestConformingSubString("eceba", 2));
+        int[] testArr = {1, 2, 2, 3, 1, 4, 4, 4, 5, 5, 2, 2, 2, 3, 3};
+        System.out.println(findValidModulos(new int[] {2, 6, 4, 5, 3}, 3));
     }
 
     // Big-O Speed
@@ -669,4 +669,155 @@ public class day5 {
     //      what would need to change in your approach if the problem instead asked for at most 2 distinct values and each of those two values must appear an equal nuber of times
     //          dont solve this just yet, just reason about whether your current map absed approach could be extended to check it or whether it would need something additional
     // Build base version first, same three step structure, HM and shrink condition when map.size() > 2
+    public static HashMap<Integer, Integer> findIntSubArr(int[] nums, int k) {
+        HashMap<Integer, Integer> freq = new HashMap<>();
+        int left = 0; int maxLength = 0;
+        for (int right = 0; right < nums.length; right++) {
+            freq.merge(nums[right], 1, (o, n) -> o + n);
+
+            while (freq.size() > k) {
+                freq.merge(nums[left], -1, (o, n) -> o + n);
+                if (freq.get(nums[left]) == 0) { freq.remove(nums[left]); }
+                left++;
+            }
+            maxLength = Math.max(maxLength, right - left + 1);
+        }
+        System.out.println(String.format("Max length is  %d", maxLength));
+        return freq;
+    }
+    // Exercise 5 - difficulty increasing
+    // Given a String consisting only of the characters 0 and 1, find the length of the longest substring containing at most one 0 that can be turned into all 1s
+    //      meaning the longest stretch where youre allowed to flip at most one zero to a one and every other character must already be a one
+    // This is a genuinely different shape of tracking than anything so far
+    //      instead of a map counting distinct values, youre tracking a single running count of how many zeros are currently inside the window and the shrink condition fires the moment that count
+    //          exceeds your allowance (1, in this version)
+    // Before writing anything - state the plan yourself:
+    //      what single variable do you need to track (not a map this time, think back to Exc 1 simpler numeric tracking)
+    //          it can be any length of 1's with one 0 at any point and if theres another 0 adjacent then decrement to that 0
+    //      what does the while condition check against
+    //          whenever 
+    //      what happens to that counter specifically when the character leaving the window at left happens to be a 0
+    public static int longestBinarySubArr(String s) {
+        int left = 0; int maxLength = 0; int occurences = 0;
+
+        for (int right = 0; right < s.length(); right++) {
+            if (s.charAt(right) == '0') { occurences +=1;}
+
+            while (occurences > 1) { if (s.charAt(left) == '0') { occurences--; } left++; }
+            maxLength = Math.max(maxLength, right - left + 1);
+        }
+        // Tested with 0001010101011100011101
+        return maxLength;
+    }
+    // Exercise 6 - Increased Difficutly
+    // This one introduces a new mechanishm, explanation below
+    // Longest Repeating Character Repalcement
+    //      Given a String and an integer k, find the length of the longest substring that could be turned into all the same character by changing at most k characters
+    // The key insight this problem needs, which nothing built so far has required
+    //      inside the window, you dont just track how many distinct characters exit but you also need to track the count of whichever single character currently appears most often in the window. Call it maxFreq
+    // Why this number matters
+    //      if the windows size is right - left + 1 and the most ocmmon character inside it occurs maxFreq times, then the number of characters youd need to change to make
+    //          the whole window that one repeated character is exactly windowSize - mexFreq, everything that isnt the majority character
+    //      The window stays valid as long as windowSize - maxFreq <= k: the shirnk condition fires when windowSize - maxFreq > k
+    // maxFreq does not need to be perfectly recalculates every time the window shirnks, its mathematically safe to let it be a little stale, never decreasing it even if the character it refers to has since left the window
+    //      because a stale, too high maxFreq can only ever make the alg undercount how much shrinking is needed , which non-obviously still produces the correct final maxLength
+    //          since the windows tru best length was already captured before the staleness could matter
+    // This is a subtle correctness arg specific to this problem, not something to derive fromm scratch
+    // Restate before building; what two things does the map need to track and how do you get maxFreq from it at any given meomen and whats the actual shrink condition
+    public static String changeKLetters(String s, int k) {
+        int maxFreq = 0; int left = 0; int maxLength = 0;
+        HashMap<Character, Integer> occurences = new HashMap<>();
+        for (int right = 0; right < s.length(); right++) {
+            occurences.merge(s.charAt(right), 1, (o, n) -> o + n);
+            maxFreq = Math.max(maxFreq, occurences.get(s.charAt(right)));
+
+            while (((right - left + 1) - maxFreq) > k) {
+                occurences.merge(s.charAt(left), -1, (o, n) -> o + n);
+                if (occurences.get(s.charAt(left)) == 0) { occurences.remove(s.charAt(left)); }
+                left++;
+            }
+            System.out.println(occurences);
+            maxLength = Math.max(maxLength, right - left + 1);
+        }
+        // tested with "alibaba"
+        System.out.println(String.format("Map: %s, Max Freq: %d", occurences, maxFreq));
+        return String.format("Max Length: %d", maxLength);
+    }
+    // Exercise 7, increasing difficulty
+    // Given an int[] of positive integers, find the number of contiguous subarray whos product is strictly less than a given k, not the longest subarray
+    // This is genuinely different question shape than everything so far, worth thinking through carefuly before writing
+    // This one asks you to count every valid subarray, and theres a real trick worth derviing yourself:
+    //      once you have a valid window [left, right] where the product is < k, how many additional valid subarrays does that single subarray actually represent
+    //          just by considering different starting points within that same window, all ending at right
+    // Before writing any code, work thorugh this with a small example
+    //      if your current valid window spans indices 2 through 5, (four elemnts: left = 2 and right = 5)
+    //          how many distinct contiguous subarrays end exactly at index 5 and start somewhere between index 2 and index 5 inclusive
+    //      List them out explicity by their start/end index pairs
+    /*@
+     @ requires k > 1;
+     @ requires (\forall int i; 0 <= i && i < nums.length; nums[i] != 0);
+    @*/
+    public static int findValidSubs(int[] nums, int k) {
+        int count = 0; int left = 0; int prod = 1;
+        for (int right = 0; right < nums.length; right++) {
+            prod *= nums[right];
+            
+            while (prod >= k) {
+                prod /= nums[left];
+                left++;
+            }
+            count += (right - left + 1);
+        }
+        return count;
+    }
+    // Exercise 8 - difficulty increasing
+    // Given an int[] and a target k, find total number of contiguous subarrays whose sum equals exactly k
+    //      This time youre allowed to assume the array contains only positive integers which changes everything about which technique actually applies here
+    // Think thorugh carefully before building since its a genuine trap
+    //      does the standard two pointer growing shrinking window actually work correctly for an exact equality condition even with all positive numbers
+    // or does exactly equals k behave differently from at most k or less than k in a way that breaks the shrink while invalid logic
+    public static int findValidSubsAdd(int[] nums, int k) {
+        HashMap<Integer, Integer> differences = new HashMap<>();
+        int left = 0; int count = 0; int sum = 0;
+        differences.put(0,1);
+        for (int right = 0; right < nums.length; right++) {
+            sum += nums[right];
+
+            if (differences.containsKey(sum - k)) {
+                count += differences.get(sum - k);
+            }
+            differences.merge(sum, 1, (o, n) -> o + n);
+
+        }
+        return count;
+    }
+    // Exercise 9 - same difficulty as Exc 8, increased excs to 14
+    // Given an array of positive integers and a target k, find the total number of contiguous subarrays whose sum is a multiple of k meaning sum % k == 0
+    //      same prefix sum plus map tehcnique but the thing youre checking for existence is based on the remainder when dividing the running sum by k
+    // Before writing code, reason through why:
+    //      if two difference positions have prefix sums that leave the same remainder when divided by k, what does that tell you about the sum of th eusbarray between those two positions
+    //          specifically regarding whether its evenly divisible by k
+    public static int findValidModulos(int[] nums, int k) {
+        HashMap<Integer, Integer> map = new HashMap<>();
+        map.put(0, 1);
+        int count = 0; int sum = 0;
+        for (int right = 0; right < nums.length; right++) {
+            sum += nums[right];
+
+            if (map.containsKey(sum % k)) {
+                count += map.get(sum % k);
+            }
+            map.merge(sum % k, 1, (o, n) -> o + n);
+        }
+        System.out.println(map);
+        return count;
+        // when a remainder occurs n times total, the number of valid pairs it contributes is n choose 2 (n(n-1)/2) or n^2 - n / 2
+    }
+    // Exercise 10 - difficulty increasing, total stands at 14
+    // Given a String consisting only of binary numbrs, find total number of contiguous substrings where the count of 0s equals the count of 1's
+    // Think through this one carefully before building
+    //      the underlying trick is genuinely the same prefix sum plus map idea but the sum itself isnt a direct running total of characters anymore
+    // Work out what transformation turns cunt zeros equals count ones into something yo can track as a signle running numberm the same way sum divisible by k got reduced to tracking remainders
+    // Consider: what if encountering a 1 countes as +1 and encountering a 0 counted as -1
+    // What would it mean in terms of that running total for a substring to contain an equal number of each character
 }
