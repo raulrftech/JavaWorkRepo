@@ -12,7 +12,6 @@ public class day5 {
         int[] testArr2 = {8, 2, 15, 3, 9, 1, 20, 4, 6, 11, 2, 18, 5, 7, 3, 13, 9, 1, 16, 4};
         int[] testArr = {1, 2, 2, 3, 1, 4, 4, 4, 5, 5, 2, 2, 2, 3, 3};
         int[] tA3 = new int[] {1, 2, 3, 4, 5, 4, 3};
-        System.out.println(findShortestSub(variableUse, 12));
     }
 
     // Big-O Speed
@@ -912,6 +911,43 @@ public class day5 {
     //      given everything already proven about sliding max/min not having a cheap O(1) update trick
     //          is it acceptable for this specific exercise to fall back to a full rescan of the current windows k elements to find the max penalty each time the window slides
     //              making this an intentionalyy O(N*K) solution rather than a fully optimal one
-    
+    public static int findMaxPossible(int[] regular, int[] penalty, int k) {
+        int maxSum = 0; int left = 0; int currentSum = 0;
+        for (int right = 0; right < regular.length; right++) {
+            currentSum += regular[right];
+            if (right == (k-1)) {
+                int penalBest = 0;
+                for (int pen = left; pen < k; pen++) {
+                    penalBest = Math.max(penalBest, penalty[pen]);
+                }
+                maxSum = Math.max(maxSum, currentSum - penalBest);
+                k++; left++; 
+            }
+        }
+        return maxSum;
+    }
+    // Phase 3 - Linked Lists
+    // Full explanation before anything else
+    // A linked list is the structural opposite of an array, worth contrasting precisely against everything jsut spent months proving about contiguous memory
+    // Instead of one unbroken block, a linkedl list is a chain of individually-allocated nodes, each one holding two things:
+    //      some actual data and a reference to the next node in the chain
+    // The nodes themselves can live anywhere in memory, scattered, non-contiguous, connected only be these references
+    //          class Node {int data; Node next; Node(int data) { this.data = data; this.next = null; }}
+    // WHy access is O(n) and not O(1)
+    //      since nodes arent contiguous, theres no baseAddress + offset trick possible
+    //          to reach the 5th node, you must start at the beginning and follow next references one at a time, four seperate hops walking the chain
+    //          This is strictly worse than an arrays direct-address O(1) access
+    // Why insertion/deletion at a known position is O(1)
+    //      since theres no contiguous block requiring a shift, inserting a new node between two existing ones is just rewiring two references
+    //          the node before points to the new node, the new node points to what used to come next
+    //          No other node in the entire list needs to move at all, a genuine structural advantage over arrays O(n) shift cost
+    // The head references - how you actually access a linked list
+    //      A linked list itself is typically represented by just one variable, a reference to the first node, called head
+    //      Every other node is reached only by following next references starting from head
+    //          if you ever lose your reference to head, the entire rest of the list becomes unreachable, garbage-collected away, since nothing else points to it
+    // Before any exercise, trace this concretely: 
+    //      given three separately-created Node objects, walk through in words how you would manually link them together into a chain of 1->2->3
+    //      what head would need to reference once theyre connected
+    //      what line of code connects the first node to the second
 }
  
