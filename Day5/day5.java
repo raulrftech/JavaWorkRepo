@@ -11,7 +11,8 @@ public class day5 {
         int[] variableUse = new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
         int[] testArr2 = {8, 2, 15, 3, 9, 1, 20, 4, 6, 11, 2, 18, 5, 7, 3, 13, 9, 1, 16, 4};
         int[] testArr = {1, 2, 2, 3, 1, 4, 4, 4, 5, 5, 2, 2, 2, 3, 3};
-        System.out.println(findValidModulos(new int[] {2, 6, 4, 5, 3}, 3));
+        int[] tA3 = new int[] {1, 2, 3, 4, 5, 4, 3};
+        System.out.println(findShortestSub(variableUse, 12));
     }
 
     // Big-O Speed
@@ -820,4 +821,97 @@ public class day5 {
     // Work out what transformation turns cunt zeros equals count ones into something yo can track as a signle running numberm the same way sum divisible by k got reduced to tracking remainders
     // Consider: what if encountering a 1 countes as +1 and encountering a 0 counted as -1
     // What would it mean in terms of that running total for a substring to contain an equal number of each character
+    public static int equalBinaryString(String binString) {
+        int count = 0; int sum = 0;
+        HashMap<Integer, Integer> occurences = new HashMap<>();
+        occurences.put(0, 1);
+        for (int right = 0; right < binString.length(); right++) {
+            if (binString.charAt(right) == '1') { sum++; } else { sum--; }
+            if (occurences.containsKey(sum)) { count += occurences.get(sum); }
+            System.out.println(String.format("O: %s, S: %d", occurences, sum));
+            occurences.merge(sum, 1, (o, n) -> o + n);
+        }
+        return count;
+    }
+    // Exercise 11, difficulty increasing
+    // Given an int[], find the legnth of the longest strictly increasing contiguous subarray, meaning each element must be strictly greater than the one immediately before it, no repeats allowed within it
+    // Theres no map involved at all here, no prefix sum, no distinct-value tracking
+    // Think through why:
+    //      the validity of this window dpeends only on the relationship between two adjacent elements, is the current one greater than the previous one, not any running total count or set membership at all
+    // Before writing any code, reason through this:
+    //      Given that the condition only ever depends on comparing arr[right] against arr[right - 1], does this problem actually need a left/right two pointer structure growing and shrinking at all
+    //          or could it be solved with something simpler such as a single pass, tracking just the current streaks lenght and the best one seen?
+    //      Think through whehter shrinking even makes sense as a concept here, given that the moment the icnreasing condition breaks, the entire current streak ebcomes invalid at once, not something youd want to shirnk from 1 side
+    public static int findLongestIncreasing(int[] nums) {
+        int maxLength = 1; int currentLength = 1;
+        for (int i = 1; i < nums.length; i++) {
+            if (nums[i] > nums[ i -1]) { currentLength++; } else { currentLength = 1; }
+            maxLength = Math.max(maxLength, currentLength);
+        }
+        return maxLength;
+    }
+    // Exercise 12 - difficulty increasing, total remains at 14
+    // Given an int[], find length of longest contiguous subarray that is either strictly increasing or strictly decreasing, meaning check both directions and return whichever streak increasing/decreasing is longest across the whole array
+    // THink through before building, does this genuinely require two separate passes over the array (on tracking increasing streaks, one tracking decreasing) or can both be tracked simultaneously
+    //      in a single pass using two independent counters that both reset and grow bases on different conditions at each step
+    // Consider what happens at each index, could the same element potentially extend an increasing streak and simultaneously break a decreasing one or vice versa
+    //      meaning both counters need their own independent logic evaluated at every single iteration, not sharing one rest/increment decision
+    public static int findLongestDeIncreasing(int[] arr) {
+        int totalMaxLength = 1;
+        int maxDecreasing = 1; int maxIncreasing = 1;
+        for (int i = 1; i < arr.length; i++) {
+            if (arr[i] < arr[i - 1]) {
+                maxIncreasing = 1;
+                maxDecreasing++;
+            } else {
+                maxDecreasing = 1;
+                maxIncreasing++;
+            }
+            totalMaxLength = Math.max(totalMaxLength, Math.max(maxDecreasing, maxIncreasing));
+        }
+        System.out.println(String.format("-%d, +%d", maxDecreasing, maxIncreasing));
+        return totalMaxLength;
+    }
+    /*
+        // This exercise will be conducted whenever the correct ds are introduced
+        Given an int[], find the length of the longest contiguous subarray where every element is strictly greater than the average of the entire subarray. 
+            This forces a genuinely different kind of thinking than anything in this set so far — unlike every prior "streak" or "window" condition, 
+                this one's validity depends on a relationship every element has with a value computed from the whole subarray itself, not a simple adjacent 
+                    comparison or a running count/sum threshold against a fixed external target.
+        Think through this carefully before building anything, since it's worth recognizing a real structural trap: can this condition be checked incrementally,
+            the way every sliding-window exercise so far has (grow one element, cheaply update a running value, decide validity) — or does checking "is every
+                element greater than this subarray's own average" fundamentally require knowing the full subarray's contents before you can evaluate it at all,
+                    meaning any candidate window would need to be checked as a whole, not built up incrementally with cheap per-step updates?
+        Reason through it with a small example: take [5, 6, 7] — compute the average, then check whether every element exceeds it. Now imagine adding a fourth
+            element to extend this into [5,6,7,8] — does knowing the previous window's average let you cheaply determine anything about the new, larger window's
+                validity, or does the entire condition need to be re-evaluated from scratch?
+     */
+    // Exercise 13 - difficulty increasing total remains 14
+    // Given an int[] and target k, find the length of the shortest contiguous subarray with sum greater than or equal to k
+    //      genuinely the mirror image of every longest variant built so far tonight, using Math.min instead of Math.max and shrinking while condition is already satisfied
+    //          (trying to shrink further, since youre now hunting for the smalles valid window, not the largest) rather than shrinking to escape an invalid state
+    public static int findShortestSub(int[] arr, int k) {
+        int left = 0; int sum = 0; int shortestLength = Integer.MAX_VALUE;
+        for (int right = 0; right < arr.length; right++) {
+            sum += arr[right];
+            while (sum >= k) { shortestLength = Math.min(shortestLength, right - left + 1); System.out.println(Arrays.toString(Arrays.copyOfRange(arr, left, right + 1))); sum -= arr[left]; left++; }
+        }
+        return shortestLength;
+    }
+    // Exercise 14, closing exc for this set.
+    // Given an int[] and integer k, find max sum achievable form any contiguous subarray of length exactly k but with one added twist
+    //      youre also given a second int[] of the same length as the original array, representing a penalty value at each index
+    // If your chosen window includes index 1, you must subtract penalty[1] from that windows sum
+    //      but only for the single highest penalty value found within that specific window (not every penalty in the window, just the worst one)
+    //          representing "you get penalized once per window, for your single riskiest included position"
+    // THis deliberatly combines two things proven separately:
+    //      the fixed size sum tracking window and a running maximum within the window tracking mechanish similar in spirit to the min/max range problem
+    //          except this time, since window size is fixed at k rather than variable, think carefully about whether the no simple arithmetic shortcut for sliding min/max limitation still applies
+    //          or whether the fixed size constraint changes whats genuinel feasible without needing a monotonic deque
+    // before writing any code, reason through this explicitly:
+    //      given everything already proven about sliding max/min not having a cheap O(1) update trick
+    //          is it acceptable for this specific exercise to fall back to a full rescan of the current windows k elements to find the max penalty each time the window slides
+    //              making this an intentionalyy O(N*K) solution rather than a fully optimal one
+    
 }
+ 
