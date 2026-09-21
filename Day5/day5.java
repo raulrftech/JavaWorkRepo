@@ -8,10 +8,9 @@ import java.util.List;
 
 public class day5 {
     public static void main(String[] args) {
-        int[] variableUse = new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
-        int[] testArr2 = {8, 2, 15, 3, 9, 1, 20, 4, 6, 11, 2, 18, 5, 7, 3, 13, 9, 1, 16, 4};
-        int[] testArr = {1, 2, 2, 3, 1, 4, 4, 4, 5, 5, 2, 2, 2, 3, 3};
-        int[] tA3 = new int[] {1, 2, 3, 4, 5, 4, 3};
+        LL1 head = new LL1();
+        head.addToEnd(1); head.addToEnd(2); head.addToEnd(3); head.addToEnd(4); head.addToEnd(5);
+        head.printAll(); System.out.println(head.size());
     }
 
     // Big-O Speed
@@ -949,5 +948,62 @@ public class day5 {
     //      given three separately-created Node objects, walk through in words how you would manually link them together into a chain of 1->2->3
     //      what head would need to reference once theyre connected
     //      what line of code connects the first node to the second
+    // Eercise 1 - Linked Lists, building your own class from scratch
+    // Build a proper LinkedList class (not just loose node objects wired together manuall) with:
+    //      a Node inner class, a head field, and three methods
+    //          addToEnd(int value) that appends a new node to the tail, handing the mepty-list case where head itself is null)
+    //          printAll() which is the traversal proven by hand
+    //          size() that returns count of nodes, computed by traversing
+    // Before building
+    //      think through the empty-list logic esge case specifically
+    //          what does addToENd need to do differently if head is currently null vs if the list already has at least one node
+    public static class LL1 {
+        Node head;
+
+        private class Node {
+            int data; Node next;
+            Node(int data) {
+                this.data = data;
+                this.next = null;
+            }
+        }
+        // The following methods belong on LL1 because they operate on the whole list as a concept
+        // none of these are actions a single Node wuld ever need to perform on itself
+        // A Node's only job is holding one piece of data and a reference to what comes next
+        //      it has no awareness of the list as a whole, no way to know how many other nodes exist or where the lsit ends, unless it was given deliverately
+        // The objects representing the whole collection/system is where operations spanning multiple pieces belong
+        public void addToEnd(int value) {
+            Node newNode = new Node(value);
+            // handle null head
+            if (this.head == null) { this.head = newNode; } else {
+                Node current = this.head;
+                while (current.next != null) { current = current.next; }
+                current.next = newNode;
+            }
+        }
+        public void printAll() {
+            Node current = this.head;
+            while (current != null) {
+                System.out.println(String.format("Found next node with data of %d", current.data));
+                current = current.next;
+            }
+        }
+        public int size() {
+            int count = 0;
+            Node current = this.head;
+            while (current != null) {
+                count++; current = current.next;
+            }
+            return count;
+        }
+    }
+    // Exercise 2 - insertAt(int index, int value) and deleteAt(int index), two ops that actually demonstrate an LLs real advantage over an array
+    // Add both methods to your LL1 class
+    //      insertAt places a new node at a specific position (index 0 meaning new head), shifting nothing else in memory, only rewiring two references
+    //      deleteAt remvoes the node at a specific position, again only rewiring references never shifting
+    // Before building, think thrugh the genuinely tricky edge case both methods share:
+    //      inserting or deleting at index 0 requires different handling than inserting/deleting anywhere else in the middle, since theres no previous node to rewire when youre operating on the head itself
+    //          youre reassigning head directly instead
+    // Walk through in words, what insertAt(0, value) needs to do different from insertAt(2, value), and separately what deleteAt(0) needs to do differently from deleteAt(2)
 }
  
