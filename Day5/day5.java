@@ -10,7 +10,8 @@ public class day5 {
     public static void main(String[] args) {
         LL1 head = new LL1();
         head.addToEnd(1); head.addToEnd(2); head.addToEnd(3); head.addToEnd(4); head.addToEnd(5);
-        head.printAll(); System.out.println(head.size());
+        head.printAll(); System.out.println(head.size()); head.insertAt(80, 22); head.deleteAt(4);
+        LL1 ll2 = new LL1(); ll2.deleteAt(0); ll2.insertAt(0, 1);
     }
 
     // Big-O Speed
@@ -995,6 +996,48 @@ public class day5 {
                 count++; current = current.next;
             }
             return count;
+        }
+        public void insertAt(int index, int value) {
+            Node newNode = new Node(value); Node current = this.head;
+            int counter = 0;
+
+            if (counter == 0 ) {
+                 if (this.head == null) {this.head = newNode; System.out.println("Since list was originally empty, this LL now starts with this node"); return; } 
+                 else { newNode.next = this.head; this.head = newNode; return; } 
+            }
+
+            while (counter < index - 1 && current.next != null) {
+                counter++; current = current.next;
+            }
+            if (counter == (index - 1)) { current.next = newNode; } else { 
+                System.out.println(String.format("Insertion was only able to reach node %d. Not able to gain access to position %d for proper insertion.", counter + 1, index -1));
+                return;
+            }
+        }
+        public void deleteAt(int index) {
+            int counter = 0; Node current = this.head;
+            if (index == 0) {
+                if (this.head == null) { System.out.println("This linked list is already empty."); return; }
+                if (this.head.next != null) {
+                    this.head = this.head.next; return;
+                } else {
+                    this.head = null;
+                    System.out.println("There is no other node to reset head too. This linked list is now empty");
+                    return;
+                }
+                
+            }
+            while (counter < index - 1 && current.next != null) {
+                counter++; current = current.next;
+            }
+            if (counter == (index - 1)) {
+                // skipping 2 -> 1 --> 3
+                // but what if theres no 3
+                if (current.next.next == null) {
+                    current.next = null;
+                    System.out.println("The index passed in pointed to the very last node, it's now deleted");
+                } else { current.next = current.next.next; }
+            }
         }
     }
     // Exercise 2 - insertAt(int index, int value) and deleteAt(int index), two ops that actually demonstrate an LLs real advantage over an array
