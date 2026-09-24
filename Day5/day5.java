@@ -1064,6 +1064,7 @@ public class day5 {
                 }
             }
         }
+
         public void returnSummary() {
             Node current = this.head;
             while (current != null) {
@@ -1111,5 +1112,10 @@ public class day5 {
     //   My Plan For This
     //          Instead of storing occurences in an HM, I can do a while (current.next != null) { if (current.next == value) { current.next = current.next.next}}
     //          I do not need a counter for this, well I can if I want to get the total number of nodes deleted but im going to implement an iteration to print out the chain before and after
+    // Exericse 6 - Yet Another One Liner Req
+    //      Write a method that removes duplicate values form the list, keeping only the first occurence of each
+    //      This time you dont know the target value in advance so youre still tracking whats already been seen rather than checking every node against one fixed value.
+    //   My Plan For This
+
 }
  
