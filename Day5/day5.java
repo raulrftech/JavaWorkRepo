@@ -10,8 +10,10 @@ public class day5 {
     public static void main(String[] args) {
         LL1 head = new LL1();
         head.addToEnd(1); head.addToEnd(2); head.addToEnd(3); head.addToEnd(4); head.addToEnd(5);
-        head.printAll(); System.out.println(head.size()); head.insertAt(80, 22); head.deleteAt(4);
-        LL1 ll2 = new LL1(); ll2.deleteAt(0); ll2.insertAt(0, 1);
+        head.addToEnd(6); head.addToEnd(7); head.addToEnd(2); head.addToEnd(1); head.addToEnd(4);
+        head.addToEnd(6); head.addToEnd(11); head.addToEnd(12); head.addToEnd(114); head.addToEnd(2);
+        head.addToEnd(6); head.addToEnd(2); head.addToEnd(8); head.addToEnd(9); head.addToEnd(8);
+        head.returnSummary(); System.out.println(); head.deleteNodesWith(6); System.out.println(); head.deleteNodesWith(2);
     }
 
     // Big-O Speed
@@ -1039,6 +1041,36 @@ public class day5 {
                 } else { current.next = current.next.next; }
             }
         }
+        public int findNode(int value) {
+            Node current = this.head; int counter = -1;
+            while (current != null) { counter++; if (current.data == value) { return counter; } else { current = current.next; }} return -1;
+        }
+        public boolean deleteNodeWith(int value) {
+           Node current = this.head; int currentIndex = 0;
+           int indexOf = findNode(value);
+           if (this.head.data == value) { current = this.head.next; this.head = current; return true; }
+           if (indexOf == -1) { return false; }
+           while (currentIndex < indexOf - 1) { currentIndex++; current = current.next; }
+           current.next = current.next.next; return true; 
+        }
+        public void deleteNodesWith(int value) {
+            Node current = this.head;
+            while (this.head != null && this.head.data == value ) { current = this.head.next; this.head = current; }
+            while (current != null && current.next != null) {
+                if (current.next.data == value) {
+                    current.next = current.next.next; 
+                 } else {
+                     current = current.next;
+                }
+            }
+        }
+        public void returnSummary() {
+            Node current = this.head;
+            while (current != null) {
+                System.out.print(current.data + " -> ");
+                current = current.next;
+            }
+        }
     }
     // Exercise 2 - insertAt(int index, int value) and deleteAt(int index), two ops that actually demonstrate an LLs real advantage over an array
     // Add both methods to your LL1 class
@@ -1048,5 +1080,36 @@ public class day5 {
     //      inserting or deleting at index 0 requires different handling than inserting/deleting anywhere else in the middle, since theres no previous node to rewire when youre operating on the head itself
     //          youre reassigning head directly instead
     // Walk through in words, what insertAt(0, value) needs to do different from insertAt(2, value), and separately what deleteAt(0) needs to do differently from deleteAt(2)
+                // EXERCISE 2 AND 3 ARE IMPLEMENTED IN THE ABOVE CODE
+    // Exercise 3 - One Liner Req
+    //      Give the list the ability to tell you whether a given value is present and where it is
+    //    My Plan For This
+    //          Since we have a value, this is of course the firstIndex of since numerous nodes can have the same value
+    //          So we can do a while loop with current so while (current != null) <- this would overall end at .size - 1
+    //          Im doing this with a counter ofc so that in the body i can increment counter and check if it has the value
+    //          If it breaks out the while loop then no node has the particular value which I will return -1
+    // Exercise 4 - One Liner Req
+    //      Write a method that deletes the node containing a given value from the list
+    //    My Plan For This
+    //      Since I have the method findNode that returns the index of the node containing that certain value i can use this and while condition will be while (counter < returnValue) 
+    //      Not doing .equals(returnValue) since I need to be on the node prior in order to reset it and connect to the following node via next.next
+    //      Okay I was doing something wrong. findNode correctly returns the index of a particular node
+    //      Since i can find the index of the wanted node to delete with this method i can use int indexOf = findNode(inputValue)
+    //      the thing i was messing up in was perhaps both my while condition and my while body
+    //      Since we start from head, index0, current = current.next means current is now the 2nd node with index of 1
+    //      Since i want index 2 to be the one I stop at so I have access to 3 and 4 my while condition can be while (currentIndex < indexOf)
+    //      So this is where I began thinking that my while body was wrong since it increments counter so from 0-1 for first iteration which is the correct index of current whenever current = current.next is called
+    //      Since I want to stop at 2 that would mean i have to do this until it hits 1 so that counter is incremented in body and current.next is set to the 3rd node in the list
+    //      So in order to stop at index 1 with indexOf 3 that would be while (currentIndex < indexOf - 1)
+    // WORTH RETAINING
+    //   One closing piece to make that precise rather than absolute: "no theta" means no theta describes every input of size n uniformly
+    //   it doesn't mean theta stops applying anywhere. The best-case scenario on its own still has a tight bound, Θ(1). The worst-case 
+    //   scenario on its own still has a tight bound, Θ(n). What doesn't exist is a single Θ(f(n)) holding across both, because which one 
+    //   you get depends on more than just n — it depends on where the value sits, or whether it's there at all.
+    // Exercise 5 - Another One Liner Req
+    //      Write a method that deletes every node containing a given value, not just the first one
+    //   My Plan For This
+    //          Instead of storing occurences in an HM, I can do a while (current.next != null) { if (current.next == value) { current.next = current.next.next}}
+    //          I do not need a counter for this, well I can if I want to get the total number of nodes deleted but im going to implement an iteration to print out the chain before and after
 }
  
