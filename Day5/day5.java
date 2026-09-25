@@ -13,7 +13,7 @@ public class day5 {
         head.addToEnd(6); head.addToEnd(7); head.addToEnd(2); head.addToEnd(1); head.addToEnd(4);
         head.addToEnd(6); head.addToEnd(11); head.addToEnd(12); head.addToEnd(114); head.addToEnd(2);
         head.addToEnd(6); head.addToEnd(2); head.addToEnd(8); head.addToEnd(9); head.addToEnd(8);
-        head.returnSummary(); System.out.println(); head.deleteNodesWith(6); System.out.println(); head.deleteNodesWith(2);
+        head.returnSummary(); System.out.println(); head.removeDuplicates(); head.returnSummary();
     }
 
     // Big-O Speed
@@ -1065,6 +1065,41 @@ public class day5 {
             }
         }
 
+        public void removeDuplicates() {
+            HashSet<Integer> occurences = new HashSet<>();
+            Node current = this.head;
+            if (current == null) { return; }
+            occurences.add(current.data);
+            while (current.next != null) {
+                if (occurences.contains(current.next.data)) {
+                    current.next = current.next.next;
+                } else { occurences.add(current.next.data); current = current.next; }
+            }
+            // Answers to Claude's Questions
+            //      Trace this.head = null through this method by hand. Whats the very first thing that happens to current and whats the very first tthing the method tried to do with it right after
+            //          if the list is empty then it would be setting current to null and the method would crash whenever the while loop is checked 
+            //      Check your own plan against what was built. Wanted to utilize merge with occurence value but decided to go with presence checking. Why?
+            //          i saw that the usage of checking if its value was useless, just the presence of the key itself means it was seen before so that is why
+            //      Although the one written is better, is there anywhere in this method that actually reads a count back out of occurences?
+            //          no lol
+            //      If not, what is the Integer count and the merge lambda buying you, versus just recording seen; a HashSet<Integer>
+            //          nothing, just an overall occurence count which was never used for anything in this method, a HashSet makes perfect sense but Ive gotten used to HM's so that is why
+            //      What is structurally different abut this problem versus exc 5 that makes a lookup structure actually earn its keep here when it didnt in exc 5
+            //          exc 5 was designed to delete all nodes with a particular value whereas this one required to only delete 2nd or more occurence of something so there had to be a way to retain that info
+            //          and that was via a HashSet. Im going to include these answers to your qustions along with the updated code
+            //      What does a HashSet give you over an ArrayList, for the one operations this does repeatedly, that makes it the right choice rather than just happening to work
+            //          ArrayList can contain dupes whilst a Set cannot, the add fucntion is conditional with a Set, if its already there then it doesnt add again then in the AL wed have to get the index of it then remove that
+            //      How expensive is ArrayList.contains() once the list already holds k values, compared to HashSet.contains() once the the set already holds k values?
+            //          AL.contains() performs a linear search using .equals() on each index it comes across to check if it does contain the value whereas Set has a hashmap underneat it and the object passed in used as the key to check for that in O(1)
+            //      Given occurences can grow to hold up to n values over one call to removeDupes, with .contains() getting called once per node, what does that difference actually cost you, total, across the whole method, with each structure
+            //          itll be the differnce of how many times its called for the O(1) way versus iterating indices to find that specific index in O(n), that can differ greatly by the time the method finishes
+            //      Sum 0...n-1 for the ArrayList.contains() search, what does that total come out to and what BigO class does it fall into
+            //          it depends on the size of the input list, for example if size was 10 total would be 55. Its numerous linear searches so Big O is n
+            //      What does it make the time complexity of the whole method, if it had been built on an AL instead of a HashSet
+            //          my current version is O(n) due to the while loop with an O(1) check utilizing a HashSet but if it were an AL it would have the same complexity but take longer
+            
+        }
+
         public void returnSummary() {
             Node current = this.head;
             while (current != null) {
@@ -1116,6 +1151,9 @@ public class day5 {
     //      Write a method that removes duplicate values form the list, keeping only the first occurence of each
     //      This time you dont know the target value in advance so youre still tracking whats already been seen rather than checking every node against one fixed value.
     //   My Plan For This
-
+    //      Basic iteration with an HM with a merge and checking if its key is greater than one
+    //      Since nodes have values, I can use the merge on this
+    //      After thought, used around the same fucntionality as in exercise 5 utilizing current.next = current.next.next and not advancing current so if the next
+    //          one is also a dupe it does get removed as well. Succesfully ran
 }
  
