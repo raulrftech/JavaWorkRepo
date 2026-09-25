@@ -8,12 +8,11 @@ import java.util.List;
 
 public class day5 {
     public static void main(String[] args) {
-        LL1 head = new LL1();
-        head.addToEnd(1); head.addToEnd(2); head.addToEnd(3); head.addToEnd(4); head.addToEnd(5);
-        head.addToEnd(6); head.addToEnd(7); head.addToEnd(2); head.addToEnd(1); head.addToEnd(4);
-        head.addToEnd(6); head.addToEnd(11); head.addToEnd(12); head.addToEnd(114); head.addToEnd(2);
-        head.addToEnd(6); head.addToEnd(2); head.addToEnd(8); head.addToEnd(9); head.addToEnd(8);
-        head.returnSummary(); System.out.println(); head.removeDuplicates(); head.returnSummary();
+        LL1 list1 = new LL1();
+        list1.addToEnd(1); list1.addToEnd(3); list1.addToEnd(5); list1.addToEnd(7);
+        LL1 list2 = new LL1();
+        list2.addToEnd(2); list2.addToEnd(4); list2.addToEnd(6); list2.addToEnd(8);
+        list1.joinLists(list2).returnSummary();
     }
 
     // Big-O Speed
@@ -1097,7 +1096,40 @@ public class day5 {
             //          it depends on the size of the input list, for example if size was 10 total would be 55. Its numerous linear searches so Big O is n
             //      What does it make the time complexity of the whole method, if it had been built on an AL instead of a HashSet
             //          my current version is O(n) due to the while loop with an O(1) check utilizing a HashSet but if it were an AL it would have the same complexity but take longer
-            
+            //      What is space complexity? Walk through input versus auxiliary. Does swapping HashSet for ArrayList change the space complexity at all or does it only change time
+            //          Theres no input besides the LL, theres an auxiliary space of the HS and the Node current. Swapping HS for an AL would change the space as the HS would contain only distinct values whereas the AL can be a total size of n
+            //      Is there any point in this method where youd ever try to add a value thats already sitting in occurences
+            //          No because the uniqueness isnt coming form the HS refusing a dupe on my behalf , its coming from the if (!contains) -> add logic and that logic would guard an AL exactly the same way
+        }
+
+        // Exercise 7
+        // Write a method that merges this sorted list with another sorted listinto one combined sorted list.
+        //      Youre coordinating two spearate transversals instead of one
+        // My Plan For This
+        //      This method would have to be static taking two instances of the class in order to do so or can take another list as a parameter which ill do instead
+        //      Since I have to link them i would need to have two pointers, one to each respectively
+        //      First we determine which head to start with which we can do Node newHead = (list1.head.data < list2.head.data) ? list1.head : list2.head
+        //      In order to traverse, itll be a constant comparison between each current of either input list
+        //          1, 2 and 3, 4 would return 1,2,3,4. So the head is 1 and not 3, list1's current becomes null before the 2nd list one does. So we can have one current thatll point to both at a certain condition
+        //      So current can point to the conditional head of the newList created then the while condition will be while (current != null)
+        //      But in order for current to point to the right node and also handle a null value 
+        public LL1 joinLists(LL1 list2) {
+            LL1 newList = new LL1();
+            Node list1Current = this.head;
+            Node list2Current = list2.head;
+            while (list1Current != null && list2Current != null) {
+                if (list1Current.data < list2Current.data) { newList.addToEnd(list1Current.data); list1Current = list1Current.next; } else { newList.addToEnd(list2Current.data); list2Current = list2Current.next;}
+            }
+            if (list1Current != null) {
+                while (list1Current != null) {
+                    newList.addToEnd(list1Current.data); list1Current = list1Current.next;
+                }
+            } else {
+                while (list2Current != null) {
+                    newList.addToEnd(list2Current.data); list2Current = list2Current.next;
+                }
+            }
+            return newList;
         }
 
         public void returnSummary() {
