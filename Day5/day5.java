@@ -1132,6 +1132,56 @@ public class day5 {
             return newList;
         }
 
+        // Exercise 8 - remove the Nth node from the end of the list
+        //      Given only the head and n, no separate length param
+        //      N is 1-indexed from the end, N = 1 means the last node
+        //  Example: removing N=2 from 1,2,3,4,5 should return 1,2,3,4,5
+        public Node removeNthFromEnd(Node head, int n) {
+            // since this is indexed-based and starting from the end
+            // to get the end it would be list.length - n, such that if n is 1, that would return the last
+            ArrayList<Node> nodeArray = new ArrayList<>();
+            Node current = head;
+            while (current != null) { nodeArray.add(current); current = current.next; }
+            if (nodeArray.size() - n == 0) { current = head.next; head = current; return head; }
+            if (nodeArray.size() - n < 0) { System.out.println("Insufficient linked list size."); return null; }
+            nodeArray.get(nodeArray.size() - (n + 1)).next = nodeArray.size() - (n - 1) < nodeArray.size() ? nodeArray.get(nodeArray.size() - (n - 1)) : null; return head;
+            // Since you already pull the target node itself via nodeArray.get(targetIndex), you could get the node after it straight form targetNode.next instead of a second array lookup
+                // thats naturally null when the target is the tail so it sidesteps the bounds check entirely instead of working around it
+        }
+
+        // Exercise 9 - Check whether two linked lists are dientical
+            // Same values, in the same order, same legnth
+        // Given two heds, determine if they match all the way thorugh, including correctly handing the case where one list is longer than the other
+        public boolean isIdentical(Node headA, Node headB) {
+            Node ll1C = headA; Node ll2C = headB;
+            while ( ll1C != null && ll2C != null) {
+                if (ll1C.data ==ll2C.data) { ll1C = ll1C.next; ll2C = ll2C.next; } else { return false; }
+            }
+            return ll1C == ll2C;
+        }
+
+        // Exercise 10 - Concatenate two linked lists 
+        // Given headA and headB, join list B onto the end of list A and return the combined head
+        // Think thorughh what should happen if headA is empty
+        public Node concatenate(Node headA, Node headB) {
+            if (headA == null) { return headB; }
+            Node llAC = headA;
+            while (llAC.next != null) { llAC = llAC.next; }
+            llAC.next = headB;
+            return headA;
+        }
+
+        // Exercise 11 - remove dupe vals from an unsorted list, no extra data structure this time
+        // Same goal as exc 6, each val surives only once, keep the first occurence but now with no HS, AL or other collection
+        // O(1) extra space, comparing nodes directly
+        // One thing to think about befoe you start
+        //      given the keep the first occurrence rule, could the head itself ever need to be removed here?
+        //          That should tell you something about what this method actually needs to return
+        public void removeDupes_NoCollections(Node head) {
+
+            
+        }
+
         public void returnSummary() {
             Node current = this.head;
             while (current != null) {
