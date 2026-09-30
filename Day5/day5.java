@@ -8,11 +8,9 @@ import java.util.List;
 
 public class day5 {
     public static void main(String[] args) {
-        LL1 list1 = new LL1();
-        list1.addToEnd(1); list1.addToEnd(3); list1.addToEnd(5); list1.addToEnd(7);
-        LL1 list2 = new LL1();
-        list2.addToEnd(2); list2.addToEnd(4); list2.addToEnd(6); list2.addToEnd(8);
-        list1.joinLists(list2).returnSummary();
+        LL1 ll1 = new LL1(); ll1.addToEnd(1); ll1.addToEnd(1); ll1.addToEnd(2); ll1.addToEnd(2); ll1.addToEnd(1); ll1.addToEnd(3); ll1.addToEnd(4);
+        ll1.addToEnd(4); ll1.addToEnd(5);
+        ll1.returnSummary(); System.out.println(); ll1.removeDupes_NoCollections(ll1.head); System.out.println(); ll1.returnSummary();
     }
 
     // Big-O Speed
@@ -1177,9 +1175,25 @@ public class day5 {
         // One thing to think about befoe you start
         //      given the keep the first occurrence rule, could the head itself ever need to be removed here?
         //          That should tell you something about what this method actually needs to return
-        public void removeDupes_NoCollections(Node head) {
+        public Node removeDupes_NoCollections(Node head) {
+            Node left = head; Node current = left.next;
+            if (head.next == null) { return head; }
+            while (current.next.next != null) {
+                if (left.data == current.data) {
+                    System.out.println(String.format("Left and C are equal: { L: %d, C: %d }%n", left.data, current.data));
+                    System.out.println(String.format("Going to reset current(%d) to current.next(%d) and left.next(%d) to current(%d). Left remains at (%d)", current.data, current.next.data, left.next.data, current.next.data, left.data));
+                    current = current.next; left.next = current; this.returnSummary();
+                } else if (current.data == current.next.data) {
+                    System.out.println(String.format("Current and CN are equal: {C: %d, CN: %d}%n", current.data, current.next.data));
+                    System.out.println(String.format("Current.Next is currently %d, resetting it to be %d%n", current.next.data, current.next.next.data));
 
-            
+                    current.next = current.next.next; this.returnSummary();
+                } else {
+                    System.out.println(String.format("Current(%d) doesnt match to left nor its next, resetting current to be the next of value %d%n", current.data, current.next.data));
+                    current = current.next; this.returnSummary();
+                }
+            }
+            return head;
         }
 
         public void returnSummary() {
