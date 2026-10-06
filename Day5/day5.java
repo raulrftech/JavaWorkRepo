@@ -8,9 +8,10 @@ import java.util.List;
 
 public class day5 {
     public static void main(String[] args) {
-        LL1 ll1 = new LL1(); ll1.addToEnd(1); ll1.addToEnd(1); ll1.addToEnd(2); ll1.addToEnd(2); ll1.addToEnd(1); ll1.addToEnd(3); ll1.addToEnd(4);
-        ll1.addToEnd(4); ll1.addToEnd(5);
-        ll1.returnSummary(); System.out.println(); ll1.removeDupes_NoCollections(ll1.head); System.out.println(); ll1.returnSummary();
+        LL1 ll = new LL1();
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(4); ll.addToEnd(5); ll.addToEnd(3); ll.addToEnd(2); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(3);
+        ll.returnSummary(); System.out.println();
+        ll.rearrangeList(ll.head, 3);
     }
 
     // Big-O Speed
@@ -1180,20 +1181,32 @@ public class day5 {
             if (head.next == null) { return head; }
             while (current.next.next != null) {
                 if (left.data == current.data) {
-                    System.out.println(String.format("Left and C are equal: { L: %d, C: %d }%n", left.data, current.data));
-                    System.out.println(String.format("Going to reset current(%d) to current.next(%d) and left.next(%d) to current(%d). Left remains at (%d)", current.data, current.next.data, left.next.data, current.next.data, left.data));
                     current = current.next; left.next = current; this.returnSummary();
-                } else if (current.data == current.next.data) {
-                    System.out.println(String.format("Current and CN are equal: {C: %d, CN: %d}%n", current.data, current.next.data));
-                    System.out.println(String.format("Current.Next is currently %d, resetting it to be %d%n", current.next.data, current.next.next.data));
-
-                    current.next = current.next.next; this.returnSummary();
-                } else {
-                    System.out.println(String.format("Current(%d) doesnt match to left nor its next, resetting current to be the next of value %d%n", current.data, current.next.data));
-                    current = current.next; this.returnSummary();
-                }
+                } else if (current.data == current.next.data) { current.next = current.next.next; this.returnSummary(); } else { current = current.next; this.returnSummary(); }
             }
             return head;
+        }
+        
+        // Excercise 12 - Rearrange a singly linked list around a value x so every node with a value less than x comes before every node with a value greater than or equal to x.
+        // WIthin each group, nodes must keep their original relative order
+        // Assume that x isn't mandated to be in the list at all and value x can occur multiple times
+        public Node rearrangeList(Node head, int x) {
+            if (head == null) { return null; }
+            
+            // TODO: This returns some other new instance of Node. Return edited version of Node passed in
+            
+            Node current = head;
+            LL1 groupA = new LL1(); groupA.addToEnd(0);
+            LL1 groupB = new LL1(); groupB.addToEnd(0);
+            
+            while (current.next != null) {
+                if (current.data < x) {
+                    groupA.addToEnd(current.data);
+                } else { groupB.addToEnd(current.data); }
+                current = current.next;
+            }
+            
+            return concatenate(groupA.head, groupB.head);
         }
 
         public void returnSummary() {
@@ -1252,4 +1265,3 @@ public class day5 {
     //      After thought, used around the same fucntionality as in exercise 5 utilizing current.next = current.next.next and not advancing current so if the next
     //          one is also a dupe it does get removed as well. Succesfully ran
 }
- 
