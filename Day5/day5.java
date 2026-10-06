@@ -10,7 +10,6 @@ public class day5 {
     public static void main(String[] args) {
         LL1 ll = new LL1();
         ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(4); ll.addToEnd(5); ll.addToEnd(3); ll.addToEnd(2); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(3);
-        ll.returnSummary(); System.out.println();
         ll.rearrangeList(ll.head, 3);
     }
 
@@ -1162,11 +1161,17 @@ public class day5 {
         // Exercise 10 - Concatenate two linked lists 
         // Given headA and headB, join list B onto the end of list A and return the combined head
         // Think thorughh what should happen if headA is empty
-        public Node concatenate(Node headA, Node headB) {
+        public Node concatenate_Heads(Node headA, Node headB, Integer removeValue) {
             if (headA == null) { return headB; }
             Node llAC = headA;
-            while (llAC.next != null) { llAC = llAC.next; }
-            llAC.next = headB;
+            if (llAC.data == removeValue && llAC.next != null) { llAC = llAC.next; headA = llAC; }
+            
+            while (llAC.next != null) {
+                if (llAC.next.data == removeValue) { llAC.next = llAC.next.next; } else {
+                    llAC = llAC.next; }
+                
+            }
+            llAC.next = headB.data == removeValue ? headB.next : headB;
             return headA;
         }
 
@@ -1181,8 +1186,8 @@ public class day5 {
             if (head.next == null) { return head; }
             while (current.next.next != null) {
                 if (left.data == current.data) {
-                    current = current.next; left.next = current; this.returnSummary();
-                } else if (current.data == current.next.data) { current.next = current.next.next; this.returnSummary(); } else { current = current.next; this.returnSummary(); }
+                    current = current.next; left.next = current;
+                } else if (current.data == current.next.data) { current.next = current.next.next;} else { current = current.next; }
             }
             return head;
         }
@@ -1192,25 +1197,24 @@ public class day5 {
         // Assume that x isn't mandated to be in the list at all and value x can occur multiple times
         public Node rearrangeList(Node head, int x) {
             if (head == null) { return null; }
+            if (head.next == null) { return head; }
             
-            // TODO: This returns some other new instance of Node. Return edited version of Node passed in
-            
-            Node current = head;
             LL1 groupA = new LL1(); groupA.addToEnd(0);
             LL1 groupB = new LL1(); groupB.addToEnd(0);
-            
+            Node current = head;
             while (current.next != null) {
-                if (current.data < x) {
-                    groupA.addToEnd(current.data);
-                } else { groupB.addToEnd(current.data); }
+                if (current.data < x) { groupA.addToEnd(current.data); } else { groupB.addToEnd(current.data); }
                 current = current.next;
             }
+            groupB.addToEnd(current.data);
             
-            return concatenate(groupA.head, groupB.head);
+            Node output = concatenate_Heads(groupA.head, groupB.head, groupA.head.data);
+            returnSummary(output);
+            return output;
         }
 
-        public void returnSummary() {
-            Node current = this.head;
+        public void returnSummary(Node head) {
+            Node current = head;
             while (current != null) {
                 System.out.print(current.data + " -> ");
                 current = current.next;
