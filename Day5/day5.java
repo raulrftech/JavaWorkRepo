@@ -9,8 +9,8 @@ import java.util.List;
 public class day5 {
     public static void main(String[] args) {
         LL1 ll = new LL1();
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(4); ll.addToEnd(5); ll.addToEnd(3); ll.addToEnd(2); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(3);
-        ll.rearrangeList(ll.head, 3);
+        ll.addToEnd(1); ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(1); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(6);
+        ll.returnSummary(ll.swapAdjacentNodes(ll.head));
     }
 
     // Big-O Speed
@@ -1211,6 +1211,22 @@ public class day5 {
             Node output = concatenate_Heads(groupA.head, groupB.head, groupA.head.data);
             returnSummary(output);
             return output;
+        }
+        
+        // Exercise 13 - Swap every two adjacent nodes in a linked list by relinking the nodes themselves, not by swapping their data values and return the new head
+        // If the list has an odd length, the last node stays where it is
+        // Target: O(n) time, O(1) extra space
+        public Node swapAdjacentNodes(Node head) {
+            if (head == null || or head.next == null) { return head; }
+            
+            Node newHead = head.next;
+            Node left = head;
+            Node right = head.next;
+            
+            while (right != null) {
+                
+            }
+            return head;
         }
 
         public void returnSummary(Node head) {
