@@ -9,8 +9,8 @@ import java.util.List;
 public class day5 {
     public static void main(String[] args) {
         LL1 ll = new LL1();
-        ll.addToEnd(1); ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(1); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(6);
-        ll.returnSummary(ll.swapAdjacentNodes(ll.head));
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(3); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5); ll.addToEnd(5);
+        ll.returnSummary(ll.removeDupicatesV3(ll.head));
     }
 
     // Big-O Speed
@@ -1217,14 +1217,35 @@ public class day5 {
         // If the list has an odd length, the last node stays where it is
         // Target: O(n) time, O(1) extra space
         public Node swapAdjacentNodes(Node head) {
-            if (head == null || or head.next == null) { return head; }
+            if (head == null || head.next == null) { return head; }
             
-            Node newHead = head.next;
-            Node left = head;
-            Node right = head.next;
+            Node newHead = head.next; Node prev = null;
+            Node left = head; Node right = head.next;
             
             while (right != null) {
+                left.next = right.next;
+                right.next = left;
+                if (prev != null) {
+                    prev.next = right; // previous tail points at this pairs new front
+                }
+                prev = left;
                 
+                left = left.next; right = (left == null) ? null : left.next;
+            }
+            return newHead;
+        }
+        
+        // Exercise 14 - Given the head of a sorted (ascending) singly ll, remove every node whose value appears more than once, so only values that appeared exactly once remain and return the new head
+        // Example 1,2,3,3,4,4,5 becomes 1,2,5
+        // Target Time/Space: O(n) and O(1), one pass relinking existing nodes with no collections or second list
+        public Node removeDupicatesV3(Node head) {
+            if (head == null || head.next == null) { return head; }
+            Node current = head.next;
+            
+            while (current.next != null) {
+                if (current.data == head.data) {
+                    head = current.next; current = head.next;
+                } else { current = current.next; head.next = current; }
             }
             return head;
         }
