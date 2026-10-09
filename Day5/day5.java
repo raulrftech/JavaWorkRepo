@@ -9,7 +9,8 @@ import java.util.List;
 public class day5 {
     public static void main(String[] args) {
         LL1 ll = new LL1();
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(3); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5); ll.addToEnd(5);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(3); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(6); ll.addToEnd(7);
         ll.returnSummary(ll.removeDupicatesV3(ll.head));
     }
 
@@ -1240,13 +1241,14 @@ public class day5 {
         // Target Time/Space: O(n) and O(1), one pass relinking existing nodes with no collections or second list
         public Node removeDupicatesV3(Node head) {
             if (head == null || head.next == null) { return head; }
-            Node current = head.next;
+            Node current = head; Node last = head;
             
             while (current.next != null) {
-                if (current.data == head.data) {
-                    head = current.next; current = head.next;
-                } else { current = current.next; head.next = current; }
+                if (current.next.data == current.data) {
+                    current = current.next;
+                } else { current = current.next; last.next = current; last = last.next;  }
             }
+            head.next = last;
             return head;
         }
 
