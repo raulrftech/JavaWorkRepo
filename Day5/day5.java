@@ -1241,15 +1241,22 @@ public class day5 {
         // Target Time/Space: O(n) and O(1), one pass relinking existing nodes with no collections or second list
         public Node removeDupicatesV3(Node head) {
             if (head == null || head.next == null) { return head; }
-            Node current = head; Node last = head;
             
+            Node prev = head;
+            Node current = head.next;
+            Node ph = new Node(0);
+            Node tail = ph;
+            
+            if (head.data != head.next.data) { tail.next = head; tail = tail.next; }
             while (current.next != null) {
-                if (current.next.data == current.data) {
-                    current = current.next;
-                } else { current = current.next; last.next = current; last = last.next;  }
+                if (current.data != current.next.data && prev.data != current.data) {
+                    tail.next = current; tail = tail.next;
+                }
+                prev = current; current = current.next;
+                
             }
-            head.next = last;
-            return head;
+            if (prev.data != current.data) { tail.next = current; tail = tail.next; }
+            tail.next = null; return ph.next;
         }
 
         public void returnSummary(Node head) {
