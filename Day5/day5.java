@@ -8,10 +8,18 @@ import java.util.List;
 
 public class day5 {
     public static void main(String[] args) {
-        LL1 ll = new LL1();
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(3); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(6); ll.addToEnd(7);
-        ll.returnSummary(ll.removeDupicatesV3(ll.head));
+        LL1 ll = new LL1(); LL1 ll2 = new LL1();
+        ll.addToEnd(1); ll.addToEnd(4); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(6); ll.addToEnd(4); ll.addToEnd(6); ll.addToEnd(9); ll.addToEnd(4); ll.addToEnd(8);
+        ll.addToEnd(9); ll.addToEnd(0); ll.addToEnd(9); ll.addToEnd(1); ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(6); ll.addToEnd(8); ll.addToEnd(5); ll.addToEnd(3);
+        ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(0); ll.addToEnd(3); ll.addToEnd(6); ll.addToEnd(6); ll.addToEnd(9); ll.addToEnd(1); ll.addToEnd(1); ll.addToEnd(4);
+        ll.addToEnd(6); ll.addToEnd(4); ll.addToEnd(9); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(4); ll.addToEnd(5); ll.addToEnd(9); ll.addToEnd(8);
+
+        ll2.addToEnd(6); ll2.addToEnd(2); ll2.addToEnd(1); ll2.addToEnd(0); ll2.addToEnd(2); ll2.addToEnd(8); ll2.addToEnd(8); ll2.addToEnd(0); ll2.addToEnd(6); ll2.addToEnd(7);
+        ll2.addToEnd(0); ll2.addToEnd(9); ll2.addToEnd(0); ll2.addToEnd(8); ll2.addToEnd(3); ll2.addToEnd(2); ll2.addToEnd(3); ll2.addToEnd(1); ll2.addToEnd(1); ll2.addToEnd(7);
+        ll2.addToEnd(3); ll2.addToEnd(6); ll2.addToEnd(7); ll2.addToEnd(6); ll2.addToEnd(5); ll2.addToEnd(3); ll2.addToEnd(0); ll2.addToEnd(8); ll2.addToEnd(8); ll2.addToEnd(6);
+        ll2.addToEnd(8); ll2.addToEnd(9); ll2.addToEnd(0); ll2.addToEnd(8); ll2.addToEnd(6); ll2.addToEnd(3); ll2.addToEnd(0); ll2.addToEnd(0); ll2.addToEnd(5); ll2.addToEnd(7);
+        
+        ll2.returnSummary(ll2.llSums(ll.head, ll2.head));
     }
 
     // Big-O Speed
@@ -1258,7 +1266,61 @@ public class day5 {
             if (prev.data != current.data) { tail.next = current; tail = tail.next; }
             tail.next = null; return ph.next;
         }
-
+        
+        // Exercise 15
+        // Two non-empty singly linked lists each store a non-negative integer, one digit per node, with the least significant digit first
+        // Return the head of a new list that stores their sum in the same format
+        // Example: 2->4->3 (that's 342) plus 5->6->4(tht's 465) gives 7->0->8 (807)
+        // The two lists may not be equal sizes
+        // The two lists may have one node respectively
+        public Node llSums(Node h1, Node h2) {
+            int prevOverage = 0;
+            
+            // base case 1: both are null
+            if (h1 == null && h2 == null) { return null; }
+            // base case 2: h1 is null
+            if (h1 == null && h2 != null) { return h2; }
+            // base case 3: h2 is null
+            if (h1 != null && h2 == null) { return h1; }
+            
+            Node h1c = h1; Node h2c = h2; Node ph = new Node(0); Node tail = ph;
+            int sum = 0;
+            while (h1c != null && h2c != null) {
+                sum = h1c.data + h2c.data + prevOverage;
+                prevOverage = sum / 10;
+                
+                if (sum >= 10) {
+                    tail.next = new Node(sum % 10); tail = tail.next;
+                } else { tail.next = new Node(sum); tail = tail.next; }
+                h1c = h1c.next; h2c = h2c.next;
+            }
+            
+            if (h1c != null) {
+                while (h1c != null) {
+                    int sum3 = h1c.data + prevOverage;
+                    if (prevOverage != 0 && sum3 >= 10) {
+                        prevOverage = sum3 / 10; tail.next = new Node(sum3 % 10); h1c = h1c.next; tail = tail.next;
+                    } else if (prevOverage != 0 && sum3 < 10) {
+                        tail.next = new Node(sum3); prevOverage = h1c.data / 10; h1c = h1c.next; tail = tail.next;
+                    } else { tail.next = new Node(h1c.data); h1c = h1c.next; tail = tail.next; }
+                }
+            } else {
+                while (h2c != null) {
+                    int sum4 = h2c.data + prevOverage;
+                    if (prevOverage != 0 && sum4 >= 10) {
+                        prevOverage = sum4 / 10; tail.next = new Node(sum4 % 10); h2c = h2c.next; tail = tail.next;
+                    } else if (prevOverage != 0 && sum4 < 10) {
+                        prevOverage = sum4 / 10;
+                        tail.next = new Node(sum4); h2c = h2c.next; tail = tail.next;
+                    } else { tail.next = new Node(h2c.data); h2c = h2c.next; tail = tail.next; }
+                }
+            }
+            if (h1c == null && h2c == null && prevOverage != 0) {
+                tail.next = new Node(prevOverage); tail = tail.next;
+            }
+            return ph.next;
+        }
+        
         public void returnSummary(Node head) {
             Node current = head;
             while (current != null) {
