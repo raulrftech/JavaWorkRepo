@@ -1321,6 +1321,14 @@ public class day5 {
             return ph.next;
         }
         
+        // Exercise 16
+        // Given the head of a singly linked list and a non negative integer k, rotate the list to the right by k places and return the new head
+        public Node rotateList(Node head, int k) {
+            // Had an idea of iterating the ll k times, pushing current to current.next
+            // Might need placeholder node to sub in the .next node before its changed
+            return null;
+        }
+        
         public void returnSummary(Node head) {
             Node current = head;
             while (current != null) {
