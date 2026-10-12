@@ -1368,6 +1368,15 @@ public class day5 {
             return head;
         }
         
+        // Exercise 17
+        // Given the heads of two singly linked lists, return the node where they begin to share nodes or null if they never do
+        // Two lists share a node when one obj in memory is reachable from both of them
+        // A node in each list that merely holds the same value doesnt count because those are two different objs
+        // This is reference vs value distinction
+        public Node ll_congruency(Node head) {
+            return null;
+        }
+        
         public void returnSummary(Node head) {
             Node current = head;
             while (current != null) {
