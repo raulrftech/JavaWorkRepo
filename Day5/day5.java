@@ -8,18 +8,24 @@ import java.util.List;
 
 public class day5 {
     public static void main(String[] args) {
-        LL1 ll = new LL1(); LL1 ll2 = new LL1();
-        ll.addToEnd(1); ll.addToEnd(4); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(6); ll.addToEnd(4); ll.addToEnd(6); ll.addToEnd(9); ll.addToEnd(4); ll.addToEnd(8);
-        ll.addToEnd(9); ll.addToEnd(0); ll.addToEnd(9); ll.addToEnd(1); ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(6); ll.addToEnd(8); ll.addToEnd(5); ll.addToEnd(3);
-        ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(0); ll.addToEnd(3); ll.addToEnd(6); ll.addToEnd(6); ll.addToEnd(9); ll.addToEnd(1); ll.addToEnd(1); ll.addToEnd(4);
-        ll.addToEnd(6); ll.addToEnd(4); ll.addToEnd(9); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(4); ll.addToEnd(5); ll.addToEnd(9); ll.addToEnd(8);
-
-        ll2.addToEnd(6); ll2.addToEnd(2); ll2.addToEnd(1); ll2.addToEnd(0); ll2.addToEnd(2); ll2.addToEnd(8); ll2.addToEnd(8); ll2.addToEnd(0); ll2.addToEnd(6); ll2.addToEnd(7);
-        ll2.addToEnd(0); ll2.addToEnd(9); ll2.addToEnd(0); ll2.addToEnd(8); ll2.addToEnd(3); ll2.addToEnd(2); ll2.addToEnd(3); ll2.addToEnd(1); ll2.addToEnd(1); ll2.addToEnd(7);
-        ll2.addToEnd(3); ll2.addToEnd(6); ll2.addToEnd(7); ll2.addToEnd(6); ll2.addToEnd(5); ll2.addToEnd(3); ll2.addToEnd(0); ll2.addToEnd(8); ll2.addToEnd(8); ll2.addToEnd(6);
-        ll2.addToEnd(8); ll2.addToEnd(9); ll2.addToEnd(0); ll2.addToEnd(8); ll2.addToEnd(6); ll2.addToEnd(3); ll2.addToEnd(0); ll2.addToEnd(0); ll2.addToEnd(5); ll2.addToEnd(7);
+        LL1 ll = new LL1();
+        ll.addToEnd(1); ll.addToEnd(3); ll.addToEnd(5); ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8);
+        ll.addToEnd(1); ll.addToEnd(3); ll.addToEnd(5); ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8);
+        ll.addToEnd(1); ll.addToEnd(3); ll.addToEnd(5); ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8);
+        ll.addToEnd(1); ll.addToEnd(3); ll.addToEnd(5); ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8);
+        ll.addToEnd(1); ll.addToEnd(3); ll.addToEnd(5); ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8);
+        ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8); ll.addToEnd(1); ll.addToEnd(3); ll.addToEnd(5);
+        ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8); ll.addToEnd(1); ll.addToEnd(3); ll.addToEnd(5);
+        ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8);
+        ll.addToEnd(1); ll.addToEnd(3); ll.addToEnd(5); ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8);
+        ll.addToEnd(1); ll.addToEnd(3); ll.addToEnd(5); ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8);
+        ll.addToEnd(1); ll.addToEnd(3); ll.addToEnd(5); ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8);
+        ll.addToEnd(1); ll.addToEnd(3); ll.addToEnd(5); ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8);
+        ll.addToEnd(1); ll.addToEnd(3); ll.addToEnd(5); ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8);
+        ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8); ll.addToEnd(1); ll.addToEnd(3); ll.addToEnd(5);
+        ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8); ll.addToEnd(1); ll.addToEnd(3); ll.addToEnd(5);
+        ll.returnSummary(ll.rotateList(ll.head, 400));
         
-        ll2.returnSummary(ll2.llSums(ll.head, ll2.head));
     }
 
     // Big-O Speed
@@ -1324,9 +1330,42 @@ public class day5 {
         // Exercise 16
         // Given the head of a singly linked list and a non negative integer k, rotate the list to the right by k places and return the new head
         public Node rotateList(Node head, int k) {
-            // Had an idea of iterating the ll k times, pushing current to current.next
-            // Might need placeholder node to sub in the .next node before its changed
-            return null;
+            // base case: head is null or head.next is null or k is 0
+            if (head == null || head.next == null || k == 0) { return head; }
+            
+            Node current = head; Node ph = head;
+            int size = 0;
+            int currentIter = 0;
+            
+            while (ph != null) {
+                size++; ph = ph.next;
+            }
+            
+            int finalPush = k % counter;
+            if (finalPush == 0) { return head; }
+            
+            // while (currentIter != finalPush) {
+            // // working on last node
+                // if (current.next.next == null) {
+                    // current.next.next = head; head = current.next; current.next = null; current = head; currentIter++;
+                    // System.out.println(String.format("If Branch: currentIter is %d", currentIter));
+                // } else { current = current.next; }
+            // }
+            // keeping the above commented-out while loop because this was a first approach before
+            // claude introduced to me to think about it more deeply and consider what actually happens
+            // then to implement an alg that access that particular node and then the ones after it
+            // structure of functionality is below
+            
+            int step = size - finalPush - 1;
+            while (currentIter != step) {
+                current = current.next;
+                currentIter += 1;
+            }
+            ph = current.next;
+            while (ph.next != null) { ph = ph.next; }
+            ph.next = head; head = current.next; current.next = null;
+            
+            return head;
         }
         
         public void returnSummary(Node head) {
