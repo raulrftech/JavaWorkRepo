@@ -5,27 +5,18 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 public class day5 {
     public static void main(String[] args) {
-        LL1 ll = new LL1();
-        ll.addToEnd(1); ll.addToEnd(3); ll.addToEnd(5); ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8);
-        ll.addToEnd(1); ll.addToEnd(3); ll.addToEnd(5); ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8);
-        ll.addToEnd(1); ll.addToEnd(3); ll.addToEnd(5); ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8);
-        ll.addToEnd(1); ll.addToEnd(3); ll.addToEnd(5); ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8);
-        ll.addToEnd(1); ll.addToEnd(3); ll.addToEnd(5); ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8);
-        ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8); ll.addToEnd(1); ll.addToEnd(3); ll.addToEnd(5);
-        ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8); ll.addToEnd(1); ll.addToEnd(3); ll.addToEnd(5);
-        ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8);
-        ll.addToEnd(1); ll.addToEnd(3); ll.addToEnd(5); ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8);
-        ll.addToEnd(1); ll.addToEnd(3); ll.addToEnd(5); ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8);
-        ll.addToEnd(1); ll.addToEnd(3); ll.addToEnd(5); ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8);
-        ll.addToEnd(1); ll.addToEnd(3); ll.addToEnd(5); ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8);
-        ll.addToEnd(1); ll.addToEnd(3); ll.addToEnd(5); ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8);
-        ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8); ll.addToEnd(1); ll.addToEnd(3); ll.addToEnd(5);
-        ll.addToEnd(5); ll.addToEnd(2); ll.addToEnd(8); ll.addToEnd(1); ll.addToEnd(3); ll.addToEnd(5);
-        ll.returnSummary(ll.rotateList(ll.head, 400));
-        
+        LL1 ll = new LL1(); LL1 ll2 = new LL1();
+        ll.addToEnd(2); ll.addToEnd(4); ll.addToEnd(6); ll.addToEnd(8); ll.addToEnd(10);
+        ll2.addToEnd(1); ll2.addToEnd(3); ll2.addToEnd(5); ll2.addToEnd(7);
+
+        // point the 7's next at the 8 that belongs to ll
+        ll2.head.next.next.next.next = ll.head.next.next.next;
+        ll.ll_congruency(ll.head, ll2.head);
     }
 
     // Big-O Speed
@@ -1341,7 +1332,7 @@ public class day5 {
                 size++; ph = ph.next;
             }
             
-            int finalPush = k % counter;
+            int finalPush = k % size;
             if (finalPush == 0) { return head; }
             
             // while (currentIter != finalPush) {
@@ -1373,9 +1364,22 @@ public class day5 {
         // Two lists share a node when one obj in memory is reachable from both of them
         // A node in each list that merely holds the same value doesnt count because those are two different objs
         // This is reference vs value distinction
-        public Node ll_congruency(Node head) {
-            return null;
+        public Node ll_congruency(Node h1, Node h2) {
+            HashMap<Node, Integer> seen = new HashMap<>();
+            Node h1c = h1; Node h2c = h2;
+            Node found = null; 
+
+            while (h1c != null || h2c != null) {
+                if (h1c != null) { seen.merge(h1c, 1, (o, n) -> o + n); if (seen.getOrDefault(h1c, 1) > 1) { found = h1c; break; } else { h1c = h1c.next; } }
+                if (h2c != null) { seen.merge(h2c, 1, (o, n) -> o + n); if (seen.getOrDefault(h2c, 1) > 1) { found = h2c;  break; } else { h2c = h2c.next; } }
+            }
+
+            System.out.println(String.format("%s", found != null ? String.format("Found intersection with the node containing %d", found.data) : "Did not find any intersection"));
+            for (Map.Entry<Node, Integer> pair: seen.entrySet()) { System.out.println(String.format("K: %d, V: %d", pair.getKey().data, pair.getValue())); }
+            return found;
         }
+
+        
         
         public void returnSummary(Node head) {
             Node current = head;
