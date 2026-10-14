@@ -1379,7 +1379,15 @@ public class day5 {
             return found;
         }
 
-        
+        // Exercise 18
+        // Given a singly linked list and an integer K, split the list into k consecutive parts
+        // whose sizes are as equal as possible and return the K heads
+        public Node[] splitLL(Node head, int k) {
+            // get the size first
+            
+            // get maxPartition of nodes first
+            // iterate the rest and separate into respective heads
+        }
         
         public void returnSummary(Node head) {
             Node current = head;
