@@ -12,11 +12,9 @@ public class day5 {
     public static void main(String[] args) {
         LL1 ll = new LL1(); LL1 ll2 = new LL1();
         ll.addToEnd(2); ll.addToEnd(4); ll.addToEnd(6); ll.addToEnd(8); ll.addToEnd(10);
-        ll2.addToEnd(1); ll2.addToEnd(3); ll2.addToEnd(5); ll2.addToEnd(7);
+        ll.addToEnd(2); ll.addToEnd(4); ll.addToEnd(6); ll.addToEnd(8); ll.addToEnd(10);
+        ll.splitLL(ll.head, 3);
 
-        // point the 7's next at the 8 that belongs to ll
-        ll2.head.next.next.next.next = ll.head.next.next.next;
-        ll.ll_congruency(ll.head, ll2.head);
     }
 
     // Big-O Speed
@@ -1384,9 +1382,24 @@ public class day5 {
         // whose sizes are as equal as possible and return the K heads
         public Node[] splitLL(Node head, int k) {
             // get the size first
-            
-            // get maxPartition of nodes first
-            // iterate the rest and separate into respective heads
+            Node sizeCounter = head; int size = 0;
+            while (sizeCounter != null) { size++; sizeCounter = sizeCounter.next; }
+
+            int maxPartSize = k + (size % k);
+            int minPartSize = size / k;
+
+            // setup array of Node heads
+            Node[] partitionHeads = new Node[k];
+            for (int i = 0; i < partitionHeads.length; i++) { partitionHeads[i] = new Node(0); }
+
+            Node current = head; int cIndex = 0;
+            while (current != null) {
+                // the alg in order to input to correct index of partitionHeads is easier than thought of to be
+                // TODO: configure automatic determination to partitionHeads
+
+                current = current.next; cIndex++;
+            }
+            return null;
         }
         
         public void returnSummary(Node head) {
