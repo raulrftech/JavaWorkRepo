@@ -1384,9 +1384,13 @@ public class day5 {
             // get the size first
             Node sizeCounter = head; int size = 0;
             while (sizeCounter != null) { size++; sizeCounter = sizeCounter.next; }
-
-            int maxPartSize = k + (size % k);
+            
+            // Partition Sizes (max and minimum sizes)
+            int maxPartSize = (size + k - 1);
             int minPartSize = size / k;
+            
+            HashMap<Integer, Integer> partitionSizes = new HashMap<>();
+            hm.put(1, maxPartSize); hm.put(k-1, minSize);
 
             // setup array of Node heads
             Node[] partitionHeads = new Node[k];
