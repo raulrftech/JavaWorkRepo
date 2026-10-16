@@ -10,9 +10,9 @@ import java.util.Objects;
 
 public class day5 {
     public static void main(String[] args) {
-        LL1 ll = new LL1(); LL1 ll2 = new LL1();
-        ll.addToEnd(2); ll.addToEnd(4); ll.addToEnd(6); ll.addToEnd(8); ll.addToEnd(10);
-        ll.addToEnd(2); ll.addToEnd(4); ll.addToEnd(6); ll.addToEnd(8); ll.addToEnd(10);
+        LL1 ll = new LL1();
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
         ll.splitLL(ll.head, 3);
 
     }
@@ -1386,23 +1386,66 @@ public class day5 {
             while (sizeCounter != null) { size++; sizeCounter = sizeCounter.next; }
             
             // Partition Sizes (max and minimum sizes)
-            int maxPartSize = (size + k - 1);
-            int minPartSize = size / k;
+            int maxPartSize = (size + k - 1) / k; // (886 + 13 - 1) / 13 -> 69
+            int minPartSize = size / k;           // 886 / 13            -> 68
+            // Number of partitions per each
+            int count_maxPS = size % k;           // 886 % 13            -> 2
+            int count_minPS = k - (size % k);     // 13 - (886%13)       -> 11
             
+            // Setup HM (k: max or minSize, v: how many heads are assigned to this amount of nodes)
             HashMap<Integer, Integer> partitionSizes = new HashMap<>();
-            hm.put(1, maxPartSize); hm.put(k-1, minSize);
+            if (count_maxPS != 0) {
+                partitionSizes.put(maxPartSize, count_maxPS);
+                partitionSizes.put(minPartSize, count_minPS);
+            } else { partitionSizes.put(minPartSize, count_minPS); }
 
             // setup array of Node heads
             Node[] partitionHeads = new Node[k];
             for (int i = 0; i < partitionHeads.length; i++) { partitionHeads[i] = new Node(0); }
 
-            Node current = head; int cIndex = 0;
-            while (current != null) {
-                // the alg in order to input to correct index of partitionHeads is easier than thought of to be
-                // TODO: configure automatic determination to partitionHeads
-
-                current = current.next; cIndex++;
+            Node current = head; int cIndex = 0; int currentCount = 0;
+            if (count_maxPS != 0) {
+                // Max Partition Configurator
+                while (current != null && cIndex < partitionSizes.get(maxPartSize)) {
+                    Node currentP = partitionHeads[cIndex];
+                    // since countMax is 2, we can get the total number of nodes for this section
+                        // using count_maxPS(2) * maxPartSize(69) which yields 138
+                    // in order to append to index 0, this is if currentCount <= maxPartSize(69)
+                    if (currentCount <= maxPartSize) {
+                        currentP.next = current;
+                        currentP = currentP.next;
+                        // move current
+                        current = current.next;
+                        // increment counter
+                        currentCount++;
+                    } else { cIndex++; currentCount = 0; currentP = partitionHeads[cIndex]; }
+                }
+                // Min Partition Configurator
+                current = current.next; // this is in order to move it to next node of the inputted ll after max partitions are taken care of
+                while (current != null && cIndex < partitionSizes.get(minPartSize)) {
+                    Node currentP = partitionHeads[cIndex];
+                    
+                    if (currentCount <= minPartSize) {
+                        currentP.next = current;
+                        currentP = currentP.next;
+                        current = current.next;
+                        currentCount++;
+                    } else { cIndex++; currentCount = 0; currentP = partitionHeads[cIndex]; }
+                }
+            } else {
+                while (current != null && cIndex < partitionSizes.get(minPartSize)) {
+                    Node currentP = partitionHeads[cIndex];
+                    
+                    if (currentCount <= minPartSize) {
+                        currentP.next = current;
+                        currentP = currentP.next;
+                        current = current.next;
+                        currentCount++;
+                    } else { cIndex++; currentCount = 0; currentP = partitionHeads[cIndex]; }
+                }
             }
+            
+            for (Node h: partitionHeads) { this.returnSummary(h); System.out.println();}
             return null;
         }
         
