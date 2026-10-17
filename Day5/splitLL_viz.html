@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>splitLL — Algorithm Visualizer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --surface-0: #0A0A0F;
+      --surface-1: #111118;
+      --surface-2: #1A1A24;
+      --surface-3: #222233;
+      --surface-4: #2E2E42;
+      --text-1: #EEEEF0;
+      --text-2: #8888A0;
+      --text-3: #55556A;
+      --border: rgba(255,255,255,0.06);
+      --border-v: rgba(255,255,255,0.10);
+      --accent: #7C6AEF;
+      --accent-dim: rgba(124,106,239,0.12);
+      --accent-glow: rgba(124,106,239,0.25);
+      --mono: 'JetBrains Mono', 'SF Mono', 'Cascadia Code', Consolas, monospace;
+      --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --ease: cubic-bezier(0.4, 0, 0.2, 1);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --ease-out: cubic-bezier(0, 0, 0.58, 1);
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--surface-0);
+      background-image: radial-gradient(ellipse at 50% 0%, rgba(124,106,239,0.04) 0%, transparent 50%);
+      color: var(--text-1);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── App Shell ── */
+    .app {
+      max-width: 1120px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 32px 32px 24px;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+      animation: fadeSlideDown 0.4s var(--ease) both;
+    }
+    .header-left { display: flex; flex-direction: column; gap: 4px; }
+    .header-title {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-1);
+    }
+    .header-title code {
+      font-family: var(--mono);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .header-sub {
+      font-size: 14px;
+      color: var(--text-2);
+      line-height: 1.5;
+    }
+    .controls {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+    .ctrl-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ctrl-label {
+      font-size: 12px;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 500;
+    }
+    .ctrl-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--border-v);
+      background: var(--surface-1);
+      color: var(--text-2);
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 150ms var(--ease);
+      font-family: var(--sans);
+    }
+    .ctrl-btn:hover { background: var(--surface-2); color: var(--text-1); }
+    .ctrl-btn:active { transform: scale(0.95); }
+    .ctrl-val {
+      font-family: var(--mono);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-1);
+      min-width: 24px;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Step Timeline ── */
+    .timeline {
+      display: flex;
+      align-items: center;
+      padding: 20px 0 24px;
+      gap: 0;
+      animation: fadeIn 0.3s var(--ease) 0.1s both;
+    }
+    .tl-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      position: relative;
+      z-index: 1;
+    }
+    .tl-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--surface-3);
+      transition: all 250ms var(--ease);
+      flex-shrink: 0;
+    }
+    .tl-step.active .tl-dot {
+      background: var(--accent);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+    .tl-step.completed .tl-dot {
+      background: var(--accent);
+      opacity: 0.6;
+    }
+    .tl-step:hover .tl-dot { background: var(--surface-4); }
+    .tl-step.active:hover .tl-dot,
+    .tl-step.completed:hover .tl-dot { background: var(--accent); opacity: 1; }
+    .tl-label {
+      font-size: 11px;
+      color: var(--text-3);
+      font-weight: 500;
+      transition: color 200ms;
+      white-space: nowrap;
+    }
+    .tl-step.active .tl-label { color: var(--text-1); }
+    .tl-line {
+      flex: 1;
+      height: 2px;
+      background: var(--surface-3);
+      margin: 0 -2px;
+      margin-bottom: 22px;
+      transition: background 300ms;
+    }
+    .tl-line.done { background: var(--accent); opacity: 0.3; }
+
+    /* ── Main Viz Area ── */
+    .viz {
+      flex: 1;
+      display: flex;
+      gap: 24px;
+      min-height: 380px;
+      animation: fadeIn 0.3s var(--ease) 0.2s both;
+    }
+    .viz-main {
+      flex: 1;
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .viz-side {
+      width: 320px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ── Step Info Card ── */
+    .info-card {
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .info-step-num {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    .info-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-1);
+      margin-bottom: 8px;
+      letter-spacing: -0.01em;
+    }
+    .info-desc {
+      font-size: 13px;
+      color: var(--text-2);
+      line-height: 1.6;
+    }
+
+    /* ── Code Card ── */
+    .code-card {
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .code-header {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .code-lang {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .code-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: 0.5;
+    }
+    .code-body {
+      padding: 14px 16px;
+      margin: 0;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.7;
+      color: var(--text-2);
+      overflow-x: auto;
+      white-space: pre;
+      tab-size: 2;
+    }
+    .code-body .kw { color: #C084FC; }
+    .code-body .type { color: #67E8F9; }
+    .code-body .cm { color: var(--text-3); font-style: italic; }
+    .code-body .num { color: #FDE68A; }
+
+    /* ── Variable Cards ── */
+    .var-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .var-card {
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      min-width: 80px;
+      animation: fadeSlideUp 0.3s var(--ease) both;
+    }
+    .var-label {
+      font-size: 10px;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    .var-value {
+      font-family: var(--mono);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-1);
+      font-variant-numeric: tabular-nums;
+    }
+    .var-value.pending { color: var(--text-3); }
+
+    /* ── Linked List Nodes ── */
+    .node-chain {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      row-gap: 20px;
+      justify-content: center;
+    }
+    .node-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+    .ll-node {
+      display: flex;
+      align-items: center;
+      height: 40px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-v);
+      border-radius: 8px;
+      overflow: hidden;
+      transition: all 200ms var(--ease);
+      cursor: default;
+    }
+    .ll-node.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 16px var(--accent-glow);
+      background: var(--accent-dim);
+    }
+    .ll-node.counted {
+      border-color: rgba(124,106,239,0.15);
+      background: rgba(124,106,239,0.06);
+    }
+    .ll-node.consumed { opacity: 0.25; }
+    .ll-node.dummy { border-style: dashed; opacity: 0.6; }
+    .ll-node.colored { border-width: 2px; }
+    .node-data {
+      padding: 0 12px;
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-1);
+      font-variant-numeric: tabular-nums;
+    }
+    .node-ptr {
+      padding: 0 8px;
+      border-left: 1px solid var(--border);
+      color: var(--text-3);
+      font-size: 10px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+    .connector {
+      width: 20px;
+      height: 2px;
+      background: var(--text-3);
+      flex-shrink: 0;
+      position: relative;
+    }
+    .connector::after {
+      content: '';
+      position: absolute;
+      right: -1px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 3px solid transparent;
+      border-left-color: var(--text-3);
+    }
+    .null-label {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-3);
+      font-style: italic;
+      padding-left: 4px;
+    }
+    .ptr-label {
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--accent);
+      white-space: nowrap;
+      padding: 2px 8px;
+      background: var(--accent-dim);
+      border-radius: 4px;
+      opacity: 0;
+      transition: opacity 200ms;
+      pointer-events: none;
+    }
+    .node-wrap.pointed .ptr-label { opacity: 1; }
+
+    /* ── Counter Badge ── */
+    .counter-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 16px;
+      margin-top: 20px;
+    }
+    .counter-badge .label {
+      font-size: 12px;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .counter-badge .value {
+      font-family: var(--mono);
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-1);
+      font-variant-numeric: tabular-nums;
+      min-width: 32px;
+      text-align: right;
+    }
+    .counter-badge.done .value { color: var(--accent); }
+
+    /* ── Formula Display ── */
+    .formula-block { display: flex; flex-direction: column; gap: 4px; width: 100%; max-width: 600px; }
+    .formula-row {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      padding: 10px 16px;
+      border-radius: 8px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      opacity: 0;
+      transform: translateX(-12px);
+      animation: slideReveal 0.4s var(--ease) forwards;
+    }
+    .formula-name {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--accent);
+      min-width: 120px;
+      flex-shrink: 0;
+    }
+    .formula-expr {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--text-2);
+      flex: 1;
+    }
+    .formula-result {
+      font-family: var(--mono);
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-1);
+      min-width: 40px;
+      text-align: right;
+    }
+
+    /* ── HashMap Display ── */
+    .hm-table {
+      width: 100%;
+      max-width: 420px;
+      border-collapse: separate;
+      border-spacing: 0;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .hm-table th {
+      font-size: 11px;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 500;
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .hm-table th:last-child, .hm-table td:last-child { text-align: right; }
+    .hm-table td {
+      font-family: var(--mono);
+      font-size: 14px;
+      padding: 12px 16px;
+      color: var(--text-1);
+      font-variant-numeric: tabular-nums;
+    }
+    .hm-table tr:not(:last-child) td { border-bottom: 1px solid var(--border); }
+    .hm-meaning {
+      font-family: var(--sans);
+      font-size: 12px;
+      color: var(--text-3);
+      font-style: italic;
+    }
+
+    /* ── Partition Rows ── */
+    .partition-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+    }
+    .partition-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      transition: all 200ms var(--ease);
+      cursor: default;
+      opacity: 0;
+      transform: translateY(8px);
+      animation: fadeSlideUp 0.35s var(--ease) forwards;
+    }
+    .partition-row:hover { background: var(--surface-3); }
+    .partition-label {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .partition-nodes {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex: 1;
+      overflow-x: auto;
+    }
+    .partition-nodes .ll-node { height: 32px; }
+    .partition-nodes .node-data { font-size: 12px; padding: 0 8px; }
+    .partition-nodes .node-ptr { padding: 0 6px; font-size: 8px; }
+    .partition-nodes .connector { width: 12px; }
+    .partition-count {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-3);
+      white-space: nowrap;
+    }
+
+    /* ── Init Array Display ── */
+    .array-viz {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 100%;
+      align-items: center;
+    }
+    .array-bracket {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .bracket-char {
+      font-family: var(--mono);
+      font-size: 24px;
+      color: var(--text-3);
+      font-weight: 300;
+    }
+    .array-slots {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .array-slot {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      opacity: 0;
+      animation: scaleIn 0.3s var(--ease-spring) forwards;
+    }
+    .slot-index {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-3);
+    }
+    .slot-node {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      border: 1px dashed var(--border-v);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-2);
+      background: var(--surface-2);
+    }
+
+    /* ── Navigation ── */
+    .nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      margin-top: 24px;
+      animation: fadeIn 0.3s var(--ease) 0.3s both;
+    }
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: 1px solid var(--border-v);
+      background: var(--surface-1);
+      color: var(--text-2);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 150ms var(--ease);
+      font-family: var(--sans);
+    }
+    .nav-btn:hover { background: var(--surface-2); color: var(--text-1); }
+    .nav-btn:active { transform: scale(0.97); }
+    .nav-btn:disabled { opacity: 0.3; pointer-events: none; }
+    .nav-btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .nav-btn.primary:hover { opacity: 0.9; }
+    .nav-center {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .nav-step-label {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-3);
+      font-variant-numeric: tabular-nums;
+    }
+    .play-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--border-v);
+      background: var(--surface-1);
+      color: var(--text-2);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 150ms var(--ease);
+      font-size: 14px;
+    }
+    .play-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .play-btn:active { transform: scale(0.95); }
+    .play-btn.playing { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* ── Full-width mode ── */
+    .viz.full-width .viz-side { display: none; }
+    .viz.full-width .viz-main { max-width: 100%; }
+
+    /* ── Animations ── */
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeSlideDown { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes scaleIn { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+    @keyframes slideReveal { to { opacity: 1; transform: translateX(0); } }
+    @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+    @keyframes countPulse { 0%,100% { transform: scale(1); color: var(--text-1); } 50% { transform: scale(1.15); color: var(--accent); } }
+
+    .stagger-in {
+      opacity: 0;
+      transform: translateY(8px);
+      animation: fadeSlideUp 0.35s var(--ease) forwards;
+    }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--surface-4); }
+
+    @media (max-width: 860px) {
+      .viz { flex-direction: column; }
+      .viz-side { width: 100%; flex-direction: row; flex-wrap: wrap; }
+      .viz-side > * { flex: 1; min-width: 200px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app"></div>
+  <script>
+    // ═══════════════════ PARTITION COLORS ═══════════════════
+    const PCOLORS = [
+      { bg: 'rgba(124,106,239,0.12)', text: '#A78BFA', border: 'rgba(124,106,239,0.3)' },
+      { bg: 'rgba(56,189,248,0.12)',  text: '#38BDF8', border: 'rgba(56,189,248,0.3)' },
+      { bg: 'rgba(52,211,153,0.12)',  text: '#34D399', border: 'rgba(52,211,153,0.3)' },
+      { bg: 'rgba(251,191,36,0.12)',  text: '#FBBF24', border: 'rgba(251,191,36,0.3)' },
+      { bg: 'rgba(244,114,182,0.12)', text: '#F472B6', border: 'rgba(244,114,182,0.3)' },
+      { bg: 'rgba(251,146,60,0.12)',  text: '#FB923C', border: 'rgba(251,146,60,0.3)' },
+      { bg: 'rgba(167,139,250,0.12)', text: '#C4B5FD', border: 'rgba(167,139,250,0.3)' },
+      { bg: 'rgba(45,212,191,0.12)',  text: '#2DD4BF', border: 'rgba(45,212,191,0.3)' },
+      { bg: 'rgba(248,113,113,0.12)', text: '#F87171', border: 'rgba(248,113,113,0.3)' },
+      { bg: 'rgba(163,230,53,0.12)',  text: '#A3E635', border: 'rgba(163,230,53,0.3)' },
+    ];
+
+    // ═══════════════════ STEPS ═══════════════════
+    const STEPS = [
+      { id:'input',   label:'Input',      title:'Method Input',           desc:'splitLL receives the head of a linked list and integer k \u2014 the number of partitions to split it into.' },
+      { id:'count',   label:'Count',      title:'Count List Size',        desc:'Traverse the entire linked list with a pointer to determine its total size.' },
+      { id:'math',    label:'Calculate',  title:'Partition Size Math',    desc:'Compute the maximum and minimum partition sizes, and how many partitions receive each size.' },
+      { id:'hashmap', label:'HashMap',    title:'Build Size Map',         desc:'Store partition sizes as keys and their occurrence counts as values in a HashMap.' },
+      { id:'init',    label:'Initialize', title:'Create Partition Heads', desc:'Allocate an array of k Nodes, each initialized with a dummy head Node(0).' },
+      { id:'fill',    label:'Distribute', title:'Fill Partitions',        desc:'Walk through the linked list, distributing nodes across partitions \u2014 first filling max-size, then min-size.' },
+      { id:'output',  label:'Output',     title:'Result',                 desc:'The linked list has been split into k partitions. Each starts with a dummy head Node(0).' },
+    ];
+
+    const STEP_CODE = [
+      'public Node[] splitLL(Node head, int k)',
+      'Node sizeCounter = head;\nint size = 0;\nwhile (sizeCounter != null) {\n  size++;\n  sizeCounter = sizeCounter.next;\n}',
+      'int maxPartSize = (size + k - 1) / k;\nint minPartSize = size / k;\nint count_maxPS = size % k;\nint count_minPS = k - (size % k);',
+      'HashMap<Integer, Integer> partitionSizes\n  = new HashMap<>();\npartitionSizes.put(\n  maxPartSize, count_maxPS);\npartitionSizes.put(\n  minPartSize, count_minPS);',
+      'Node[] partitionHeads = new Node[k];\nfor (int i = 0; i < k; i++) {\n  partitionHeads[i] = new Node(0);\n}',
+      '// Max Partition Configurator\nwhile (current != null &&\n  cIndex < count_maxPS) {\n  // append nodes to partition\n}\n// Min Partition Configurator\nwhile (current != null &&\n  cIndex < k) {\n  // append remaining nodes\n}',
+      'return partitionHeads;',
+    ];
+
+    // ═══════════════════ STATE ═══════════════════
+    const S = { k: 3, n: 10, step: 0, animating: false, playing: false, computed: null, animId: 0 };
+
+    // ═══════════════════ ALGORITHM ═══════════════════
+    function compute(n, k) {
+      const size = n;
+      const maxPartSize = Math.floor((size + k - 1) / k);
+      const minPartSize = Math.floor(size / k);
+      const count_maxPS = size % k;
+      const count_minPS = k - count_maxPS;
+      const partitions = [];
+      let idx = 0;
+      for (let i = 0; i < k; i++) {
+        const pSize = (i < count_maxPS) ? maxPartSize : minPartSize;
+        const nodes = [0];
+        for (let j = 0; j < pSize; j++) {
+          if (idx < n) nodes.push(idx + 1);
+          idx++;
+        }
+        partitions.push(nodes);
+      }
+      return { size, maxPartSize, minPartSize, count_maxPS, count_minPS, partitions };
+    }
+
+    // ═══════════════════ HELPERS ═══════════════════
+    function el(tag, cls, children, attrs) {
+      const e = document.createElement(tag);
+      if (cls) e.className = cls;
+      if (children !== undefined && children !== null) {
+        if (typeof children === 'string' || typeof children === 'number') e.textContent = String(children);
+        else if (Array.isArray(children)) children.forEach(c => { if (c) e.appendChild(c); });
+        else e.appendChild(children);
+      }
+      if (attrs) {
+        for (const [k, v] of Object.entries(attrs)) {
+          if (k === 'style' && typeof v === 'object') Object.assign(e.style, v);
+          else if (k.startsWith('on') && typeof v === 'function') e.addEventListener(k.slice(2).toLowerCase(), v);
+          else if (k === 'innerHTML') e.innerHTML = v;
+          else e.setAttribute(k, v);
+        }
+      }
+      return e;
+    }
+
+    function highlightJava(code) {
+      return code
+        .replace(/\b(\d+)\b/g, '<span class="num">$1</span>')
+        .replace(/\b(public|private|int|while|for|if|else|new|return|null|void)\b/g, '<span class="kw">$1</span>')
+        .replace(/\b(Node|HashMap|Integer|String)\b/g, '<span class="type">$1</span>')
+        .replace(/\/\/.*/g, '<span class="cm">$&</span>');
+    }
+
+    function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    // ═══════════════════ COMPONENT BUILDERS ═══════════════════
+    function buildHeader() {
+      const left = el('div', 'header-left', [
+        el('div', 'header-title', null, { innerHTML: '<code>splitLL()</code> Visualizer' }),
+        el('div', 'header-sub', 'Step through a linked list partitioning algorithm'),
+      ]);
+      function mkCtrl(label, val, onMinus, onPlus) {
+        return el('div', 'ctrl-group', [
+          el('span', 'ctrl-label', label),
+          el('button', 'ctrl-btn', '\u2212', { onClick: onMinus }),
+          el('span', 'ctrl-val', String(val)),
+          el('button', 'ctrl-btn', '+', { onClick: onPlus }),
+        ]);
+      }
+      const controls = el('div', 'controls', [
+        mkCtrl('k', S.k, () => adjustK(-1), () => adjustK(1)),
+        mkCtrl('n', S.n, () => adjustN(-1), () => adjustN(1)),
+      ]);
+      return el('header', 'header', [left, controls]);
+    }
+
+    function buildTimeline() {
+      const items = [];
+      STEPS.forEach((step, i) => {
+        if (i > 0) items.push(el('div', 'tl-line' + (i <= S.step ? ' done' : '')));
+        const cls = 'tl-step' + (i === S.step ? ' active' : '') + (i < S.step ? ' completed' : '');
+        const item = el('div', cls, [
+          el('div', 'tl-dot'),
+          el('div', 'tl-label', step.label),
+        ], { onClick: () => goToStep(i) });
+        items.push(item);
+      });
+      return el('div', 'timeline', items);
+    }
+
+    function buildChain(values, opts = {}) {
+      const chain = el('div', 'node-chain');
+      values.forEach((val, i) => {
+        const wrap = el('div', 'node-wrap');
+        if (opts.pointerLabel) wrap.appendChild(el('span', 'ptr-label', opts.pointerLabel));
+        const node = el('div', 'll-node' + (val === 0 && opts.showDummy ? ' dummy' : ''));
+        node.appendChild(el('span', 'node-data', String(val)));
+        node.appendChild(el('span', 'node-ptr', '\u25CF'));
+        wrap.appendChild(node);
+        chain.appendChild(wrap);
+        if (i < values.length - 1) chain.appendChild(el('div', 'connector'));
+      });
+      chain.appendChild(el('div', 'connector'));
+      chain.appendChild(el('span', 'null-label', 'null'));
+      return chain;
+    }
+
+    function buildCodeCard(stepIdx) {
+      const card = el('div', 'code-card');
+      card.appendChild(el('div', 'code-header', [
+        el('div', 'code-dot'),
+        el('span', 'code-lang', 'Java'),
+      ]));
+      card.appendChild(el('pre', 'code-body', null, { innerHTML: highlightJava(STEP_CODE[stepIdx]) }));
+      return card;
+    }
+
+    function buildInfoCard(stepIdx) {
+      const step = STEPS[stepIdx];
+      return el('div', 'info-card', [
+        el('div', 'info-step-num', `Step ${stepIdx + 1} of ${STEPS.length}`),
+        el('div', 'info-title', step.title),
+        el('div', 'info-desc', step.desc),
+      ]);
+    }
+
+    function buildVarCards(stepIdx) {
+      const c = S.computed;
+      const cards = [];
+      function mk(label, value, i) {
+        return el('div', 'var-card', [
+          el('div', 'var-label', label),
+          el('div', 'var-value' + (value === '\u2014' ? ' pending' : ''), value),
+        ], { style: { animationDelay: i * 0.05 + 's' } });
+      }
+      cards.push(mk('k', String(S.k), 0));
+      cards.push(mk('size', stepIdx >= 1 ? String(c.size) : '\u2014', 1));
+      if (stepIdx >= 2) {
+        cards.push(mk('maxPS', String(c.maxPartSize), 2));
+        cards.push(mk('minPS', String(c.minPartSize), 3));
+        cards.push(mk('cnt max', String(c.count_maxPS), 4));
+        cards.push(mk('cnt min', String(c.count_minPS), 5));
+      }
+      return el('div', 'var-grid', cards);
+    }
+
+    function buildNav() {
+      const prev = el('button', 'nav-btn', [
+        el('span', null, '\u2190'),
+        el('span', null, 'Previous'),
+      ], { onClick: () => goToStep(S.step - 1) });
+      if (S.step === 0) prev.disabled = true;
+
+      const playBtn = el('button', 'play-btn' + (S.playing ? ' playing' : ''),
+        S.playing ? '\u23F8' : '\u25B6', { onClick: togglePlay });
+
+      const center = el('div', 'nav-center', [
+        playBtn,
+        el('span', 'nav-step-label', `${S.step + 1} / ${STEPS.length}`),
+      ]);
+
+      const isLast = S.step === STEPS.length - 1;
+      const next = el('button', 'nav-btn' + (!isLast ? ' primary' : ''), [
+        el('span', null, isLast ? 'Restart' : 'Next'),
+        el('span', null, isLast ? '\u21BA' : '\u2192'),
+      ], { onClick: () => isLast ? goToStep(0) : goToStep(S.step + 1) });
+
+      return el('div', 'nav-bar', [prev, center, next]);
+    }
+
+    // ═══════════════════ STEP RENDERERS ═══════════════════
+    function renderInput(main) {
+      const values = Array.from({ length: S.n }, (_, i) => i + 1);
+      const chain = buildChain(values);
+      const kBadge = el('div', 'counter-badge', [
+        el('span', 'label', 'k ='),
+        el('span', 'value', String(S.k)),
+      ]);
+      main.appendChild(el('div', null, [chain, kBadge], {
+        style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', width: '100%' }
+      }));
+      chain.querySelectorAll('.node-wrap').forEach((n, i) => {
+        n.classList.add('stagger-in');
+        n.style.animationDelay = `${0.05 * i}s`;
+      });
+      chain.querySelectorAll('.connector').forEach((c, i) => {
+        c.classList.add('stagger-in');
+        c.style.animationDelay = `${0.05 * i + 0.025}s`;
+      });
+      const nl = chain.querySelector('.null-label');
+      if (nl) { nl.classList.add('stagger-in'); nl.style.animationDelay = `${0.05 * S.n + 0.025}s`; }
+    }
+
+    function renderCount(main) {
+      const values = Array.from({ length: S.n }, (_, i) => i + 1);
+      const chain = buildChain(values, { pointerLabel: 'sizeCounter' });
+      const badge = el('div', 'counter-badge', [
+        el('span', 'label', 'size'),
+        el('span', 'value', '0'),
+      ]);
+      main.appendChild(el('div', null, [chain, badge], {
+        style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', width: '100%' }
+      }));
+      animateCount(chain, badge);
+    }
+
+    async function animateCount(chain, badge) {
+      const myId = ++S.animId;
+      const wraps = chain.querySelectorAll('.node-wrap');
+      const valEl = badge.querySelector('.value');
+      await wait(300);
+      for (let i = 0; i < wraps.length; i++) {
+        if (S.animId !== myId) return;
+        wraps.forEach(w => { w.classList.remove('pointed'); w.querySelector('.ll-node').classList.remove('active'); });
+        if (i > 0) wraps[i - 1].querySelector('.ll-node').classList.add('counted');
+        wraps[i].classList.add('pointed');
+        wraps[i].querySelector('.ll-node').classList.add('active');
+        valEl.textContent = String(i + 1);
+        valEl.style.animation = 'none';
+        void valEl.offsetWidth;
+        valEl.style.animation = 'countPulse 0.3s var(--ease)';
+        await wait(250);
+      }
+      if (S.animId !== myId) return;
+      wraps[wraps.length - 1].querySelector('.ll-node').classList.remove('active');
+      wraps[wraps.length - 1].querySelector('.ll-node').classList.add('counted');
+      wraps[wraps.length - 1].classList.remove('pointed');
+      badge.classList.add('done');
+      valEl.textContent = String(S.n);
+      valEl.style.animation = 'pulse 0.5s var(--ease)';
+    }
+
+    function renderMath(main) {
+      const c = S.computed;
+      const block = el('div', 'formula-block');
+      [
+        { name: 'maxPartSize', expr: `(${c.size} + ${S.k} \u2212 1) / ${S.k}`, result: c.maxPartSize },
+        { name: 'minPartSize', expr: `${c.size} / ${S.k}`, result: c.minPartSize },
+        { name: 'count_maxPS', expr: `${c.size} % ${S.k}`, result: c.count_maxPS },
+        { name: 'count_minPS', expr: `${S.k} \u2212 (${c.size} % ${S.k})`, result: c.count_minPS },
+      ].forEach((r, i) => {
+        block.appendChild(el('div', 'formula-row', [
+          el('span', 'formula-name', r.name),
+          el('span', 'formula-expr', `= ${r.expr}`),
+          el('span', 'formula-result', String(r.result)),
+        ], { style: { animationDelay: `${i * 0.15}s` } }));
+      });
+      main.appendChild(block);
+    }
+
+    function renderHashMap(main) {
+      const c = S.computed;
+      const table = el('table', 'hm-table');
+      const thead = el('thead');
+      thead.appendChild(el('tr', null, [
+        el('th', null, 'Key (partition size)'),
+        el('th', null, 'Value (count)'),
+      ]));
+      const tbody = el('tbody');
+      const entries = [];
+      if (c.count_maxPS > 0)
+        entries.push({ key: c.maxPartSize, val: c.count_maxPS, meaning: `${c.count_maxPS} partition${c.count_maxPS > 1 ? 's' : ''} of size ${c.maxPartSize}` });
+      entries.push({ key: c.minPartSize, val: c.count_minPS, meaning: `${c.count_minPS} partition${c.count_minPS > 1 ? 's' : ''} of size ${c.minPartSize}` });
+
+      entries.forEach((e, i) => {
+        const keyCell = el('td');
+        keyCell.appendChild(el('span', null, String(e.key)));
+        keyCell.appendChild(document.createElement('br'));
+        keyCell.appendChild(el('span', 'hm-meaning', e.meaning));
+        const tr = el('tr', null, [keyCell, el('td', null, String(e.val))]);
+        tr.classList.add('stagger-in');
+        tr.style.animationDelay = `${0.15 + i * 0.15}s`;
+        tbody.appendChild(tr);
+      });
+      table.appendChild(thead);
+      table.appendChild(tbody);
+
+      const wrapper = el('div', null, [
+        el('div', null, 'HashMap<Integer, Integer>', {
+          style: { fontFamily: 'var(--mono)', fontSize: '13px', color: 'var(--text-3)', marginBottom: '12px', textAlign: 'center' }
+        }),
+        table,
+      ], { style: { display: 'flex', flexDirection: 'column', alignItems: 'center' } });
+      wrapper.classList.add('stagger-in');
+      main.appendChild(wrapper);
+    }
+
+    function renderInit(main) {
+      const arrViz = el('div', 'array-viz');
+      arrViz.appendChild(el('div', null, `Node[] partitionHeads = new Node[${S.k}]`, {
+        style: { fontFamily: 'var(--mono)', fontSize: '13px', color: 'var(--text-3)', marginBottom: '8px' }
+      }));
+      const bracket = el('div', 'array-bracket');
+      bracket.appendChild(el('span', 'bracket-char', '['));
+      const slots = el('div', 'array-slots');
+      for (let i = 0; i < S.k; i++) {
+        const slot = el('div', 'array-slot', [
+          el('div', 'slot-index', String(i)),
+          el('div', 'slot-node', '0'),
+        ], { style: { animationDelay: `${0.1 + i * 0.08}s` } });
+        const color = PCOLORS[i % PCOLORS.length];
+        slot.querySelector('.slot-node').style.borderColor = color.border;
+        slot.querySelector('.slot-node').style.color = color.text;
+        slots.appendChild(slot);
+      }
+      bracket.appendChild(slots);
+      bracket.appendChild(el('span', 'bracket-char', ']'));
+      arrViz.appendChild(bracket);
+      arrViz.appendChild(el('div', null, 'Each slot initialized with a dummy Node(0)', {
+        style: { fontFamily: 'var(--sans)', fontSize: '12px', color: 'var(--text-3)', marginTop: '12px' }
+      }));
+      main.appendChild(arrViz);
+    }
+
+    function renderDistribute(main) {
+      const c = S.computed;
+      const srcLabel = el('div', null, 'Source Linked List', {
+        style: { fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }
+      });
+      const values = Array.from({ length: S.n }, (_, i) => i + 1);
+      const chain = buildChain(values);
+      const grid = el('div', 'partition-grid');
+      main.appendChild(el('div', null, [srcLabel, chain, grid], {
+        style: { display: 'flex', flexDirection: 'column', width: '100%', gap: '20px' }
+      }));
+      animateDistribute(chain, grid, c);
+    }
+
+    async function animateDistribute(chain, grid, c) {
+      const myId = ++S.animId;
+      const wraps = chain.querySelectorAll('.node-wrap');
+      await wait(400);
+      // Build empty partition rows
+      for (let i = 0; i < S.k; i++) {
+        if (S.animId !== myId) return;
+        const color = PCOLORS[i % PCOLORS.length];
+        const row = el('div', 'partition-row', null, { style: { animationDelay: `${i * 0.06}s` } });
+        const label = el('span', 'partition-label', `P${i}`, {
+          style: { background: color.bg, color: color.text, border: `1px solid ${color.border}` }
+        });
+        const nc = el('div', 'partition-nodes');
+        const dn = el('div', 'll-node dummy');
+        dn.appendChild(el('span', 'node-data', '0'));
+        dn.appendChild(el('span', 'node-ptr', '\u25CF'));
+        nc.appendChild(el('div', 'node-wrap', [dn]));
+        nc.appendChild(el('div', 'connector'));
+        const count = el('span', 'partition-count', '0 nodes');
+        row.appendChild(label);
+        row.appendChild(nc);
+        row.appendChild(count);
+        grid.appendChild(row);
+      }
+      await wait(300);
+      // Distribute
+      let nodeIdx = 0;
+      for (let pi = 0; pi < S.k; pi++) {
+        const pSize = (pi < c.count_maxPS) ? c.maxPartSize : c.minPartSize;
+        const row = grid.children[pi];
+        const nc = row.querySelector('.partition-nodes');
+        const countEl = row.querySelector('.partition-count');
+        const color = PCOLORS[pi % PCOLORS.length];
+        for (let j = 0; j < pSize && nodeIdx < S.n; j++) {
+          if (S.animId !== myId) return;
+          const srcWrap = wraps[nodeIdx];
+          srcWrap.querySelector('.ll-node').classList.add('active');
+          srcWrap.querySelector('.ll-node').style.borderColor = color.border;
+          srcWrap.querySelector('.ll-node').style.boxShadow = `0 0 12px ${color.bg}`;
+          await wait(120);
+          const nn = el('div', 'll-node colored', null, {
+            style: { borderColor: color.border, background: color.bg, opacity: '0', transform: 'translateY(-8px)', transition: 'all 0.25s var(--ease)' }
+          });
+          nn.appendChild(el('span', 'node-data', String(nodeIdx + 1)));
+          nn.appendChild(el('span', 'node-ptr', '\u25CF'));
+          nc.appendChild(el('div', 'node-wrap', [nn]));
+          nc.appendChild(el('div', 'connector'));
+          requestAnimationFrame(() => { nn.style.opacity = '1'; nn.style.transform = 'translateY(0)'; });
+          srcWrap.querySelector('.ll-node').classList.remove('active');
+          srcWrap.querySelector('.ll-node').classList.add('consumed');
+          srcWrap.querySelector('.ll-node').style.borderColor = '';
+          srcWrap.querySelector('.ll-node').style.boxShadow = '';
+          countEl.textContent = `${j + 1} node${j + 1 > 1 ? 's' : ''}`;
+          nodeIdx++;
+          await wait(100);
+        }
+      }
+      // Replace trailing connectors with null
+      grid.querySelectorAll('.partition-nodes').forEach(pn => {
+        const last = pn.querySelector('.connector:last-child');
+        if (last) last.replaceWith(el('span', 'null-label', 'null'));
+      });
+    }
+
+    function renderOutput(main) {
+      const c = S.computed;
+      const grid = el('div', 'partition-grid');
+      c.partitions.forEach((part, i) => {
+        const color = PCOLORS[i % PCOLORS.length];
+        const row = el('div', 'partition-row', null, { style: { animationDelay: `${i * 0.08}s` } });
+        const label = el('span', 'partition-label', `Partition ${i}`, {
+          style: { background: color.bg, color: color.text, border: `1px solid ${color.border}` }
+        });
+        const nc = el('div', 'partition-nodes');
+        part.forEach((val, j) => {
+          const node = el('div', 'll-node' + (j === 0 ? ' dummy' : ''));
+          node.appendChild(el('span', 'node-data', String(val)));
+          node.appendChild(el('span', 'node-ptr', '\u25CF'));
+          nc.appendChild(el('div', 'node-wrap', [node]));
+          if (j < part.length - 1) nc.appendChild(el('div', 'connector'));
+        });
+        nc.appendChild(el('div', 'connector'));
+        nc.appendChild(el('span', 'null-label', 'null'));
+        const count = el('span', 'partition-count', `${part.length - 1} node${part.length - 1 !== 1 ? 's' : ''}`);
+        row.appendChild(label);
+        row.appendChild(nc);
+        row.appendChild(count);
+        grid.appendChild(row);
+      });
+      main.appendChild(grid);
+    }
+
+    // ═══════════════════ RENDER ENGINE ═══════════════════
+    const RENDERERS = [renderInput, renderCount, renderMath, renderHashMap, renderInit, renderDistribute, renderOutput];
+    const FULL_WIDTH = new Set([5, 6]);
+
+    function renderViz() {
+      const viz = document.getElementById('viz-container');
+      if (!viz) return;
+      viz.className = 'viz' + (FULL_WIDTH.has(S.step) ? ' full-width' : '');
+      viz.innerHTML = '';
+      const main = el('div', 'viz-main');
+      viz.appendChild(main);
+      if (!FULL_WIDTH.has(S.step)) {
+        viz.appendChild(el('div', 'viz-side', [
+          buildInfoCard(S.step),
+          buildCodeCard(S.step),
+          buildVarCards(S.step),
+        ]));
+      }
+      RENDERERS[S.step](main);
+    }
+
+    function render() {
+      const app = document.getElementById('app');
+      app.innerHTML = '';
+      S.computed = compute(S.n, S.k);
+      app.appendChild(buildHeader());
+      app.appendChild(buildTimeline());
+      const viz = el('div', 'viz', null, { id: 'viz-container' });
+      app.appendChild(viz);
+      renderViz();
+      app.appendChild(buildNav());
+    }
+
+    // ═══════════════════ NAVIGATION ═══════════════════
+    function goToStep(idx) {
+      if (idx < 0 || idx >= STEPS.length) return;
+      S.animId++;
+      S.step = idx;
+      render();
+    }
+
+    function adjustK(delta) {
+      const nk = S.k + delta;
+      if (nk < 1 || nk > Math.min(15, S.n)) return;
+      S.k = nk;
+      S.step = 0; S.animId++;
+      render();
+    }
+
+    function adjustN(delta) {
+      const nn = S.n + delta;
+      if (nn < 1 || nn > 20) return;
+      S.n = nn;
+      if (S.k > S.n) S.k = S.n;
+      S.step = 0; S.animId++;
+      render();
+    }
+
+    // ═══════════════════ AUTO PLAY ═══════════════════
+    let playTimer = null;
+    function togglePlay() {
+      if (S.playing) { S.playing = false; clearTimeout(playTimer); render(); }
+      else { S.playing = true; render(); autoAdvance(); }
+    }
+    function autoAdvance() {
+      if (!S.playing) return;
+      const t = S.step === 1 ? S.n * 280 + 800 : S.step === 5 ? S.n * 250 + 1000 : 2000;
+      playTimer = setTimeout(() => {
+        if (!S.playing) return;
+        if (S.step < STEPS.length - 1) { S.step++; render(); autoAdvance(); }
+        else { S.playing = false; render(); }
+      }, t);
+    }
+
+    // ═══════════════════ KEYBOARD ═══════════════════
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); goToStep(S.step + 1); }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); goToStep(S.step - 1); }
+      if (e.key === ' ') { e.preventDefault(); togglePlay(); }
+    });
+
+    // ═══════════════════ INIT ═══════════════════
+    render();
+  </script>
+</body>
+</html>
