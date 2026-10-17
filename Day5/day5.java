@@ -1393,53 +1393,49 @@ public class day5 {
             // Setup HM (k: max or minSize, v: how many heads are assigned to this amount of nodes)
             HashMap<Integer, Integer> partitionSizes = new HashMap<>();
             if (count_maxPS != 0) {
-            partitionSizes.put(maxPartSize, count_maxPS);
-            partitionSizes.put(minPartSize, count_minPS);
-                        } else { partitionSizes.put(minPartSize, count_minPS); }
+                partitionSizes.put(maxPartSize, count_maxPS);
+                partitionSizes.put(minPartSize, count_minPS);
+                for (Map.Entry<Integer, Integer> pair: partitionSizes.entrySet()) { System.out.println(String.format("K: %d, V: %d", pair.getKey(), pair.getValue())); }
+            } else { partitionSizes.put(minPartSize, count_minPS); }
             // setup array of Node heads
             Node[] partitionHeads = new Node[k];
             for (int i = 0; i < partitionHeads.length; i++) { partitionHeads[i] = new Node(0); }
             Node current = head; int cIndex = 0; int currentCount = 0;
+            Node currentP = partitionHeads[cIndex];
             if (count_maxPS != 0) {
-            // Max Partition Configurator
-            while (current != null && cIndex < partitionSizes.get(maxPartSize)) {
-            Node currentP = partitionHeads[cIndex];
-            // since countMax is 2, we can get the total number of nodes for this section
-            // using count_maxPS(2) * maxPartSize(69) which yields 138
-            // in order to append to index 0, this is if currentCount <= maxPartSize(69)
-            if (currentCount <= maxPartSize) {
-            currentP.next = current;
-                                    currentP = currentP.next;
-            // move current
-                                    current = current.next;
-            // increment counter
-                                    currentCount++;
-                                } else { cIndex++; currentCount = 0; currentP = partitionHeads[cIndex]; }
-                            }
-            // Min Partition Configurator
-                            current = current.next; // this is in order to move it to next node of the inputted ll after max partitions are taken care of
-            while (current != null && cIndex < partitionSizes.get(minPartSize)) {
-            Node currentP = partitionHeads[cIndex];
-            if (currentCount <= minPartSize) {
-            currentP.next = current;
-                                    currentP = currentP.next;
-                                    current = current.next;
-                                    currentCount++;
-                                } else { cIndex++; currentCount = 0; currentP = partitionHeads[cIndex]; }
-                            }
-                        } else {
-            while (current != null && cIndex < partitionSizes.get(minPartSize)) {
-            Node currentP = partitionHeads[cIndex];
-            if (currentCount <= minPartSize) {
-            currentP.next = current;
-                                    currentP = currentP.next;
-                                    current = current.next;
-                                    currentCount++;
-                                } else { cIndex++; currentCount = 0; currentP = partitionHeads[cIndex]; }
-                            }
-                        }
-            for (Node h: partitionHeads) { this.returnSummary(h); System.out.println();}
-            return null; // this is a placeholder for the functions return value, im in the process of debugging
+                // Max Partition Configurator
+                
+                while (current != null && (cIndex < partitionSizes.get(maxPartSize)) && currentCount <= (maxPartSize * partitionSizes.get(maxPartSize))) {
+                    
+                    if (currentCount < (maxPartSize * (1 + cIndex))) {
+                        currentP.next = current; currentP = currentP.next;
+
+                        current = current.next; currentCount++;
+                    } else { cIndex++; currentP.next = null; currentP = partitionHeads[cIndex]; }
+                }
+
+                // Min Partition Configurator
+                //current = current.next; // this is in order to move it to next node of the inputted ll after max partitions are taken care of
+                while (currentCount < size - (minPartSize * (k - (cIndex + 1)))) {
+                    if (currentCount < size - (minPartSize * (k - (cIndex + 1)))) {
+                        currentP.next = current; currentP = currentP.next;
+                        current = current.next; currentCount++;
+                    } else { cIndex++; currentP.next = null; currentP = partitionHeads[cIndex]; }
+                }
+            } else {
+                while (currentCount < size - (minPartSize * (k - (cIndex + 1)))) {
+                    if (currentCount < (minPartSize * (1 + cIndex))) {
+                        currentP.next = current; currentP = currentP.next;
+                        current = current.next; currentCount++;
+                    } else { cIndex++; currentP.next = null; currentP = partitionHeads[cIndex]; }
+                }
+            }
+            for (int i = 0; i < partitionHeads.length; i++) {
+                Node ph = partitionHeads[i];
+                ph = ph.next; 
+            }
+            for (Node h: partitionHeads) { this.returnSummary(h); System.out.println(); }
+            return partitionHeads; 
         }
         
         public void returnSummary(Node head) {
