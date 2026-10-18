@@ -13,7 +13,65 @@ public class day5 {
         LL1 ll = new LL1();
         ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
         ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.splitLL(ll.head, 3);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
+        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
+        ll.splitLL(ll.head, 22);
 
     }
 
@@ -1381,6 +1439,8 @@ public class day5 {
         // Given a singly linked list and an integer K, split the list into k consecutive parts
         // whose sizes are as equal as possible and return the K heads
         public Node[] splitLL(Node head, int k) {
+            if (k <= 0) { return null; }
+            if ( head == null || head.next == null || k == 1 ) { return new Node[] { null }; }
             // get the size first
             Node sizeCounter = head; int size = 0;
             while (sizeCounter != null) { size++; sizeCounter = sizeCounter.next; }
@@ -1390,6 +1450,7 @@ public class day5 {
             // Number of partitions per each
             int count_maxPS = size % k;           // 886 % 13            -> 2
             int count_minPS = k - (size % k);     // 13 - (886%13)       -> 11
+            System.out.println(String.format("Size: %d%nMaxSize: %d%nMinSize: %d%nNumber of Parts Of MaxSize: %d%nNumber of Parts Of MinSize:%d%n", size, maxPartSize, minPartSize, count_maxPS, count_minPS));
             // Setup HM (k: max or minSize, v: how many heads are assigned to this amount of nodes)
             HashMap<Integer, Integer> partitionSizes = new HashMap<>();
             if (count_maxPS != 0) {
@@ -1416,23 +1477,22 @@ public class day5 {
 
                 // Min Partition Configurator
                 //current = current.next; // this is in order to move it to next node of the inputted ll after max partitions are taken care of
-                while (currentCount < size - (minPartSize * (k - (cIndex + 1)))) {
+                while (current != null && currentCount < size) {
                     if (currentCount < size - (minPartSize * (k - (cIndex + 1)))) {
                         currentP.next = current; currentP = currentP.next;
                         current = current.next; currentCount++;
                     } else { cIndex++; currentP.next = null; currentP = partitionHeads[cIndex]; }
                 }
             } else {
-                while (currentCount < size - (minPartSize * (k - (cIndex + 1)))) {
-                    if (currentCount < (minPartSize * (1 + cIndex))) {
+                while (current != null && currentCount < size) {
+                    if (currentCount < size - (minPartSize * (k - (cIndex + 1)))) {
                         currentP.next = current; currentP = currentP.next;
                         current = current.next; currentCount++;
                     } else { cIndex++; currentP.next = null; currentP = partitionHeads[cIndex]; }
                 }
             }
             for (int i = 0; i < partitionHeads.length; i++) {
-                Node ph = partitionHeads[i];
-                ph = ph.next; 
+                 partitionHeads[i] = partitionHeads[i].next;
             }
             for (Node h: partitionHeads) { this.returnSummary(h); System.out.println(); }
             return partitionHeads; 
