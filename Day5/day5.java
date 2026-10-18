@@ -11,67 +11,8 @@ import java.util.Objects;
 public class day5 {
     public static void main(String[] args) {
         LL1 ll = new LL1();
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.addToEnd(1); ll.addToEnd(2); ll.addToEnd(3); ll.addToEnd(4); ll.addToEnd(5);
-        ll.addToEnd(6); ll.addToEnd(7); ll.addToEnd(8); ll.addToEnd(9); ll.addToEnd(10);
-        ll.splitLL(ll.head, 22);
+        ll.addToEnd(10); ll.addToEnd(4); ll.addToEnd(9); ll.addToEnd(5); ll.addToEnd(2);
+        ll.addToEnd(3); ll.addToEnd(7); ll.addToEnd(6); ll.addToEnd(8); ll.addToEnd(1);
 
     }
 
@@ -1440,10 +1381,11 @@ public class day5 {
         // whose sizes are as equal as possible and return the K heads
         public Node[] splitLL(Node head, int k) {
             if (k <= 0) { return null; }
-            if ( head == null || head.next == null || k == 1 ) { return new Node[] { null }; }
+            if ( head == null || head.next == null || k == 1 ) { return new Node[] { head }; }
             // get the size first
             Node sizeCounter = head; int size = 0;
             while (sizeCounter != null) { size++; sizeCounter = sizeCounter.next; }
+            if (k > size) { k = size; }
             // Partition Sizes (max and minimum sizes)
             int maxPartSize = (size + k - 1) / k; // (886 + 13 - 1) / 13 -> 69
             int minPartSize = size / k;           // 886 / 13            -> 68
@@ -1498,6 +1440,19 @@ public class day5 {
             return partitionHeads; 
         }
         
+        // Exercise 19
+        // Given the head of a singly linked list, sort it in ascending order by relinking its existing nodes (not by copying values between nodes) and return the new head
+        // For example, 4>2>1>3 becomes 1>2>3>4
+        public Node sortLL(Node head) {
+            Node current = head;
+            Node prev = null; Node currentMin = head;
+            while (current.next != null) {
+                
+            }
+
+            return null;
+        }
+
         public void returnSummary(Node head) {
             Node current = head;
             while (current != null) {
