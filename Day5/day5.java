@@ -11,9 +11,9 @@ import java.util.Objects;
 public class day5 {
     public static void main(String[] args) {
         LL1 ll = new LL1();
-        ll.addToEnd(10); ll.addToEnd(4); ll.addToEnd(9); ll.addToEnd(5); ll.addToEnd(2);
-        ll.addToEnd(3); ll.addToEnd(7); ll.addToEnd(6); ll.addToEnd(8); ll.addToEnd(1);
-
+        ll.addToEnd(10); ll.addToEnd(6); ll.addToEnd(11); ll.addToEnd(4); ll.addToEnd(2);
+        ll.addToEnd(8); ll.addToEnd(1);
+        ll.sortLL(ll.head);
     }
 
     // Big-O Speed
@@ -1444,12 +1444,16 @@ public class day5 {
         // Given the head of a singly linked list, sort it in ascending order by relinking its existing nodes (not by copying values between nodes) and return the new head
         // For example, 4>2>1>3 becomes 1>2>3>4
         public Node sortLL(Node head) {
-            Node current = head;
-            Node prev = null; Node currentMin = head;
-            while (current.next != null) {
-                
+            Node current = head.next;
+            Node currentMin = head;
+            head.next = null;
+            while (current != null) {
+                // this push im just going to find a way to append to the lhs
+                Node next = current.next; // holds the rest before any changes are made
+                if (current.data < currentMin.data) { current.next = currentMin; currentMin = current; } else { System.out.println(String.format("%d is greater than cM, it points to %d", current.data, current.next.data)); }
+                current = next;
             }
-
+            this.returnSummary(currentMin);
             return null;
         }
 
