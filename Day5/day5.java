@@ -1446,11 +1446,20 @@ public class day5 {
         public Node sortLL(Node head) {
             Node current = head.next;
             Node currentMin = head;
+            Node max = head;
+            while (current.next != null) {
+                // starts from the first least known value and compares from there
+                if (current.data > max.data) { max = current; }
+                current = current.next;
+            }
+            current = head.next;
             head.next = null;
             while (current != null) {
                 // this push im just going to find a way to append to the lhs
                 Node next = current.next; // holds the rest before any changes are made
-                if (current.data < currentMin.data) { current.next = currentMin; currentMin = current; } else { System.out.println(String.format("%d is greater than cM, it points to %d", current.data, current.next.data)); }
+                // since 11 is the max, we need everything behind it.
+                // Grow from the left however if a particular number is greater than currentMin, we set currentMin.next = current or whatever
+                if (current.data < max.data) { current.next = currentMin; currentMin = current; } else { System.out.println(String.format("%d is greater than cM, it points to %d", current.data, current.next.data)); }
                 current = next;
             }
             this.returnSummary(currentMin);
