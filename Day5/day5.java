@@ -1444,25 +1444,50 @@ public class day5 {
         // Given the head of a singly linked list, sort it in ascending order by relinking its existing nodes (not by copying values between nodes) and return the new head
         // For example, 4>2>1>3 becomes 1>2>3>4
         public Node sortLL(Node head) {
-            Node current = head.next;
-            Node currentMin = head;
+            Node current = head;
+            Node ph = new Node(0);
             Node max = head;
-            while (current.next != null) {
-                // starts from the first least known value and compares from there
+            Node min = head; 
+            Node tail = ph;
+            while (current != null) {
                 if (current.data > max.data) { max = current; }
                 current = current.next;
             }
-            current = head.next;
-            head.next = null;
+            current = head;
+            // Idea; Find min and max, loop with min set as head, if c is lesser then reset and edit connections
+            // Example:
+                // Input LL: 10, 6, 11, 4, 2, 8, 1 -> min: 1 and max: 11
+                // if c > min then min.next = c; c = c.n, with 10 this would do 1>10 and then point c to 6 but since 6 is lesser than 10 that is where min = min.next comes into play, we have min always at 1
+                // This is pretty mumbo jumbo right now but I think the idea is almost there
             while (current != null) {
-                // this push im just going to find a way to append to the lhs
-                Node next = current.next; // holds the rest before any changes are made
-                // since 11 is the max, we need everything behind it.
-                // Grow from the left however if a particular number is greater than currentMin, we set currentMin.next = current or whatever
-                if (current.data < max.data) { current.next = currentMin; currentMin = current; } else { System.out.println(String.format("%d is greater than cM, it points to %d", current.data, current.next.data)); }
-                current = next;
+                if (current.data < min.data) { min = current;} 
+                current = current.next;
             }
-            this.returnSummary(currentMin);
+            System.out.println(String.format("Min: %d, Max: %d", min.data, max.data));
+            current = head.next;
+            Node prev = head;
+            while (current != null) {
+                // since the range is [min, max] that means every value is either greater than min and lesser than max or equal to min and equal to max
+                // base case would be equal to some value min or max, min is obviously going to be the head and max the tail
+                if (current.data == min.data) {
+                    current.next = ph.next; ph.next = current; current = current.next;
+                    // prev wouldnt move here since its conditionally setting to the beginning of the ll
+                } else if (current.next.data < current.data)  {
+                    // this is for regular nodes, in which case are for sure greater than min and lesser than max
+                    // if c.n is greater than c then append, if not append prior c so there needs to be something that points to prior c
+                    // pointers would be current.next, current and prev
+                    prev.next = current.next; prev = prev.next; prev.next = current;
+                    
+                } else {
+                    // if the ll is something like 9, 10 and the current is 11
+                    // tail needs to have pointed to the 10 or ph
+                    current.next = max; tail = tail.next; current = current.next; current.next = null; 
+                    
+                }
+                prev = current;
+                
+            }
+            this.returnSummary(ph);
             return null;
         }
 
