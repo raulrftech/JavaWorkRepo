@@ -1474,6 +1474,7 @@ public class day5 {
             }
         }
     }
+    
     // Exercise 2 - insertAt(int index, int value) and deleteAt(int index), two ops that actually demonstrate an LLs real advantage over an array
     // Add both methods to your LL1 class
     //      insertAt places a new node at a specific position (index 0 meaning new head), shifting nothing else in memory, only rewiring two references
