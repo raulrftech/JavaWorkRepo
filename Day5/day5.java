@@ -1463,31 +1463,22 @@ public class day5 {
                 if (current.data < min.data) { min = current;} 
                 current = current.next;
             }
-            System.out.println(String.format("Min: %d, Max: %d", min.data, max.data));
-            current = head.next;
-            Node prev = head;
-            while (current != null) {
-                // since the range is [min, max] that means every value is either greater than min and lesser than max or equal to min and equal to max
-                // base case would be equal to some value min or max, min is obviously going to be the head and max the tail
-                if (current.data == min.data) {
-                    current.next = ph.next; ph.next = current; current = current.next;
-                    // prev wouldnt move here since its conditionally setting to the beginning of the ll
-                } else if (current.next.data < current.data)  {
-                    // this is for regular nodes, in which case are for sure greater than min and lesser than max
-                    // if c.n is greater than c then append, if not append prior c so there needs to be something that points to prior c
-                    // pointers would be current.next, current and prev
-                    prev.next = current.next; prev = prev.next; prev.next = current;
-                    
-                } else {
-                    // if the ll is something like 9, 10 and the current is 11
-                    // tail needs to have pointed to the 10 or ph
-                    current.next = max; tail = tail.next; current = current.next; current.next = null; 
-                    
-                }
-                prev = current;
-                
-            }
-            this.returnSummary(ph);
+
+            // Approach That Might Work
+            // Use Case: {5, 7, 11, 4, 10, 6}
+            // The smallest first seen is always going to be the head
+                // If next is greater keep going
+                // If next is smaller than head replace
+                    // c.n = head, heac = c etc for proper replacement -> {4, 5, 7, 11, 10, 6}
+                    // We can cut here so 4, 5, 7 is sorted
+                    // Work on remaining list of 11, 10, 6 with same approach
+                        // 10 < 11 so replace -> {10, 11, 6}
+                        // 6 < 10 so replace -> { 6, 10, 11}
+            // Two remaining ll's are { 4, 5, 7} and { 6, 10, 11}
+                // Merge respectively
+                // Output: {4, 5, 6, 7, 10, 11}
+
+            this.returnSummary(currentMin);
             return null;
         }
 
